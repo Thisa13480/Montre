@@ -12309,20 +12309,22 @@ function cibles(ms){const out=[];const S=window.cl23Stars&&window.cl23Stars.star
  for(const [n,k] of PLAN){try{const c=window.cl23Body(k,new Date(ms));if(c&&isFinite(c.ra))out.push({n,ra:c.ra,dec:c.dec,mag:-9,c:'',type:k==='sun'?'Soleil':k==='moon'?'Lune':'planète'})}catch(e){}}return out}
 let G=null,card=null,vise=null,actif=false,ecoute=false;
 function dessin(ra,dec){if(!G)return;if(ra==null){G.innerHTML='';return}const P=window.cl22Proj&&window.cl22Proj(ra,dec,simMs());if(!P){G.innerHTML='';return}
- const x=P.x.toFixed(1),y=P.y.toFixed(1);G.innerHTML='<g style="filter:drop-shadow(0 0 2px #000)"><circle cx="'+x+'" cy="'+y+'" r="9" fill="none" stroke="#ffd66b" stroke-width="1.4"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="#ffd66b"/><line x1="'+(P.x-14).toFixed(1)+'" y1="'+y+'" x2="'+(P.x-10).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+(P.x+10).toFixed(1)+'" y1="'+y+'" x2="'+(P.x+14).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y-14).toFixed(1)+'" x2="'+x+'" y2="'+(P.y-10).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y+10).toFixed(1)+'" x2="'+x+'" y2="'+(P.y+14).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/></g>'}
+ const x=P.x.toFixed(1),y=P.y.toFixed(1);const lab=vise&&vise.lab?'<text x="'+(P.x>233?P.x-17:P.x+17).toFixed(1)+'" y="'+(P.y+3.6).toFixed(1)+'" text-anchor="'+(P.x>233?'end':'start')+'" font-size="10" font-family="Jost,Arial" font-weight="700" fill="#ffd66b" style="paint-order:stroke;stroke:#000;stroke-width:2.4px">'+vise.lab+'</text>':'';/* CL226 : le nom de l'astre visé sur le cadran (0,75 mm) */G.innerHTML=lab+'<g style="filter:drop-shadow(0 0 2px #000)"><circle cx="'+x+'" cy="'+y+'" r="9" fill="none" stroke="#ffd66b" stroke-width="1.4"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="#ffd66b"/><line x1="'+(P.x-14).toFixed(1)+'" y1="'+y+'" x2="'+(P.x-10).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+(P.x+10).toFixed(1)+'" y1="'+y+'" x2="'+(P.x+14).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y-14).toFixed(1)+'" x2="'+x+'" y2="'+(P.y-10).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y+10).toFixed(1)+'" x2="'+x+'" y2="'+(P.y+14).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/></g>'}
 function montrer(az,alt){const ms=simMs();const {ra,dec}=radec(az,alt,ms);const T=cibles(ms).map(o=>({...o,d:sep(ra,dec,o.ra,o.dec)})).sort((a,b)=>a.d-b.d);
  const best=T[0];const box=$('cl193Box');if(!box)return;const f=v=>v.toFixed(0);
  let html='<div class="r"><span>Visée</span><span>azimut '+f(az)+'° '+rose(az)+' · hauteur '+f(alt)+'°</span></div>';
  if(alt<-5)html+='<div class="big">Sous l’horizon</div><div class="n">Levez l’iPhone vers le ciel.</div>';
  else if(best){const cst=best.c?' ('+nomC(best.c)+')':'';html+='<div class="big">'+best.n+cst+' · à '+best.d.toFixed(1)+'°</div>'+T.slice(1,4).map(o=>'<div class="r"><span>'+o.n+(o.c?' · '+nomC(o.c):'')+'</span><span>'+o.d.toFixed(1)+'°</span></div>').join('')}
- box.innerHTML=html;vise={az,alt,ra,dec,nom:best?best.n:''};dessin(ra,dec)}
-function onOrient(ev){if(!actif)return;const d=direction(ev);if(!d)return;const t=Date.now();if(onOrient.t&&t-onOrient.t<400)return;onOrient.t=t;montrer(d.az,d.alt)}
-async function viser(on){actif=on;const b=$('cl193Go');if(b)b.textContent=on?'Arrêter la visée':'Viser';
- if(!on){window.removeEventListener('deviceorientation',onOrient);ecoute=false;dessin(null);const box=$('cl193Box');if(box)box.innerHTML='<div class="n">Visée arrêtée.</div>';return}
- try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){$('cl193Box').innerHTML='<div class="n">Capteurs refusés : autoriser « Mouvement et orientation » dans Réglages › Safari, puis réessayer.</div>';actif=false;if(b)b.textContent='Viser';return}}}catch(e){}
+ box.innerHTML=html;const b2=$('cl226Box');if(b2)b2.innerHTML=html;vise={az,alt,ra,dec,nom:best?best.n:'',lab:(best&&alt>=-5)?best.n+' · '+best.d.toFixed(1).replace('.',',')+'°':''};dessin(ra,dec)}/* CL226 : même lecture dans la face AIR */
+let lisse=null;/* CL226 : visée fluide — lissage de l'azimut (circulaire) et de la hauteur, lecture toutes les 150 ms au lieu de 400 */
+function onOrient(ev){if(!actif)return;const d=direction(ev);if(!d)return;if(!lisse)lisse={az:d.az,alt:d.alt};else{const da=((d.az-lisse.az+540)%360)-180;lisse.az=(lisse.az+da*0.35+360)%360;lisse.alt+=(d.alt-lisse.alt)*0.35}const t=Date.now();if(onOrient.t&&t-onOrient.t<150)return;onOrient.t=t;montrer(lisse.az,lisse.alt)}
+const boxes=h=>{for(const id of ['cl193Box','cl226Box']){const e=$(id);if(e)e.innerHTML=h}};const boutons=on=>{const b=$('cl193Go');if(b)b.textContent=on?'Arrêter la visée':'Viser';const b2=$('cl226Go');if(b2){const t=b2.querySelector('.cl226t');if(t)t.textContent=on?'Arrêter':'Viser';b2.classList.toggle('on',on)}};/* CL226 */
+async function viser(on){actif=on;boutons(on);
+ if(!on){window.removeEventListener('deviceorientation',onOrient);ecoute=false;dessin(null);boxes('<div class="n">Visée arrêtée.</div>');return}
+ try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){boxes('<div class="n">Capteurs refusés : autoriser « Mouvement et orientation » dans Réglages › Safari, puis réessayer.</div>');actif=false;boutons(false);return}}}catch(e){}
  if(!ecoute){window.addEventListener('deviceorientation',onOrient);ecoute=true}
- $('cl193Box').innerHTML='<div class="n">Levez l’iPhone vers le ciel, le dos vers l’astre… (sans capteurs : essai manuel ci-dessous)</div>';
- setTimeout(()=>{if(actif&&!vise)$('cl193Box').innerHTML='<div class="n">Aucune mesure des capteurs : utilisez l’essai manuel (azimut et hauteur) ci-dessous.</div>'},3000)}
+ boxes('<div class="n">Levez l’iPhone vers le ciel, le dos vers l’astre… (sans capteurs : essai manuel dans l’onglet Ciel)</div>');
+ setTimeout(()=>{if(actif&&!vise)boxes('<div class="n">Aucune mesure des capteurs : utilisez l’essai manuel (azimut et hauteur) de l’onglet Ciel.</div>')},3000)}
 function build(){if(!G){const ov=document.querySelector('#watch svg.overlay'),hands=$('hands');if(ov&&hands){G=document.createElementNS(NS,'g');G.id='cl193Ret';G.setAttribute('pointer-events','none');ov.insertBefore(G,hands)}}
  if(card)return true;const ciel=document.querySelector('.cl2Panel[data-k=ciel]');const ref=$('cl84Card');if(!ciel||!ref)return false;
  card=document.createElement('div');card.className='cl3Pont';card.id='cl193Card';
@@ -12332,13 +12334,13 @@ function build(){if(!G){const ov=document.querySelector('#watch svg.overlay'),ha
  $('cl193Go').addEventListener('click',()=>viser(!actif));
  $('cl193Essai').addEventListener('click',()=>{const az=+$('cl193Az').value||0,alt=+$('cl193Alt').value||0;montrer(az,alt)});
  const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl193go')){A.AIDE.push(
-  {k:'cl193go',id:'cl193Go',t:'Viser le ciel',x:'Levez l’iPhone vers le ciel, le dos de l’appareil tourné vers l’astre : grâce à la boussole et au gyroscope, la montre sait où il pointe (azimut et hauteur) et nomme l’étoile, la planète, le Soleil ou la Lune les plus proches de la visée, avec leur constellation et leur écart en degrés. Un réticule doré se pose sur la carte du ciel du cadran, au point où l’astre visé est au zénith (comme les étoiles de la vision d’en haut).\n\nSafari demande l’autorisation « Mouvement et orientation » la première fois. Lieu : celui de l’observateur. Précision : quelques degrés (boussole de l’iPhone).'},
+  {k:'cl193go',id:'cl193Go',t:'Viser le ciel',x:'Levez l’iPhone vers le ciel, le dos de l’appareil tourné vers l’astre : grâce à la boussole et au gyroscope, la montre sait où il pointe (azimut et hauteur) et nomme l’étoile, la planète, le Soleil ou la Lune les plus proches de la visée, avec leur constellation et leur écart en degrés. Un réticule doré se pose sur la carte du ciel du cadran, au point où l’astre visé est au zénith (comme les étoiles de la vision d’en haut), avec le nom de l’astre et l’écart en degrés écrits à côté (0,75 mm sur un cadran de 50 mm). Le même bouton existe dans la face AIR (carte « Viser le ciel »), pour ne pas changer d’onglet en vol.\n\nSafari demande l’autorisation « Mouvement et orientation » la première fois. Lieu : celui de l’observateur. Précision : quelques degrés (boussole de l’iPhone).'},
   {k:'cl193essai',id:'cl193Essai',t:'Essai manuel',x:'Sans capteurs (ordinateur), entrez un azimut (0° nord, 90° est, 180° sud, 270° ouest) et une hauteur (0° horizon, 90° zénith) : la montre nomme ce qui s’y trouve au moment simulé.'});
   [300,2500].forEach(d=>setTimeout(()=>A.install(),d))}
  return true}
 let n=0;const t=setInterval(()=>{n++;try{if(build()&&n>20)clearInterval(t)}catch(e){console.warn('CL193',e)}if(n>60)clearInterval(t)},400);
 setInterval(()=>{if(vise&&(actif||$('cl193Box')?.querySelector('.big')))dessin(vise.ra,vise.dec)},5000);
-window.cl193={montrer,direction,etat:()=>({actif,vise}),forcer:()=>{actif=true;if(!ecoute){window.addEventListener('deviceorientation',onOrient);ecoute=true}const b=$('cl193Go');if(b)b.textContent='Arrêter la visée'}};
+window.cl193={montrer,direction,viser,etat:()=>({actif,vise}),forcer:()=>{actif=true;if(!ecoute){window.addEventListener('deviceorientation',onOrient);ecoute=true}boutons(true)}};/* CL226 : viser() exporté pour la face AIR */
 })();
 (()=>{'use strict';
 })();
@@ -13588,8 +13590,9 @@ function scene(){const A=window.cl191;const pos=A&&A.position?A.position():null;
  const G=window.cl204Geo||[];G.forEach(g=>{const c={la:g.la,lo:g.lo},r=g.r;const dd=dist(pos,c);if(dd-r>600)return;const az=cap(pos,c);const demi=dd<=r?180:Math.asin(Math.min(1,r/dd))/rad;out.geo.push({nom:g.nom,type:g.type,d:Math.max(0,dd-r),az,demi,rel:rel(az),dedans:dd<=r})});/* CL220 : la table « Survolé » est faite d'objets */
  return out}
 /* ---------- dessin ---------- */
+let scCache=null,scT=0;
 function dessiner(force){const svgEl=$('cl218Svg');if(!svgEl)return;if(!document.body.classList.contains('clx-air')&&!force)return;
- const sc=scene();const msg=$('cl218Msg');
+ const sc=(boussole&&scCache&&Date.now()-scT<1000)?scCache:(scCache=scene(),scT=Date.now(),scCache);/* CL226 : scène gardée 1 s pendant que la boussole anime */const msg=$('cl218Msg');
  if(!sc){svgEl.innerHTML='';svgEl.setAttribute('viewBox','0 0 360 40');svgEl.innerHTML='<text x="180" y="25" font-size="13" fill="#cdbf9a" text-anchor="middle" font-family="Jost,Arial,sans-serif">Pas de vol en cours : GPS ou « Vol d’essai » pour voir l’horizon.</text>';dernier=[];return}
  const W=Math.max(300,Math.round(svgEl.getBoundingClientRect().width||svgEl.parentElement.clientWidth||360)),Hh=Math.round(W*0.5),hy=Math.round(Hh*0.6);
  let a0,a1;if(boussole&&hdgTel!=null){let c=((hdgTel-sc.H)%360+360)%360;if(c>180)c-=360;a0=c-60;a1=c+60}else{a0=VUES[vue].a0;a1=VUES[vue].a1}
@@ -13621,9 +13624,11 @@ function dire(){const A=window.cl136Dire;if(!dernier.length){if(A)A('Rien à sig
  const cote=r=>Math.abs(r)<20?'devant':r<0?(r<-120?'derrière à gauche':'à gauche'):(r>120?'derrière à droite':'à droite');
  const parts=dernier.filter(x=>x.type==='v').slice(0,4).map(x=>cote(x.rel)+', '+x.nom+' à '+Math.round(x.d)+' kilomètres').concat(dernier.filter(x=>x.type==='c').slice(0,2).map(x=>cote(x.rel)+', '+x.nom)).concat(dernier.filter(x=>x.type==='m').slice(0,1).map(x=>cote(x.rel)+', '+x.nom)).concat(dernier.filter(x=>x.type==='a').slice(0,2).map(x=>x.nom+' '+cote(x.rel)+', à '+Math.round(x.alt)+' degrés de hauteur'));
  const t=parts.join(' ; ')+'.';if(A)A(t.charAt(0).toUpperCase()+t.slice(1),true);const m=$('cl218Msg');if(m){m.dataset.fixe='1';m.textContent='« '+t+' »';setTimeout(()=>{delete m.dataset.fixe},6000)}}
-function onOrient(e){let h=null;if(typeof e.webkitCompassHeading==='number')h=e.webkitCompassHeading;else if(e.absolute&&e.alpha!=null)h=(360-e.alpha)%360;else if(e.alpha!=null)h=(360-e.alpha)%360;if(h==null||!isFinite(h))return;hdgTel=h;const t=Date.now();if(onOrient.t&&t-onOrient.t<250)return;onOrient.t=t;dessiner()}
+let hdgBrut=null,hdgDessine=null,rafOn=false;/* CL226 : boussole fluide — les capteurs donnent la consigne, une boucle d'animation lisse le cap (22 % par image) et redessine dès 0,1° */
+function onOrient(e){let h=null;if(typeof e.webkitCompassHeading==='number')h=e.webkitCompassHeading;else if(e.absolute&&e.alpha!=null)h=(360-e.alpha)%360;else if(e.alpha!=null)h=(360-e.alpha)%360;if(h==null||!isFinite(h))return;hdgBrut=h;if(hdgTel==null)hdgTel=h;if(!rafOn){rafOn=true;requestAnimationFrame(boucle)}}
+function boucle(){rafOn=false;if(!boussole||hdgBrut==null)return;const d=((hdgBrut-hdgTel+540)%360)-180;hdgTel=(hdgTel+d*0.22+360)%360;if(hdgDessine==null||Math.abs(((hdgTel-hdgDessine+540)%360)-180)>0.1){hdgDessine=hdgTel;dessiner()}if(Math.abs(d)>0.1){rafOn=true;requestAnimationFrame(boucle)}}
 async function boussoler(on){boussole=on;const b=$('cl218Bous');if(b)b.classList.toggle('on',on);
- if(!on){if(ecoute){window.removeEventListener('deviceorientation',onOrient);ecoute=false}hdgTel=null;dessiner();return}
+ if(!on){if(ecoute){window.removeEventListener('deviceorientation',onOrient);ecoute=false}hdgTel=null;hdgBrut=null;hdgDessine=null;dessiner();return}
  try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function'){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){boussole=false;if(b)b.classList.remove('on');const m=$('cl218Msg');if(m)m.textContent='Capteurs refusés : autoriser « Mouvement et orientation » dans Réglages › Safari, puis réessayer.';return}}}catch(e){}
  if(!ecoute){window.addEventListener('deviceorientation',onOrient);ecoute=true}const m=$('cl218Msg');if(m&&hdgTel==null)m.textContent='Tourne l’iPhone vers un hublot : la vue suit la boussole.';dessiner()}
 function ui(){if($('cl218Card'))return true;const bar=$('cl200Bar');if(!bar)return false;
@@ -13934,9 +13939,40 @@ window.cl225={mesure:()=>{const V=window.cl01Vue3D&&window.cl01Vue3D._dbg?window
  return V.labelG.children.filter(l=>l.visible).map(l=>{l.getWorldPosition(v);const d=v.distanceTo(V.cam.position);const px=l.scale.y/(2*d*t)*H;return {nom:(l.material.map&&l.material.map.image&&l.material.map.image.width)?'':'',d:+d.toFixed(1),px:+px.toFixed(1),capMm50:+(px*0.484*0.1657*50/59.9).toFixed(2)}})}};
 })();
 (()=>{'use strict';
-const TIT='CL225 · Lisibilité, la vue 3D';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL225')v.textContent='CL225'},300);
 })();
 }catch(e){console.error("cl225Vue3D",e);}
+/* ───────── cl226ViserAIR ───────── */
+try{
+/* CL226 — Viser le ciel : le nom sur le cadran et la commande dans la face AIR (Thierry, 11 novembre 2026, 15 h 20, depuis la
+   montre servie par le site : « je vois la petite cible jaune sur le cadran, il faudrait afficher aussi le nom des étoiles ;
+   dupliquer la commande dans AIR pour ne pas avoir à changer d'onglet ; garder ce dispositif en mémoire pour la 3D »).
+   • Sur le cadran, à côté du réticule doré : le nom de l'astre visé et l'écart en degrés (« Sirius · 2,1° »), à 0,75 mm sur un
+     cadran de 50 mm, du côté du centre pour rester dans le cadran.
+   • Face AIR, carte « Viser le ciel » sous le hublot : le même bouton Viser (symbole de visée), la même lecture (azimut, hauteur,
+     astre, constellation, écart, les trois voisins) — les deux boutons et les deux lectures restent synchronisés (cl193 :
+     boutons(), boxes(), viser() exporté). L'essai manuel reste dans l'onglet Ciel.
+   • Boussole fluide (Thierry, 15 h 23 : « fluidifier le mouvement pour boussole ») : dans le hublot, les capteurs ne font plus que
+     donner la consigne ; une boucle d'animation (requestAnimationFrame) lisse le cap de 22 % par image et redessine dès 0,1°, la
+     scène (villes, astres, reliefs) étant gardée une seconde — plus de saccades de 250 ms. Même lissage pour la visée du ciel
+     (azimut circulaire et hauteur, lecture toutes les 150 ms au lieu de 400).
+   • Feuille de route : le dispositif est noté pour la vue 3D (réticule et nom sur le dôme). Retouches p226 (12 points). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const SYM='<svg class="cl174i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>';
+function ui(){if($('cl226Card'))return true;const anc=$('cl218Card');if(!anc||!window.cl193||!window.cl193.viser)return false;
+ const c=document.createElement('div');c.id='cl226Card';
+ c.innerHTML='<div class="cl2Grp"><span id="cl226Titre">Viser le ciel</span></div><div class="cl226b"><button type="button" id="cl226Go" class="cl174sm">'+SYM+'<span class="cl226t">Viser</span></button></div><div id="cl226Box"><div class="n">Lever l’iPhone vers le ciel, le dos vers l’astre : la montre le nomme et pose le réticule doré sur le cadran, avec son nom.</div></div>';
+ anc.after(c);const css=document.createElement('style');css.id='cl226Css';css.textContent='#cl226Card{margin:8px 0 4px;padding:8px 0 2px;border-top:1px solid #ffffff14}#cl226Card .cl226b{display:flex;gap:6px;margin:0 0 6px}#cl226Card .cl226b button.on{background:linear-gradient(#f4dea6,#c39a55)!important;color:#1d160a!important;border-color:#f0d9a0!important}#cl226Box .r{display:flex;justify-content:space-between;gap:8px;padding:2px 0;border-bottom:1px solid #ffffff12;font:13px Jost,Arial,sans-serif;color:#efe7d4}#cl226Box .big{font:700 17px Jost,Arial,sans-serif;color:#ffd66b;margin:6px 0 2px}#cl226Box .n{font:12px/1.4 Jost,Arial,sans-serif;color:#b9ab86}';document.head.appendChild(css);
+ $('cl226Go').addEventListener('click',()=>{const e=window.cl193.etat();window.cl193.viser(!e.actif)});
+ const A=window.cl45Aide;if(A){const e={k:'cl226go',id:'cl226Go',t:'Viser le ciel (face AIR)',x:'Le même bouton que dans l’onglet Ciel, pour ne pas changer d’onglet en vol : lever l’iPhone vers le ciel, le dos vers l’astre ; la montre nomme l’étoile, la planète, le Soleil ou la Lune visés, leur constellation et l’écart en degrés, et pose le réticule doré sur le cadran avec le nom de l’astre. Second appui : arrêter la visée. Safari demande l’autorisation « Mouvement et orientation » la première fois.'};const i=A.AIDE.findIndex(x=>x.k===e.k);if(i>=0)A.AIDE[i]=e;else A.AIDE.push(e);try{A.install()}catch(x){}}
+ return true}
+let n=0;const t=setInterval(()=>{if(ui()||++n>200)clearInterval(t)},400);
+window.cl226={etat:()=>({card:!!$('cl226Card'),on:!!$('cl226Go')&&$('cl226Go').classList.contains('on'),texte:$('cl226Box')?$('cl226Box').textContent:''})};
+})();
+(()=>{'use strict';
+const TIT='CL226 · Viser le ciel dans AIR, le nom sur le cadran, la boussole fluide';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL226')v.textContent='CL226'},300);
+})();
+}catch(e){console.error("cl226ViserAIR",e);}
 </script>
 </body></html>
