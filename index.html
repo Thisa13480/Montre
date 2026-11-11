@@ -14129,9 +14129,150 @@ try{
 window.cl235={symbole:'historique'};
 })();
 (()=>{'use strict';
-const TIT='CL235 · Le symbole de l’historique';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL235')v.textContent='CL235'},300);
 })();
 }catch(e){console.error("cl235Historique",e);}
+/* ───────── cl236NavigationTemporelle ───────── */
+try{
+/* CL236 — Navigation temporelle, un seul panneau (Thierry, 11 novembre 2026, 18 h 05, document « Je souhaite réorganiser les onglets »).
+   • Au-dessus de la ligne date-heure du pupitre, le titre NAVIGATION TEMPORELLE, avec sa pastille « ? » ; la ligne date-heure
+     (‹ chiffres ▲▼ ›), la ligne ville · fuseau · position · UTC et la case UTC forment ce panneau.
+   • La rangée « −1 h · ⏸ · +1 h · Maintenant » et la carte « Navigation temporelle » (± minute / jour / mois / lunaison, Lune,
+     Maintenant vert) étaient redondantes avec la ligne date-heure : retirées de l'onglet Heure et lieu. −1 h / +1 h disparaissent
+     (le chiffre des heures et ▲▼ font la même chose) ; la marche/arrêt ⏸ ▶ et la vitesse restent — ils ne sont pas redondants :
+     sans eux, impossible de laisser courir le temps depuis une date choisie.
+   • « Maintenant » reste, en vert, dans le panneau conservé (il rougit un instant quand c'est fait) ; le micro de l'onglet y est
+     placé aussi (visible quand « un micro dans chaque onglet » est coché, onglet Voix).
+   • Le panneau DATEUR (« Cliquez sur un chiffre… ») est retiré : la pastille « ? » du panneau dit la même chose.
+   • La phase de la Lune que montrait la carte retirée reste dans l'onglet Soleil et Lune. Fiche « ? » récrite. Module seul (aucune
+     retouche de l'existant : les anciens éléments sont masqués, pas détruits, pour que les modules qui les tiennent à jour ne cassent pas). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const css=document.createElement('style');css.id='cl236Css';css.textContent=
+ '#cl236Nav{margin:6px 0 4px;padding:6px 8px 7px;border:1px solid #39576a;border-radius:10px;background:#152734}'+
+ '#cl236Nav>.cl2Grp{display:flex;align-items:center;gap:6px;margin:0 0 6px!important;padding:0 0 4px!important;border-bottom:1px solid #2b4458!important}'+
+ '#cl236Nav>.cl2Grp>span{flex:1}'+
+ '#cl236Nav .v6-datebar{margin:2px 0}#cl236Nav #cl3Loc{margin:4px 0 2px}'+
+ '#cl2Head #cl236Nav .v13-time-row{display:grid!important;grid-template-columns:56px 1fr 80px auto!important;gap:6px!important;margin:6px 0 0!important}'+
+ '#cl236Nav #v13Back,#cl236Nav #v13Forward{display:none!important}'+
+ '#v5Desk #cl236Nav button#v13Now{background-image:none!important;background:#1b2a1f!important;border-color:#7fe0a0!important;color:#c9f5d6!important;font-weight:600}'+
+ '#v5Desk #cl236Nav button#v13Now.fait{background:#7a1f1a!important;border-color:#ff8f7a!important;color:#fff!important}'+
+ '#cl2Head #cl236Nav .cl137m{position:static!important;width:38px!important;height:30px!important;margin:0;border-radius:8px!important}'+
+ '.cl2Panel[data-k=temps]>.cl137m{display:none!important}'+/* le micro de l'onglet est dans le panneau ; si le module des micros en repose un, il reste caché */
+ '.cl236Off{display:none!important}';
+document.head.appendChild(css);
+const pontDe=txt=>[...document.querySelectorAll('.cl2Panel[data-k=temps] .cl3Pont')].find(c=>((c.querySelector('.cl2Grp')||{}).textContent||'').trim().startsWith(txt));
+const t0=Date.now();let fait=false;
+function build(){if(fait)return true;
+ const head=$('cl2Head'),bar=head&&head.querySelector('.v6-datebar'),loc=$('cl3Loc'),row=head&&head.querySelector('.v13-time-row'),now=$('v13Now'),play=$('v13Play'),speed=$('v13Speed'),temps=document.querySelector('.cl2Panel[data-k=temps]');
+ if(!head||!bar||!loc||!row||!now||!play||!speed||!temps)return false;
+ const nav=pontDe('Navigation temporelle'),dat=pontDe('Dateur'),mic=temps.querySelector(':scope>.cl137m');
+ // attendre que la carte à retirer soit complète (Maintenant vert, Lune) et le micro posé — 20 s au plus
+ if((!nav||!$('cl144Now')||!$('cl170Lun')||!mic)&&Date.now()-t0<20000)return false;
+ const W=document.createElement('div');W.id='cl236Nav';
+ const T=document.createElement('div');T.className='cl2Grp';T.innerHTML='<span>Navigation temporelle</span>';W.appendChild(T);
+ bar.before(W);W.appendChild(bar);W.appendChild(loc);W.appendChild(row);
+ if(mic)row.appendChild(mic);
+ if(nav)nav.classList.add('cl236Off');if(dat)dat.classList.add('cl236Off');
+ // Maintenant : vert, et rougit un instant quand c'est fait
+ now.addEventListener('click',()=>{now.classList.add('fait');setTimeout(()=>now.classList.remove('fait'),1200);if(window.cl136Dire)try{window.cl136Dire('Retour à maintenant.')}catch(e){}});
+ // fiche « ? » : celle du dateur, récrite, posée sur le titre
+ const A=window.cl45Aide;if(A){const e=A.AIDE.find(x=>x.k==='dateur');if(e){e.t='Navigation temporelle';e.x='Un seul panneau pour voyager dans le temps.\n\nDate et heure (‹ ▲ ▼ ›) — La ligne montre la date et l’heure de la montre. Touchez un chiffre (jour, mois, année, heure, minute, seconde), puis ▲ ou ▼ pour l’augmenter ou le diminuer — appui long : défilement ; ‹ et › passent au chiffre précédent ou suivant. C’est ainsi que l’on avance d’une heure, d’un jour ou d’un mois. La ligne du dessous rappelle la ville, son fuseau, sa position et l’heure UTC.\n\nUTC — coché, la date et l’heure sont en temps universel (Greenwich, sans heure d’été) ; décoché, en heure locale de la ville.\n\nMaintenant (vert) — Ramène la montre à l’heure réelle de l’appareil après un voyage dans le temps ; le bouton rougit un instant : c’est fait.\n\n⏸ ▶ Marche / arrêt — En marche, le bouton ⏸ est sombre ; à l’arrêt, il devient ▶ doré. Arrête ou relance le temps de la montre : à l’arrêt, tout reste figé et vous réglez la date à loisir ; relancé, le temps court depuis la date choisie.\n\nVitesse — Menu :\n• ×1 (par défaut) — temps réel.\n• ×2, ×10\n• ×60 — une minute par seconde.\n• ×3600 — une heure par seconde.\n• ◀ ×60, ◀ ×3600 — les mêmes vitesses vers le passé.\nÀ ×3600, une journée défile en 24 secondes : on voit le jour et la nuit balayer la carte.\n\nMicro — visible quand « un micro dans chaque onglet » est coché (onglet Voix) : dites « maintenant », « coche UTC », « ouvre l’onglet Ciel »…\n\nLa phase de la Lune et ses sauts (nouvelle lune, quartiers, pleine lune) sont dans l’onglet Soleil et Lune.\n\nOù le voir : sous les boutons des cadrans, au-dessus des onglets.'}
+  const poser=()=>{const b=document.querySelector('button.cl45-info[data-k="dateur"]');if(b&&b.parentElement!==T)T.appendChild(b)};
+  try{A.install()}catch(x){}poser();[400,1600,3200,5200,8200,12200].forEach(d=>setTimeout(poser,d));}
+ fait=true;return true}
+let n=0;const t=setInterval(()=>{n++;try{if(build())clearInterval(t)}catch(e){console.warn('CL236',e)}if(n>120)clearInterval(t)},300);
+window.cl236={etat:()=>{const W=$('cl236Nav');return {panneau:!!W,titre:W?(W.querySelector('.cl2Grp>span')||{}).textContent:null,dedans:W?['.v6-datebar','#cl3Loc','.v13-time-row','#v13Now','#v13Play','#v13Speed','.cl137m','button.cl45-info[data-k="dateur"]'].filter(s=>W.querySelector(s)):[],caches:[...document.querySelectorAll('.cl2Panel[data-k=temps] .cl3Pont.cl236Off')].map(c=>(c.querySelector('.cl2Grp')||{}).textContent.trim()),vert:(()=>{const b=$('v13Now');return b?getComputedStyle(b).borderColor:null})()}}};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("cl236NavigationTemporelle",e);}
+/* ───────── cl237Disposition ───────── */
+try{
+/* CL237 — La disposition personnalisée des onglets (Thierry, 11 novembre 2026, 18 h 07, capture d'une application météo :
+   « pouvoir réaliser ce type de proposition pour chacun des menus que proposent nos onglets »).
+   • En tête de chaque onglet qui compte au moins deux rubriques, un bouton « Disposition » (symbole : liste et flèche haut-bas).
+   • Il ouvre une feuille : les rubriques de l'onglet, numérotées, chacune avec « − » (masquer) et une poignée ≡ (glisser pour
+     changer l'ordre ; au clavier, flèches haut et bas) ; en dessous, « Masqués » avec « + » pour remettre une rubrique ; en bas,
+     « Réinitialiser cet onglet » et « Tout réinitialiser » (second appui pour confirmer).
+   • L'onglet se met à jour aussitôt, derrière la feuille ; la disposition est gardée dans l'iPhone (localStorage cl237Dispo) et
+     appliquée à chaque ouverture. « Réglages d'origine » reste toujours en dernier et n'est pas dans la liste.
+   • Symboles universels (SVG), pastille « ? » sur chaque bouton « Disposition ». Module seul, aucune retouche de l'existant. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);const KEY='cl237Dispo';
+const SYM='<svg class="cl174i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M4 12h10M4 17h10"/><path d="M19 5v14M16.5 7.5L19 5l2.5 2.5M16.5 16.5L19 19l2.5-2.5"/></svg>';
+const MOINS='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 12h10" stroke="#0f1824" stroke-width="2.6" stroke-linecap="round"/></svg>';
+const PLUS='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 12h10M12 7v10" stroke="#0f1824" stroke-width="2.6" stroke-linecap="round"/></svg>';
+const POIGNEE='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
+const RESET='<svg class="cl174i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v5h5"/></svg>';
+const css=document.createElement('style');css.id='cl237Css';css.textContent=
+ '.cl237Bar{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin:0 0 6px}body.cl137 .cl2Panel>.cl237Bar{padding-right:36px}'+/* place pour le micro de l'onglet */
+ '#v5Desk .cl237Bar button.cl237Btn{font-size:12px!important;padding:5px 10px!important}'+
+ '.cl237Cache{display:none!important}body.cl237On{overflow:hidden}'+
+ '#cl237Sheet{position:fixed;inset:0;z-index:100001;background:#000000a6;display:flex;align-items:flex-end;justify-content:center}#cl237Sheet[hidden]{display:none}'+
+ '.cl237S{width:100%;max-width:480px;max-height:88vh;overflow:auto;box-sizing:border-box;background:#0f1824;border:1px solid #a88b55;border-bottom:0;border-radius:18px 18px 0 0;padding:12px 14px 22px;font:14px Jost,Arial,sans-serif;color:#f3ead2;box-shadow:0 -8px 30px #000a}'+
+ '.cl237H{display:flex;align-items:center;gap:10px;margin:0 0 6px}.cl237H b{font:600 16px Jost,Arial,sans-serif;color:#f6dc95}.cl237T{color:#b9a77f;font-size:13px;margin-left:auto}'+
+ '.cl237X{width:34px;height:34px;border-radius:50%;border:1px solid #6d5a33;background:#152233;color:#f3ead2;font:400 22px/1 Arial,sans-serif;padding:0;cursor:pointer;flex:none}'+
+ '.cl237r{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #ffffff14;background:#0f1824;box-sizing:border-box}'+
+ '.cl237n{width:22px;text-align:right;color:#8a7448;font:500 13px Jost,Arial,sans-serif;flex:none}.cl237t{flex:1;min-width:0;font-size:14.5px}'+
+ '.cl237m,.cl237p{width:32px;height:32px;border:0;background:none;color:#e8c77e;padding:3px;cursor:pointer;flex:none}.cl237m svg,.cl237p svg{width:26px;height:26px;display:block}'+
+ '.cl237h{width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#b9a77f;touch-action:none;cursor:grab;flex:none;border-radius:8px}.cl237h svg{width:22px;height:22px}.cl237h:focus{outline:1px solid #e8c77e}'+
+ '.cl237drag{opacity:.96;box-shadow:0 6px 18px #000c;border:1px solid #a88b55;border-radius:10px}.cl237ph{border:1px dashed #6d5a33;border-radius:10px;margin:2px 0}'+
+ '.cl237Mt{font:600 10px system-ui;letter-spacing:.16em;text-transform:uppercase;color:#8a7448;margin:14px 0 2px}'+
+ '.cl237F{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 6px}'+
+ '.cl237F button{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid #8a7448;border-radius:10px;background:linear-gradient(#2a3644,#121b26);color:#f3ead2;font:500 13px Jost,Arial,sans-serif;cursor:pointer}.cl237F button svg{width:16px;height:16px;flex:none}'+
+ '.cl237F button.arme{background:#7a1f1a!important;border-color:#ff8f7a!important;color:#fff!important}'+
+ '.cl237N{font:12px/1.4 Jost,Arial,sans-serif;color:#b9ab86;margin:6px 0 0}';
+document.head.appendChild(css);
+const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const slug=t=>t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const titreDe=c=>{const g=c.querySelector('.cl2Grp');if(!g)return '';const cl=g.cloneNode(true);cl.querySelectorAll('button').forEach(b=>b.remove());return cl.textContent.trim()};
+const lire=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return {}}};
+const ecrire=o=>{try{localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}};
+const nomOnglet=k=>{const b=document.querySelector('#cl2Rail button[data-k="'+k+'"]');return b?b.textContent.replace(/\?/g,'').trim():k};
+const groupes=P=>[...P.querySelectorAll(':scope>.cl3Pont')].filter(c=>!c.classList.contains('cl236Off')).map(c=>({el:c,titre:titreDe(c)})).filter(g=>g.titre&&!/^R[ée]glages d.origine$/.test(g.titre)).map(g=>Object.assign(g,{s:slug(g.titre)}));
+function appliquer(P){const k=P.dataset.k,cfg=lire()[k]||{},G=groupes(P);if(!G.length)return;const by={};G.forEach(g=>{by[g.s]=g});
+ const ordre=(cfg.ordre||[]).filter(s=>by[s]);G.forEach(g=>{if(!ordre.includes(g.s))ordre.push(g.s)});
+ const marks=G.map(g=>{const m=document.createComment('cl237');g.el.before(m);return m});
+ ordre.forEach((s,i)=>marks[i].after(by[s].el));marks.forEach(m=>m.remove());
+ const caches=cfg.caches||[];G.forEach(g=>g.el.classList.toggle('cl237Cache',caches.includes(g.s)));
+ const orig=[...P.querySelectorAll(':scope>.cl3Pont')].find(c=>/^R[ée]glages d.origine$/.test(titreDe(c)));if(orig)P.appendChild(orig)}
+let sheet=null,cur=null,armeTout=0;
+function ouvrir(P){cur=P;
+ if(!sheet){sheet=document.createElement('div');sheet.id='cl237Sheet';sheet.setAttribute('role','dialog');sheet.setAttribute('aria-label','Disposition personnalisée');
+  sheet.innerHTML='<div class="cl237S"><div class="cl237H"><button type="button" class="cl237X" aria-label="Fermer">×</button><b>Disposition personnalisée</b><span class="cl237T"></span></div><div class="cl237L" role="list"></div><div class="cl237M" hidden><div class="cl237Mt">Masqués</div><div class="cl237ML" role="list"></div></div><div class="cl237F"><button type="button" class="cl237R cl174sm">'+RESET+'Réinitialiser cet onglet</button><button type="button" class="cl237RT cl174sm">'+RESET+'Tout réinitialiser</button></div><p class="cl237N">Glissez la poignée pour changer l’ordre (au clavier : flèches haut et bas) ; − masque une rubrique, + la remet. L’onglet se met à jour aussitôt ; la disposition est gardée dans l’appareil.</p></div>';
+  document.body.appendChild(sheet);
+  sheet.addEventListener('click',e=>{if(e.target===sheet||e.target.closest('.cl237X'))fermer()});
+  sheet.querySelector('.cl237R').addEventListener('click',()=>{const o=lire();delete o[cur.dataset.k];ecrire(o);appliquer(cur);rendre()});
+  const bt=sheet.querySelector('.cl237RT');bt.addEventListener('click',()=>{const t=Date.now();if(t-armeTout<4000){armeTout=0;bt.classList.remove('arme');bt.lastChild.textContent='Tout réinitialiser';ecrire({});panneaux().forEach(appliquer);rendre()}else{armeTout=t;bt.classList.add('arme');bt.lastChild.textContent='Confirmer : tout réinitialiser';setTimeout(()=>{if(Date.now()-armeTout>=3900){bt.classList.remove('arme');bt.lastChild.textContent='Tout réinitialiser'}},4200)}});
+  glisser(sheet.querySelector('.cl237L'));}
+ sheet.querySelector('.cl237T').textContent=nomOnglet(P.dataset.k);rendre();sheet.hidden=false;document.body.classList.add('cl237On');sheet.querySelector('.cl237X').focus()}
+function fermer(){if(sheet){sheet.hidden=true;document.body.classList.remove('cl237On')}}
+function rendre(){const P=cur,cfg=lire()[P.dataset.k]||{},caches=cfg.caches||[];const G=groupes(P);
+ const L=sheet.querySelector('.cl237L'),ML=sheet.querySelector('.cl237ML');L.innerHTML='';ML.innerHTML='';let n=0;
+ G.forEach(g=>{const r=document.createElement('div');r.className='cl237r';r.dataset.s=g.s;r.setAttribute('role','listitem');
+  if(caches.includes(g.s)){r.innerHTML='<span class="cl237n">·</span><span class="cl237t">'+esc(g.titre)+'</span><button type="button" class="cl237p" aria-label="Remettre : '+esc(g.titre)+'">'+PLUS+'</button>';ML.appendChild(r)}
+  else{n++;r.innerHTML='<span class="cl237n">'+n+'</span><span class="cl237t">'+esc(g.titre)+'</span><button type="button" class="cl237m" aria-label="Masquer : '+esc(g.titre)+'">'+MOINS+'</button><span class="cl237h" tabindex="0" role="button" aria-label="Déplacer : '+esc(g.titre)+' (glisser, ou flèches haut et bas)">'+POIGNEE+'</span>';L.appendChild(r)}});
+ sheet.querySelector('.cl237M').hidden=!ML.childElementCount;
+ L.querySelectorAll('.cl237m').forEach(b=>b.addEventListener('click',()=>basculer(b.closest('.cl237r').dataset.s,true)));
+ ML.querySelectorAll('.cl237p').forEach(b=>b.addEventListener('click',()=>basculer(b.closest('.cl237r').dataset.s,false)));
+ L.querySelectorAll('.cl237h').forEach(h=>h.addEventListener('keydown',e=>{if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;e.preventDefault();const r=h.closest('.cl237r');const sib=e.key==='ArrowUp'?r.previousElementSibling:r.nextElementSibling;if(!sib)return;if(e.key==='ArrowUp')sib.before(r);else sib.after(r);sauverOrdre();h.focus()}))}
+function sauverOrdre(){const o=lire(),k=cur.dataset.k,c=o[k]||{};const vis=[...sheet.querySelectorAll('.cl237L .cl237r')].map(r=>r.dataset.s);const caches=c.caches||[];c.ordre=vis.concat(caches.filter(s=>!vis.includes(s)));o[k]=c;ecrire(o);appliquer(cur);let n=0;sheet.querySelectorAll('.cl237L .cl237r .cl237n').forEach(e=>{e.textContent=++n})}
+function basculer(s,cacher){const o=lire(),k=cur.dataset.k,c=o[k]||{};const caches=(c.caches||[]).filter(x=>x!==s);if(cacher)caches.push(s);c.caches=caches;if(!c.ordre)c.ordre=groupes(cur).map(g=>g.s);o[k]=c;ecrire(o);appliquer(cur);rendre()}
+function glisser(L){let r=null,ph=null,dy=0,h0=0;
+ L.addEventListener('pointerdown',e=>{const h=e.target.closest('.cl237h');if(!h||r)return;r=h.closest('.cl237r');e.preventDefault();try{h.setPointerCapture(e.pointerId)}catch(x){}const b=r.getBoundingClientRect();dy=e.clientY-b.top;h0=b.height;ph=document.createElement('div');ph.className='cl237ph';ph.style.height=h0+'px';r.after(ph);r.classList.add('cl237drag');r.style.cssText='position:fixed;left:'+b.left+'px;top:'+b.top+'px;width:'+b.width+'px;z-index:5';});
+ L.addEventListener('pointermove',e=>{if(!r)return;const y=e.clientY-dy;r.style.top=y+'px';const rows=[...L.querySelectorAll('.cl237r:not(.cl237drag)')];let ref=null;for(const x of rows){const b=x.getBoundingClientRect();if(y+h0/2<b.top+b.height/2){ref=x;break}}if(ref)ref.before(ph);else L.appendChild(ph)});
+ const fin=()=>{if(!r)return;ph.replaceWith(r);r.classList.remove('cl237drag');r.style.cssText='';r=null;ph=null;sauverOrdre()};
+ L.addEventListener('pointerup',fin);L.addEventListener('pointercancel',fin);}
+const panneaux=()=>[...document.querySelectorAll('#cl2Panels .cl2Panel[data-k]')];
+function barre(P){const has=P.querySelector(':scope>.cl237Bar');if(groupes(P).length<2){if(has)has.remove();return}if(has)return;/* un onglet vidé par un regroupement perd sa barre */const bar=document.createElement('div');bar.className='cl237Bar';const b=document.createElement('button');b.type='button';b.className='cl237Btn cl174sm';b.innerHTML=SYM+'Disposition';b.setAttribute('aria-label','Disposition personnalisée de cet onglet');b.addEventListener('click',()=>ouvrir(P));bar.appendChild(b);
+ const first=P.querySelector(':scope>.cl3Pont');if(first)first.before(bar);else P.appendChild(bar)}
+let n=0;const t=setInterval(()=>{n++;try{const Ps=panneaux();if(Ps.length){Ps.forEach(P=>{appliquer(P);barre(P)})}if(n===12||n===40||n===80){const A=window.cl45Aide;if(A){if(!A.AIDE.find(e=>e.k==='cl237'))A.AIDE.push({k:'cl237',all:true,txt:'Disposition',t:'Disposition personnalisée',x:'Chaque onglet se range à votre goût : touchez « Disposition » pour voir ses rubriques, numérotées dans l’ordre où elles s’affichent.\n\n• La poignée ≡ — glissez-la pour changer l’ordre (au clavier : flèches haut et bas).\n• − — masque la rubrique ; elle passe sous « Masqués ».\n• + — la remet à sa place.\n• Réinitialiser cet onglet — l’ordre et les rubriques d’origine de cet onglet.\n• Tout réinitialiser — tous les onglets (second appui pour confirmer).\n\nL’onglet se met à jour aussitôt, derrière la feuille ; la disposition est gardée dans l’appareil et retrouvée à chaque ouverture. « Réglages d’origine » reste toujours en dernier.\n\nÀ dire : « appuie sur disposition ».'});try{A.install()}catch(x){}}}}catch(e){console.warn('CL237',e)}if(n>120)clearInterval(t)},400);
+window.cl237={ouvrir:k=>{const P=document.querySelector('#cl2Panels .cl2Panel[data-k="'+k+'"]');if(P)ouvrir(P)},fermer,lire,etat:()=>({ouvert:!!sheet&&!sheet.hidden,onglet:cur?cur.dataset.k:null,liste:sheet?[...sheet.querySelectorAll('.cl237L .cl237r .cl237t')].map(e=>e.textContent):[],masques:sheet?[...sheet.querySelectorAll('.cl237ML .cl237r .cl237t')].map(e=>e.textContent):[]}),groupes:k=>{const P=document.querySelector('#cl2Panels .cl2Panel[data-k="'+k+'"]');return P?groupes(P).map(g=>({titre:g.titre,cache:g.el.classList.contains('cl237Cache')})):[]}};
+})();
+(()=>{'use strict';
+const TIT='CL237 · La disposition personnalisée des onglets';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL237')v.textContent='CL237'},300);
+})();
+}catch(e){console.error("cl237Disposition",e);}
 </script>
 </body></html>
