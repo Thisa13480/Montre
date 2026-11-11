@@ -12309,13 +12309,13 @@ function cibles(ms){const out=[];const S=window.cl23Stars&&window.cl23Stars.star
  for(const [n,k] of PLAN){try{const c=window.cl23Body(k,new Date(ms));if(c&&isFinite(c.ra))out.push({n,ra:c.ra,dec:c.dec,mag:-9,c:'',type:k==='sun'?'Soleil':k==='moon'?'Lune':'planète'})}catch(e){}}return out}
 let G=null,card=null,vise=null,actif=false,ecoute=false;
 function dessin(ra,dec){if(!G)return;if(ra==null){G.innerHTML='';return}const P=window.cl22Proj&&window.cl22Proj(ra,dec,simMs());if(!P){G.innerHTML='';return}
- const x=P.x.toFixed(1),y=P.y.toFixed(1);const lab=vise&&vise.lab?'<text x="'+(P.x>233?P.x-17:P.x+17).toFixed(1)+'" y="'+(P.y+3.6).toFixed(1)+'" text-anchor="'+(P.x>233?'end':'start')+'" font-size="10" font-family="Jost,Arial" font-weight="700" fill="#ffd66b" style="paint-order:stroke;stroke:#000;stroke-width:2.4px">'+vise.lab+'</text>':'';/* CL226 : le nom de l'astre visé sur le cadran (0,75 mm) */G.innerHTML=lab+'<g style="filter:drop-shadow(0 0 2px #000)"><circle cx="'+x+'" cy="'+y+'" r="9" fill="none" stroke="#ffd66b" stroke-width="1.4"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="#ffd66b"/><line x1="'+(P.x-14).toFixed(1)+'" y1="'+y+'" x2="'+(P.x-10).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+(P.x+10).toFixed(1)+'" y1="'+y+'" x2="'+(P.x+14).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y-14).toFixed(1)+'" x2="'+x+'" y2="'+(P.y-10).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y+10).toFixed(1)+'" x2="'+x+'" y2="'+(P.y+14).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/></g>'}
+ const x=P.x.toFixed(1),y=P.y.toFixed(1);const lab=vise&&vise.lab?'<text x="'+(P.x>233?P.x-17:P.x+17).toFixed(1)+'" y="'+(P.y+3.6).toFixed(1)+'" text-anchor="'+(P.x>233?'end':'start')+'" font-size="10" font-family="Jost,Arial" font-weight="700" fill="#ffd66b" style="paint-order:stroke;stroke:#000;stroke-width:2.4px">'+vise.lab+'</text>':'';/* CL226 : le nom de l'astre visé sur le cadran (0,75 mm) */let guide='';if(vise&&vise.vers){const Q=window.cl22Proj&&window.cl22Proj(vise.vers.ra,vise.vers.dec,simMs());if(Q)guide='<line x1="'+x+'" y1="'+y+'" x2="'+Q.x.toFixed(1)+'" y2="'+Q.y.toFixed(1)+'" stroke="#ffd66b" stroke-width="1.2" stroke-dasharray="4 3" opacity=".85"/><circle cx="'+Q.x.toFixed(1)+'" cy="'+Q.y.toFixed(1)+'" r="4" fill="none" stroke="#ffd66b" stroke-width="1.2"/>'}/* CL227 : trait pointillé vers l'astre le plus proche quand la visée est vide */G.innerHTML=guide+lab+'<g style="filter:drop-shadow(0 0 2px #000)"><circle cx="'+x+'" cy="'+y+'" r="9" fill="none" stroke="#ffd66b" stroke-width="1.4"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="#ffd66b"/><line x1="'+(P.x-14).toFixed(1)+'" y1="'+y+'" x2="'+(P.x-10).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+(P.x+10).toFixed(1)+'" y1="'+y+'" x2="'+(P.x+14).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y-14).toFixed(1)+'" x2="'+x+'" y2="'+(P.y-10).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y+10).toFixed(1)+'" x2="'+x+'" y2="'+(P.y+14).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/></g>'}
 function montrer(az,alt){const ms=simMs();const {ra,dec}=radec(az,alt,ms);const T=cibles(ms).map(o=>({...o,d:sep(ra,dec,o.ra,o.dec)})).sort((a,b)=>a.d-b.d);
  const best=T[0];const box=$('cl193Box');if(!box)return;const f=v=>v.toFixed(0);
  let html='<div class="r"><span>Visée</span><span>azimut '+f(az)+'° '+rose(az)+' · hauteur '+f(alt)+'°</span></div>';
  if(alt<-5)html+='<div class="big">Sous l’horizon</div><div class="n">Levez l’iPhone vers le ciel.</div>';
- else if(best){const cst=best.c?' ('+nomC(best.c)+')':'';html+='<div class="big">'+best.n+cst+' · à '+best.d.toFixed(1)+'°</div>'+T.slice(1,4).map(o=>'<div class="r"><span>'+o.n+(o.c?' · '+nomC(o.c):'')+'</span><span>'+o.d.toFixed(1)+'°</span></div>').join('')}
- box.innerHTML=html;const b2=$('cl226Box');if(b2)b2.innerHTML=html;vise={az,alt,ra,dec,nom:best?best.n:'',lab:(best&&alt>=-5)?best.n+' · '+best.d.toFixed(1).replace('.',',')+'°':''};dessin(ra,dec)}/* CL226 : même lecture dans la face AIR */
+ else if(best){const cst=best.c?' ('+nomC(best.c)+')':'';html+=(best.d<=10?'<div class="big">'+best.n+cst+' · à '+best.d.toFixed(1)+'°</div>':'<div class="big">Rien de connu à moins de 10°</div><div class="n">Le plus proche : '+best.n+cst+', à '+best.d.toFixed(1)+'° — le trait pointillé du cadran mène vers lui.</div>')+T.slice(1,4).map(o=>'<div class="r"><span>'+o.n+(o.c?' · '+nomC(o.c):'')+'</span><span>'+o.d.toFixed(1)+'°</span></div>').join('')}/* CL227 : un astre n'est nommé que s'il est à moins de 10° de la visée */
+ box.innerHTML=html;const b2=$('cl226Box');if(b2)b2.innerHTML=html;vise={az,alt,ra,dec,nom:best?best.n:'',lab:(best&&alt>=-5&&best.d<=10)?best.n+' · '+best.d.toFixed(1).replace('.',',')+'°':'',vers:(best&&alt>=-5&&best.d>10)?{ra:best.ra,dec:best.dec,n:best.n}:null};dessin(ra,dec)}/* CL227 : au-delà de 10°, pas de nom, mais un trait vers le plus proche *//* CL226 : même lecture dans la face AIR */
 let lisse=null;/* CL226 : visée fluide — lissage de l'azimut (circulaire) et de la hauteur, lecture toutes les 150 ms au lieu de 400 */
 function onOrient(ev){if(!actif)return;const d=direction(ev);if(!d)return;if(!lisse)lisse={az:d.az,alt:d.alt};else{const da=((d.az-lisse.az+540)%360)-180;lisse.az=(lisse.az+da*0.35+360)%360;lisse.alt+=(d.alt-lisse.alt)*0.35}const t=Date.now();if(onOrient.t&&t-onOrient.t<150)return;onOrient.t=t;montrer(lisse.az,lisse.alt)}
 const boxes=h=>{for(const id of ['cl193Box','cl226Box']){const e=$(id);if(e)e.innerHTML=h}};const boutons=on=>{const b=$('cl193Go');if(b)b.textContent=on?'Arrêter la visée':'Viser';const b2=$('cl226Go');if(b2){const t=b2.querySelector('.cl226t');if(t)t.textContent=on?'Arrêter':'Viser';b2.classList.toggle('on',on)}};/* CL226 */
@@ -12334,7 +12334,7 @@ function build(){if(!G){const ov=document.querySelector('#watch svg.overlay'),ha
  $('cl193Go').addEventListener('click',()=>viser(!actif));
  $('cl193Essai').addEventListener('click',()=>{const az=+$('cl193Az').value||0,alt=+$('cl193Alt').value||0;montrer(az,alt)});
  const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl193go')){A.AIDE.push(
-  {k:'cl193go',id:'cl193Go',t:'Viser le ciel',x:'Levez l’iPhone vers le ciel, le dos de l’appareil tourné vers l’astre : grâce à la boussole et au gyroscope, la montre sait où il pointe (azimut et hauteur) et nomme l’étoile, la planète, le Soleil ou la Lune les plus proches de la visée, avec leur constellation et leur écart en degrés. Un réticule doré se pose sur la carte du ciel du cadran, au point où l’astre visé est au zénith (comme les étoiles de la vision d’en haut), avec le nom de l’astre et l’écart en degrés écrits à côté (0,75 mm sur un cadran de 50 mm). Le même bouton existe dans la face AIR (carte « Viser le ciel »), pour ne pas changer d’onglet en vol.\n\nSafari demande l’autorisation « Mouvement et orientation » la première fois. Lieu : celui de l’observateur. Précision : quelques degrés (boussole de l’iPhone).'},
+  {k:'cl193go',id:'cl193Go',t:'Viser le ciel',x:'Levez l’iPhone vers le ciel, le dos de l’appareil tourné vers l’astre : grâce à la boussole et au gyroscope, la montre sait où il pointe (azimut et hauteur) et nomme l’étoile, la planète, le Soleil ou la Lune les plus proches de la visée, avec leur constellation et leur écart en degrés. Un réticule doré se pose sur la carte du ciel du cadran, au point où l’astre visé est au zénith (comme les étoiles de la vision d’en haut), avec le nom de l’astre et l’écart en degrés écrits à côté (0,75 mm sur un cadran de 50 mm) — seulement si l’astre est à moins de 10° de la visée, la précision d’un iPhone tenu à la main ; au-delà, la montre dit « rien de connu à moins de 10° », nomme le plus proche et trace un trait pointillé du réticule vers lui sur le cadran, pour guider le geste. Le même bouton existe dans la face AIR (carte « Viser le ciel »), pour ne pas changer d’onglet en vol.\n\nSafari demande l’autorisation « Mouvement et orientation » la première fois. Lieu : celui de l’observateur. Précision : quelques degrés (boussole de l’iPhone).'},
   {k:'cl193essai',id:'cl193Essai',t:'Essai manuel',x:'Sans capteurs (ordinateur), entrez un azimut (0° nord, 90° est, 180° sud, 270° ouest) et une hauteur (0° horizon, 90° zénith) : la montre nomme ce qui s’y trouve au moment simulé.'});
   [300,2500].forEach(d=>setTimeout(()=>A.install(),d))}
  return true}
@@ -13970,9 +13970,24 @@ let n=0;const t=setInterval(()=>{if(ui()||++n>200)clearInterval(t)},400);
 window.cl226={etat:()=>({card:!!$('cl226Card'),on:!!$('cl226Go')&&$('cl226Go').classList.contains('on'),texte:$('cl226Box')?$('cl226Box').textContent:''})};
 })();
 (()=>{'use strict';
-const TIT='CL226 · Viser le ciel dans AIR, le nom sur le cadran, la boussole fluide';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL226')v.textContent='CL226'},300);
 })();
 }catch(e){console.error("cl226ViserAIR",e);}
+/* ───────── cl227ViseeNette ───────── */
+try{
+/* CL227 — Viser le ciel : un nom seulement à moins de 10° (Thierry, 11 novembre 2026, 15 h 34 : « il y a plusieurs positions qui
+   s'appellent Lune, normal ? »). Non : la montre nommait toujours l'astre connu le plus proche de la visée, même à 30° ou 50°, si bien
+   qu'en balayant un ciel vide on lisait « Lune » un peu partout. Désormais :
+   • un astre n'est nommé (lecture et cadran) que s'il est à moins de 10° de la visée — la précision d'un iPhone tenu à la main ;
+   • au-delà, la lecture dit « Rien de connu à moins de 10° », nomme le plus proche avec son écart, et le cadran trace un trait
+     pointillé du réticule vers lui (petit cercle à l'arrivée) : on tourne l'iPhone dans ce sens jusqu'à ce que le nom paraisse.
+   • Fiche « ? » à jour. Retouches p227 (4 points dans cl193) ; ce module n'ajoute que le témoin window.cl227. */
+(()=>{'use strict';
+window.cl227={seuil:10};
+})();
+(()=>{'use strict';
+const TIT='CL227 · Viser le ciel, un nom seulement à moins de 10°';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL227')v.textContent='CL227'},300);
+})();
+}catch(e){console.error("cl227ViseeNette",e);}
 </script>
 </body></html>
