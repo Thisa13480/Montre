@@ -12309,7 +12309,7 @@ function cibles(ms){const out=[];const S=window.cl23Stars&&window.cl23Stars.star
  for(const [n,k] of PLAN){try{const c=window.cl23Body(k,new Date(ms));if(c&&isFinite(c.ra))out.push({n,ra:c.ra,dec:c.dec,mag:-9,c:'',type:k==='sun'?'Soleil':k==='moon'?'Lune':'planète'})}catch(e){}}return out}
 let G=null,card=null,vise=null,actif=false,ecoute=false;
 function dessin(ra,dec){if(!G)return;if(ra==null){G.innerHTML='';return}const P=window.cl22Proj&&window.cl22Proj(ra,dec,simMs());if(!P){G.innerHTML='';return}
- const x=P.x.toFixed(1),y=P.y.toFixed(1);const lab=vise&&vise.lab?'<text x="'+(P.x>233?P.x-17:P.x+17).toFixed(1)+'" y="'+(P.y+3.6).toFixed(1)+'" text-anchor="'+(P.x>233?'end':'start')+'" font-size="10" font-family="Jost,Arial" font-weight="700" fill="#ffd66b" style="paint-order:stroke;stroke:#000;stroke-width:2.4px">'+vise.lab+'</text>':'';/* CL226 : le nom de l'astre visé sur le cadran (0,75 mm) */let guide='';if(vise&&vise.vers){const Q=window.cl22Proj&&window.cl22Proj(vise.vers.ra,vise.vers.dec,simMs());if(Q)guide='<line x1="'+x+'" y1="'+y+'" x2="'+Q.x.toFixed(1)+'" y2="'+Q.y.toFixed(1)+'" stroke="#ffd66b" stroke-width="1.2" stroke-dasharray="4 3" opacity=".85"/><circle cx="'+Q.x.toFixed(1)+'" cy="'+Q.y.toFixed(1)+'" r="4" fill="none" stroke="#ffd66b" stroke-width="1.2"/>'}/* CL227 : trait pointillé vers l'astre le plus proche quand la visée est vide */G.innerHTML=guide+lab+'<g style="filter:drop-shadow(0 0 2px #000)"><circle cx="'+x+'" cy="'+y+'" r="9" fill="none" stroke="#ffd66b" stroke-width="1.4"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="#ffd66b"/><line x1="'+(P.x-14).toFixed(1)+'" y1="'+y+'" x2="'+(P.x-10).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+(P.x+10).toFixed(1)+'" y1="'+y+'" x2="'+(P.x+14).toFixed(1)+'" y2="'+y+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y-14).toFixed(1)+'" x2="'+x+'" y2="'+(P.y-10).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y+10).toFixed(1)+'" x2="'+x+'" y2="'+(P.y+14).toFixed(1)+'" stroke="#ffd66b" stroke-width="1.4"/></g>'}
+ const x=P.x.toFixed(1),y=P.y.toFixed(1);const lab=vise&&vise.lab?'<text x="'+Math.max(70,Math.min(396,P.x)).toFixed(1)+'" y="'+(P.y<70?P.y+30:P.y-17).toFixed(1)+'" text-anchor="middle" font-size="16" font-family="Arial,sans-serif" font-weight="700" fill="#ffffff" style="paint-order:stroke;stroke:#06121f;stroke-width:3px">'+vise.lab+'</text>':'';/* CL226 : le nom de l'astre visé sur le cadran (0,75 mm) */let guide='';if(vise&&vise.vers){const Q=window.cl22Proj&&window.cl22Proj(vise.vers.ra,vise.vers.dec,simMs());if(Q)guide='<line x1="'+x+'" y1="'+y+'" x2="'+Q.x.toFixed(1)+'" y2="'+Q.y.toFixed(1)+'" stroke="#eef6ff" stroke-width="1.2" stroke-dasharray="4 3" opacity=".85"/><circle cx="'+Q.x.toFixed(1)+'" cy="'+Q.y.toFixed(1)+'" r="4" fill="none" stroke="#eef6ff" stroke-width="1.2"/>'}/* CL227 : trait pointillé vers l'astre le plus proche quand la visée est vide */G.innerHTML=guide+lab+'<g style="filter:drop-shadow(0 0 2px #000)"><circle cx="'+x+'" cy="'+y+'" r="9" fill="none" stroke="#eef6ff" stroke-width="1.4"/><circle cx="'+x+'" cy="'+y+'" r="2" fill="#eef6ff"/><line x1="'+(P.x-14).toFixed(1)+'" y1="'+y+'" x2="'+(P.x-10).toFixed(1)+'" y2="'+y+'" stroke="#eef6ff" stroke-width="1.4"/><line x1="'+(P.x+10).toFixed(1)+'" y1="'+y+'" x2="'+(P.x+14).toFixed(1)+'" y2="'+y+'" stroke="#eef6ff" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y-14).toFixed(1)+'" x2="'+x+'" y2="'+(P.y-10).toFixed(1)+'" stroke="#eef6ff" stroke-width="1.4"/><line x1="'+x+'" y1="'+(P.y+10).toFixed(1)+'" x2="'+x+'" y2="'+(P.y+14).toFixed(1)+'" stroke="#eef6ff" stroke-width="1.4"/></g>'}/* CL228 : réticule, trait et nom en blanc des étoiles ; nom à la taille de « Polaris » (16, Arial 700) *//* nom au-dessus du réticule (en dessous près du bord haut), centré, retenu dans le cadran */
 function montrer(az,alt){const ms=simMs();const {ra,dec}=radec(az,alt,ms);const T=cibles(ms).map(o=>({...o,d:sep(ra,dec,o.ra,o.dec)})).sort((a,b)=>a.d-b.d);
  const best=T[0];const box=$('cl193Box');if(!box)return;const f=v=>v.toFixed(0);
  let html='<div class="r"><span>Visée</span><span>azimut '+f(az)+'° '+rose(az)+' · hauteur '+f(alt)+'°</span></div>';
@@ -13985,9 +13985,22 @@ try{
 window.cl227={seuil:10};
 })();
 (()=>{'use strict';
-const TIT='CL227 · Viser le ciel, un nom seulement à moins de 10°';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL227')v.textContent='CL227'},300);
 })();
 }catch(e){console.error("cl227ViseeNette",e);}
+/* ───────── cl228CibleBlanche ───────── */
+try{
+/* CL228 — Viser le ciel : la cible en blanc, le nom à la taille de « Polaris » (Thierry, 11 novembre 2026, 15 h 37 : « cible de
+   couleur blanche, de même couleur que l'affichage des étoiles ; je veux la même taille que celui qui affiche POLARIS »).
+   • Le réticule, le trait pointillé et le petit cercle d'arrivée passent du doré au blanc des étoiles (#eef6ff).
+   • Le nom de l'astre visé et son écart sont écrits comme « Polaris » sur le cadran : Arial gras, corps 16 (1,2 mm sur un cadran de
+     50 mm), blanc, contour sombre. Retouches p228 (1 point dans cl193) ; ce module n'ajoute que le témoin window.cl228. */
+(()=>{'use strict';
+window.cl228={couleur:'#eef6ff',corps:16};
+})();
+(()=>{'use strict';
+const TIT='CL228 · Viser le ciel, la cible en blanc et le nom à la taille de Polaris';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL228')v.textContent='CL228'},300);
+})();
+}catch(e){console.error("cl228CibleBlanche",e);}
 </script>
 </body></html>
