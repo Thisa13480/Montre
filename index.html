@@ -14864,9 +14864,41 @@ setInterval(()=>{try{maj()}catch(e){console.warn('CL246',e)}},1000);
 window.cl246={etat:()=>({etat,n:V?V.length:0,duree:Math.round(duree),erreur,survoles:survoles.slice()}),autour:(la,lo,r)=>sansVilles(autour({la,lo},r||60)),pourHublot,charger};
 })();
 (()=>{'use strict';
-const TIT='CL246 · Les villages survolés';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL246')v.textContent='CL246'},300);
 })();
 }catch(e){console.error("cl246VillagesSurvoles",e);}
+/* ───────── cl247FaceAIROrdinateur ───────── */
+try{
+/* CL247 — La face AIR sur l'ordinateur (Thierry, 19 novembre 2026, 23 h 45 : « gros problème avec AIR sur laptop, pas moyen de faire
+   défiler le pupitre »).
+   • Diagnostic : sur un écran large, le pupitre est une colonne de hauteur fixe (celle de la fenêtre) dont seuls les onglets
+     défilent ; la face AIR pose sa carte (1 650 px : gauges, bandeau, hublot, relief, villages…) dans l'en-tête, qui ne défile pas :
+     l'en-tête atteignait 2 135 px, les onglets n'avaient plus de place, et rien ne bougeait à la molette. Sur le téléphone, la page
+     entière défile : le défaut n'y existait pas.
+   • Remède, sur les écrans de plus de 760 px et dans la face AIR seulement : le pupitre entier défile (molette ou pavé), les boutons
+     des faces (GLEASON · PRAGUE · 3D · AIR · NAVI) restent collés en haut pour revenir d'un geste, les onglets gardent une fenêtre
+     de 380 px au bas du pupitre, qui défile elle-même, et le rail garde ses onglets. Hors AIR, rien ne change.
+   • Revue d'usage : sur l'ordinateur, les six gauges (altitude, vitesse, cap, phase, dehors, vol) se serraient sur une rangée dans
+     un pupitre de 430 px (règle pensée pour la tablette) — deux rangées de trois, comme sur le téléphone.
+   • Aucune commande nouvelle ; aucun déplacement d'élément (feuille de style seule). */
+(()=>{'use strict';
+const css=document.createElement('style');css.id='cl247Css';css.textContent=`
+@media (min-width:761px){
+ html body.clx-air.v5-layout #v5Desk.cl2{overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:thin;scrollbar-color:#8a7448 transparent;overscroll-behavior:contain}
+ html body.clx-air.v5-layout #v5Desk.cl2::-webkit-scrollbar{width:8px}html body.clx-air.v5-layout #v5Desk.cl2::-webkit-scrollbar-thumb{background:#8a7448;border-radius:4px}
+ html body.clx-air.v5-layout #v5Desk.cl2 #cl2Head{flex:0 0 auto!important;min-height:0!important}
+ html body.clx-air.v5-layout #v5Desk.cl2 #cl3Cadran{position:sticky;top:0;z-index:45;background:var(--cl2-bg,#0b1520);box-shadow:0 6px 12px -6px #000c;padding-top:4px;padding-bottom:4px}
+ html body.clx-air.v5-layout #v5Desk.cl2 #cl2Main{flex:0 0 380px!important;min-height:380px!important;max-height:380px!important;height:380px!important}
+ html body.clx-air.v5-layout #v5Desk.cl2 #cl2Panels{height:auto!important;max-height:380px!important;overflow-y:auto!important}
+ html body.clx-air.v5-layout #v5Desk.cl2 #cl2Rail{overflow-y:auto!important;max-height:380px}
+}
+@media (min-width:1001px){#cl191Card .cl191g{grid-template-columns:repeat(3,1fr)!important}}/* le pupitre de l'ordinateur fait 430 px : les six gauges tenaient sur une rangée par une règle pensée pour la tablette (720 px) — deux rangées de trois, comme sur le téléphone */`;
+document.head.appendChild(css);
+window.cl247={etat:()=>{const d=document.getElementById('v5Desk');if(!d)return null;const cs=getComputedStyle(d);return {air:document.body.classList.contains('clx-air'),overflow:cs.overflowY,sh:d.scrollHeight,ch:d.clientHeight,st:d.scrollTop}}};
+})();
+(()=>{'use strict';
+const TIT='CL247 · La face AIR sur l’ordinateur';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL247')v.textContent='CL247'},300);
+})();
+}catch(e){console.error("cl247FaceAIROrdinateur",e);}
 </script>
 </body></html>
