@@ -14451,9 +14451,67 @@ let n=0;const t=setInterval(()=>{n++;try{feuille();const desk=$('v5Desk');if(des
 window.cl239={interfaces:INTERFACES.map(x=>x[0]),actuelle:lire,appliquer};
 })();
 (()=>{'use strict';
-const TIT='CL239 · Le choix de l’interface';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL239')v.textContent='CL239'},300);
 })();
 }catch(e){console.error("cl239Interface",e);}
+/* ───────── cl240DetailsHorlogers ───────── */
+try{
+/* CL240 — Les détails horlogers (Thierry, 19 novembre 2026, 10 h 55 : « oui, onglets et détails à pousser plus loin comme tu le
+   proposes » — graphisme seulement).
+   • Phase de la Lune (onglet Soleil et Lune) : un petit cadran de phase, à lunette d'or, à côté de la phrase « Lune · phase du
+     moment » — disque lunaire dont la partie éclairée est dessinée d'après la fraction éclairée et le sens (croissante / décroissante),
+     côté éclairé selon l'hémisphère du lieu de l'observateur (à Johannesburg, la Lune croissante s'éclaire par la gauche). Mis à jour
+     avec la montre. Présent dans les quatre interfaces.
+   • Lectures sur plaques (interfaces horlogères) : heure locale et fuseau, second fuseau, lecture de la vue native, chronomètre et
+     minuteur, phase et prochaine Lune, latitude et longitude — verre sombre biseauté à filet d'or (ou d'acier), chiffres clairs.
+   • Chaque onglet signe ses titres de son propre symbole (celui de son onglet dans le rail : horloge, globe, chronomètre, calendrier,
+     Soleil et Lune, télescope, cloche, micro, fiole, règle…) à la place de l'étoile ; titre « Favoris » dans la palette.
+   • Aucune commande, aucun texte, aucun corps changé. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const css=document.createElement('style');css.id='cl240Css';css.textContent=`
+#cl240Lune{position:absolute;right:16px;top:12px;width:66px;height:66px;display:block;filter:drop-shadow(0 2px 4px #000a);pointer-events:none}
+#cl2Panels #v19MoonPhaseNote.cl240n,#v5Desk #cl2Panels #v19MoonPhaseNote.cl240n{padding-right:92px!important;min-height:64px;box-sizing:border-box}
+body.cl238 #v5Desk.cl3 #v47TimeZoneInfo,body.cl238 #v5Desk.cl3 #cl66Lect,body.cl238 #v5Desk.cl3 #cl23Readout,body.cl238 #v5Desk.cl3 #cl170Lun,body.cl238 #v5Desk.cl3 #chronoState,body.cl238 #v5Desk.cl3 #v201Coords>span>span{background:linear-gradient(#050a12,#101c2c)!important;border:1px solid var(--gl)!important;border-radius:8px!important;box-shadow:inset 0 2px 4px #000d,0 1px 0 #ffffff12!important;color:var(--digit)!important;padding:5px 9px!important}
+body.cl238 #v5Desk.cl3 #v201Coords>span>span{padding:3px 8px!important;display:inline-block}
+body.cl238 #v5Desk.cl3 #v56ChronoStatus,body.cl238 #v5Desk.cl3 #timerReadout{background:linear-gradient(#050a12,#0e1a2a)!important;border:1px solid var(--acc)!important;border-radius:8px!important;box-shadow:inset 0 2px 6px #000e,0 0 0 3px var(--bz0),0 0 0 4px var(--plb)!important;color:var(--digit)!important;text-shadow:0 0 6px var(--diglow)!important;padding:6px 10px!important;letter-spacing:.04em}
+body.cl238 #v5Desk.cl3 #cl170Lun small{color:var(--loc)!important}
+html body.cl238 #v5Desk.cl3 #cl85Fav .t{color:var(--ti)!important}
+body.cl238.cl239acier #v5Desk.cl3 .cl2Panel[data-k] .cl2Grp{background-image:var(--starA)!important}
+`;document.head.appendChild(css);
+// ---- symboles des onglets dans les titres
+function symboles(){const Ps=[...document.querySelectorAll('#cl2Panels .cl2Panel[data-k]')];if(!Ps.length)return false;let n=0;
+ for(const P of Ps){if(P.dataset.cl240)continue;const b=document.querySelector('#cl2Rail button[data-k="'+P.dataset.k+'"] svg');if(!b)continue;
+  const mk=col=>{let h=b.outerHTML.replace(/\sclass="[^"]*"/g,'').replace(/\sstroke="[^"]*"/g,'').replace(/\sfill="[^"]*"/g,'').replace('<svg','<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"');return 'url("data:image/svg+xml,'+encodeURIComponent(h).replace(/'/g,'%27').replace(/\(/g,'%28').replace(/\)/g,'%29')+'")'};
+  P.style.setProperty('--star',mk('#e3c78c'));P.style.setProperty('--starA',mk('#c4ced8'));P.dataset.cl240='1';n++}
+ return n>0||Ps.every(P=>P.dataset.cl240)}
+// ---- cadran de phase
+const NS='http://www.w3.org/2000/svg';let svg=null;
+function lune(){const note=$('v19MoonPhaseNote');if(!note)return false;
+ const pont=note.closest('.cl3Pont');if(!pont)return false;/* attendre que le pont « Phase de la Lune » soit bâti (CL3) */
+ if(!svg||!svg.isConnected){svg=document.createElementNS(NS,'svg');svg.id='cl240Lune';svg.setAttribute('viewBox','0 0 80 80');svg.setAttribute('aria-hidden','true');pont.insertBefore(svg,pont.firstChild);note.classList.add('cl240n')}
+ const t=note.textContent||'';const m=t.match(/(\d+(?:[.,]\d+)?)\s*%/);let f=m?parseFloat(m[1].replace(',','.'))/100:null;if(f==null)return true;
+ const nom=t.toLowerCase();let waxing;if(/nouvelle/.test(nom))waxing=true;else if(/pleine/.test(nom))waxing=false;else if(/décroissant|dernier/.test(nom))waxing=false;else if(/croissant|premier/.test(nom))waxing=true;else waxing=true;
+ let lat=0;try{const L=window.cl23Natif&&window.cl23Natif.lieu();if(L)lat=+L[1]||0}catch(e){}
+ const litRight=waxing!==(lat<0);/* hémisphère nord : croissante éclairée à droite ; sud : à gauche */
+ const key=[f.toFixed(3),waxing,litRight].join('|');if(svg.dataset.key===key)return true;svg.dataset.key=key;
+ const cx=40,cy=40,R=22;let lit='';
+ if(f>=0.995)lit='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="url(#cl240g)"/>';
+ else if(f>0.005){const a=Math.abs(1-2*f)*R;const T=cx+','+(cy-R),B=cx+','+(cy+R);const sweep=f<0.5?0:1;lit='<path d="M'+T+' A'+R+' '+R+' 0 0 1 '+B+' A'+a.toFixed(2)+' '+R+' 0 0 '+sweep+' '+T+'Z" fill="url(#cl240g)"/>'}
+ const stars=[[14,22,.9],[66,18,.7],[20,60,.6],[62,58,.8],[52,12,.5],[30,14,.5],[12,42,.5],[68,40,.6]].map(([x,y,r])=>'<circle cx="'+x+'" cy="'+y+'" r="'+r+'" fill="#e9e2d2" opacity=".8"/>').join('');
+ svg.innerHTML='<defs><radialGradient id="cl240g" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fffaf0"/><stop offset=".7" stop-color="#e3dcc4"/><stop offset="1" stop-color="#b9b19a"/></radialGradient><radialGradient id="cl240b" cx="50%" cy="30%" r="75%"><stop offset="0" stop-color="#f6e4b4"/><stop offset=".6" stop-color="#c9a45c"/><stop offset="1" stop-color="#6d5427"/></radialGradient></defs>'+
+  '<circle cx="40" cy="40" r="39" fill="url(#cl240b)"/><circle cx="40" cy="40" r="35.5" fill="#06101c" stroke="#2a3a50" stroke-width="1"/>'+stars+
+  '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="#1b2434" stroke="#2f3b4e" stroke-width=".8"/>'+
+  '<g'+(litRight?'':' transform="translate(80 0) scale(-1 1)"')+'>'+lit+'</g>'+
+  '<circle cx="40" cy="40" r="35.5" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="2"/>';
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{symboles();lune()}catch(e){console.warn('CL240',e)}if(n>150)clearInterval(t)},400);
+setInterval(()=>{try{lune()}catch(e){}},2000);
+window.cl240={lune:()=>{const s=$('cl240Lune');return s?{key:s.dataset.key,html:s.innerHTML.length,dansPont:!!s.closest('.cl3Pont')}:null},symboles:()=>[...document.querySelectorAll('#cl2Panels .cl2Panel[data-k]')].filter(P=>P.style.getPropertyValue('--star')).map(P=>P.dataset.k)};
+})();
+(()=>{'use strict';
+const TIT='CL240 · Les détails horlogers';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL240')v.textContent='CL240'},300);
+})();
+}catch(e){console.error("cl240DetailsHorlogers",e);}
 </script>
 </body></html>
