@@ -9112,7 +9112,7 @@ function livret(){const p=panel('livret');if(!p||$('cl78Liv'))return;const w=doc
  const an=document.createElement('div');an.className='cl3Pont';an.innerHTML='<div class="cl2Grp">Anatomie du cadran</div>'+A.map((a,i)=>'<div class="cl78r"><span><b>'+(i+1)+' · '+a[0]+'</b><br><span class="cl78d">'+a[1]+'</span></span><span><button type="button" data-show="'+a[2]+'">Montrer</button><button type="button" data-set="'+a[3]+'" data-k="'+a[4]+'">Réglage</button></span></div>').join('');w.appendChild(an);
  const ver=($('cl2Title')?.querySelector('span')?.textContent||'').split('·')[0].trim();
  const ap=document.createElement('div');ap.className='cl3Pont';ap.innerHTML='<div class="cl2Grp">À propos</div><p><b>Montre GLEASON · PRAGUE</b>, version <span id="cl78Ver">'+ver+'</span>. Une très grande complication sans rouages : ses « organes » sont des moteurs de calcul (temps légal des villes, positions du Soleil, de la Lune, des planètes et des étoiles, almanach du lieu, éclipses, marées).</p>'+
-  '<p>Sources : la carte d’Alexander GLEASON (1892) ; le modèle de Walter Bislin ; pour Prague, Jan Tošovský, le simulateur de Kerry Shetline (orloj.org) et l’article de B. Popkonstantinović et al. (2021) ; pour les éclipses, Jean Meeus, vérifié sur la NASA.</p>'+
+  '<p>Sources : la carte d’Alexander GLEASON (1892) ; le modèle de Walter Bislin ; pour Prague, Jan Tošovský, le simulateur de Kerry Shetline (orloj.org) et l’article de B. Popkonstantinović et al. (2021) ; pour les éclipses, Jean Meeus, vérifié sur la NASA ; pour les villages survolés, GeoNames (geonames.org, licence CC BY 4.0).</p>'+
   '<p>Chaque commande a son « ? ». Le livret complet, à lire et à imprimer : <a href="https://claude.ai/artifact/E4LX7m9DrKihdcb9AYGQpW" target="_blank" rel="noopener">livret R05</a>.</p>';w.appendChild(ap);
  w.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;
   if(b.dataset.go)select(b.dataset.go);
@@ -13612,7 +13612,9 @@ function scene(){const A=window.cl191;const pos=A&&A.position?A.position():null;
  const S=corps('sun',ms);if(S){const a=altAz(S.ra,S.dec,ms,pos.la,pos.lo);if(a){out.soleil=a;out.nuit=a.alt<-6;out.crep=a.alt<-1&&!out.nuit;if(a.alt>h0)out.astres.push({nom:'Soleil',az:a.az,alt:a.alt,r:9,c:'#ffd98a'})}}
  const M=corps('moon',ms);if(M){const a=altAz(M.ra,M.dec,ms,pos.la,pos.lo);if(a&&a.alt>h0)out.astres.push({nom:'Lune',az:a.az,alt:a.alt,r:6,c:'#e8e8f0'})}
  if(out.nuit||out.crep)[['Vénus','venus'],['Jupiter','jupiter'],['Saturne','saturn'],['Mars','mars']].forEach(([n,k])=>{const c=corps(k,ms);if(!c)return;const a=altAz(c.ra,c.dec,ms,pos.la,pos.lo);if(a&&a.alt>h0)out.astres.push({nom:n,az:a.az,alt:a.alt,r:3,c:'#fff6d0'})});
- const V=A.villes?A.villes():[];V.forEach(v=>{const dd=dist(pos,v);if(dd>450||dd<3)return;out.villes.push({nom:v.nom,tz:v.tz,d:dd,az:cap(pos,v),rel:rel(cap(pos,v)),h:heure(v.tz,d)})});out.villes.sort((a,b)=>a.d-b.d);
+ const V=A.villes?A.villes():[];V.forEach(v=>{const dd=dist(pos,v);if(dd>450||dd<3)return;out.villes.push({nom:v.nom,tz:v.tz,d:dd,az:cap(pos,v),rel:rel(cap(pos,v)),h:heure(v.tz,d)})});
+ try{const VI=window.cl246&&window.cl246.pourHublot?window.cl246.pourHublot(pos,60):[];VI.forEach(v=>{if(v.d<3)return;out.villes.push({nom:v.nom,tz:null,d:v.d,az:cap(pos,v),rel:rel(cap(pos,v)),h:null,village:true})})}catch(e){}/* CL246 : les villages (GeoNames) à moins de 60 km, en lettres fines */
+ out.villes.sort((a,b)=>a.d-b.d);
  const G=window.cl204Geo||[];G.forEach(g=>{const c={la:g.la,lo:g.lo},r=g.r;const dd=dist(pos,c);if(dd-r>600)return;const az=cap(pos,c);const demi=dd<=r?180:Math.asin(Math.min(1,r/dd))/rad;out.geo.push({nom:g.nom,type:g.type,d:Math.max(0,dd-r),az,demi,rel:rel(az),dedans:dd<=r})});/* CL220 : la table « Survolé » est faite d'objets */
  return out}
 /* ---------- dessin ---------- */
@@ -13640,11 +13642,11 @@ function dessiner(force){const svgEl=$('cl218Svg');if(!svgEl)return;if(!document
  sc.astres.forEach(A=>{const r=dansVue(rel2(A.az,sc.H),0);if(r==null)return;const x=X(r),y=Y(A.alt);s+='<circle cx="'+x.toFixed(0)+'" cy="'+y.toFixed(0)+'" r="'+A.r+'" fill="'+A.c+'"/><text x="'+x.toFixed(0)+'" y="'+(y+A.r+13).toFixed(0)+'" font-size="11" fill="#ffe9b0" text-anchor="middle">'+A.nom+' · '+Math.round(A.alt)+'°</text>';vis.push({nom:A.nom,rel:r,type:'a',alt:A.alt})});
  /* villes : huit au plus dans la vue */
  const niv=[[],[],[]];const dansLaVue=sc.villes.map(v=>({...v,r:dansVue(v.rel,0)})).filter(v=>v.r!=null).slice(0,8);
- const hub=!boussole&&(vue==='gauche'||vue==='droite');dansLaVue.forEach(v=>{const x=X(v.r),hw=Math.max(v.nom.length*6.6,73)/2+(hub?24:4),lx=Math.max(hw,Math.min(W-hw,x));const sz=Math.max(3,8-v.d/90);const lvl=niv.findIndex(L=>L.every(nx=>Math.abs(nx-lx)>=92));if(lvl<0){s+='<circle cx="'+x.toFixed(0)+'" cy="'+hy+'" r="'+sz.toFixed(1)+'" fill="#f4dea6" stroke="#1d160a" stroke-width="1"/>';vis.push({nom:v.nom,rel:v.r,type:'v',d:v.d});return}niv[lvl].push(lx);const yb=hy-20-lvl*24;s+='<circle cx="'+x.toFixed(0)+'" cy="'+hy+'" r="'+sz.toFixed(1)+'" fill="#f4dea6" stroke="#1d160a" stroke-width="1"/><line x1="'+x.toFixed(0)+'" y1="'+(hy-sz).toFixed(0)+'" x2="'+lx.toFixed(0)+'" y2="'+yb+'" stroke="#f4dea6" stroke-width="1"/><text x="'+lx.toFixed(0)+'" y="'+(yb-14)+'" font-size="12" font-weight="600" fill="#fff" text-anchor="middle">'+v.nom+'</text><text x="'+lx.toFixed(0)+'" y="'+(yb-3)+'" font-size="10" fill="#e8dcb8" text-anchor="middle">'+Math.round(v.d)+' km'+(v.h?' · '+v.h:'')+'</text>';vis.push({nom:v.nom,rel:v.r,type:'v',d:v.d})});
+ const hub=!boussole&&(vue==='gauche'||vue==='droite');dansLaVue.forEach(v=>{const x=X(v.r),hw=Math.max(v.nom.length*6.6,73)/2+(hub?24:4),lx=Math.max(hw,Math.min(W-hw,x));const sz=v.village?2.6:Math.max(3,8-v.d/90);/* CL246 */const lvl=niv.findIndex(L=>L.every(nx=>Math.abs(nx-lx)>=92));if(lvl<0){s+='<circle cx="'+x.toFixed(0)+'" cy="'+hy+'" r="'+sz.toFixed(1)+'" fill="#f4dea6" stroke="#1d160a" stroke-width="1"/>';vis.push({nom:v.nom,rel:v.r,type:'v',d:v.d});return}niv[lvl].push(lx);const yb=hy-20-lvl*24;s+='<circle cx="'+x.toFixed(0)+'" cy="'+hy+'" r="'+sz.toFixed(1)+'" fill="#f4dea6" stroke="#1d160a" stroke-width="1"/><line x1="'+x.toFixed(0)+'" y1="'+(hy-sz).toFixed(0)+'" x2="'+lx.toFixed(0)+'" y2="'+yb+'" stroke="#f4dea6" stroke-width="1"/><text x="'+lx.toFixed(0)+'" y="'+(yb-14)+'" font-size="12" font-weight="'+(v.village?'400':'600')+'" fill="'+(v.village?'#f3ecd8':'#fff')+'" text-anchor="middle">'+v.nom+'</text><text x="'+lx.toFixed(0)+'" y="'+(yb-3)+'" font-size="10" fill="#e8dcb8" text-anchor="middle">'+Math.round(v.d)+' km'+(v.h?' · '+v.h:'')+'</text>';vis.push({nom:v.nom,rel:v.r,type:'v',d:v.d})});
  /* l'avion et le cap */
  const V=VUES[vue];s+='<text x="'+(W/2)+'" y="'+(Hh-(hub?16:6))+'" font-size="10" fill="#f0e2c0" text-anchor="middle">'+(boussole&&hdgTel!=null?'iPhone vers '+String(Math.round(hdgTel)).padStart(3,'0')+'°':V.nom)+' · cap '+(sc.hdgConnu?String(Math.round(sc.H)).padStart(3,'0')+'°':'—')+(sc.pos.v?' · '+Math.round(sc.pos.v*3.6)+' km/h':'')+(sc.pos.alt?' · '+Math.round(sc.pos.alt).toLocaleString('fr-FR')+' m':'')+'</text>';
  svgEl.setAttribute('viewBox','0 0 '+W+' '+Hh);svgEl.innerHTML=s;svgEl.classList.toggle('hublot',!boussole&&(vue==='gauche'||vue==='droite'));dernier=vis;
- if(msg&&!msg.dataset.fixe){const n=dansLaVue.length;msg.textContent=(n?n+' ville'+(n>1?'s':'')+' dans la vue':'aucune ville à moins de 450 km dans la vue')+(sc.nuit?' · nuit':sc.crep?' · crépuscule':'')+(sc.hdgConnu?'':' · cap inconnu : vue orientée au nord')}}
+ if(msg&&!msg.dataset.fixe){const n=dansLaVue.length,nvi=dansLaVue.filter(v=>v.village).length,nv=n-nvi;msg.textContent=(n?(nv?nv+' ville'+(nv>1?'s':''):'')+(nvi?(nv?' et ':'')+nvi+' village'+(nvi>1?'s':''):'')+' dans la vue':'aucune ville à moins de 450 km dans la vue')/* CL246 : villes et villages comptés à part */+(sc.nuit?' · nuit':sc.crep?' · crépuscule':'')+(sc.hdgConnu?'':' · cap inconnu : vue orientée au nord')}}
 function rel2(az,H){let a=((az-H)%360+360)%360;if(a>180)a-=360;return a}
 function dire(){const A=window.cl136Dire;if(!dernier.length){if(A)A('Rien à signaler dans cette vue.',true);return}
  const cote=r=>Math.abs(r)<20?'devant':r<0?(r<-120?'derrière à gauche':'à gauche'):(r>120?'derrière à droite':'à droite');
@@ -14793,9 +14795,78 @@ let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){conso
 window.cl245={etat:()=>({choix:lire(),colonne:document.body.classList.contains('cl245v'),menu:!!$('cl245Sel')}),choisir:v=>{try{localStorage.setItem(KEY,v)}catch(e){}appliquer()}};
 })();
 (()=>{'use strict';
-const TIT='CL245 · Le rail en colonne';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL245')v.textContent='CL245'},300);
 })();
 }catch(e){console.error("cl245RailEnColonne",e);}
+/* ───────── cl246VillagesSurvoles ───────── */
+try{
+/* CL246 — Les villages survolés (plan du rapport R10 ; Thierry, 19 novembre 2026, 21 h 39 : « Monde entier »).
+   • La source : GeoNames (geonames.org, licence CC BY 4.0), par le miroir GitHub all-the-cities — 135 233 lieux habités de 1 000
+     habitants et plus, monde entier : nom, position, pays, population. Trop lourd pour le fichier unique : il est servi à part, sur
+     le site de la montre (villages.json, 5,2 Mo, 1,9 Mo compressés), chargé une seule fois quand la face AIR est ouverte, puis gardé
+     dans la réserve du navigateur (Cache Storage) : les vols suivants ne le rechargent pas. Ouverte hors du web (fichier), la montre
+     le dit et ne se plaint pas.
+   • Face AIR, ligne « Villages » sous « Autour » : les quatre lieux les plus proches à moins de 60 km, hors les 493 villes de la
+     montre déjà dites — nom, distance, côté (devant, à gauche, à droite, derrière), habitants ; le lieu à moins de 4 km est dit
+     « sous l'avion ». Pendant le vol, la ligne garde les derniers lieux survolés (à moins de 6 km) avec l'heure.
+   • Hublot et cockpit (CL218) : les villages à moins de 60 km paraissent à leur relèvement sur l'horizon, en lettres fines (les villes
+     de la montre restent en gras), quatre au plus, les plus peuplés d'abord ; le message compte « 3 villes et 2 villages dans la vue »
+     et « Dire la vue » les nomme.
+   • Lisibilité : mêmes corps que les autres lignes de la face (12,5 px) et que les villes du hublot (12 px). Fiche « ? » de la ligne,
+     avec la source et la licence ; « À propos » du Livret cite GeoNames. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),rad=Math.PI/180,RT=6371;
+const dist=(a,b)=>{const p1=a.la*rad,p2=b.la*rad,dl=(b.lo-a.lo)*rad;const h=Math.sin((p2-p1)/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*RT*Math.asin(Math.sqrt(h))};
+const cap=(a,b)=>{const p1=a.la*rad,p2=b.la*rad,dl=(b.lo-a.lo)*rad;const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return ((Math.atan2(y,x)/rad)+360)%360};
+const plat=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const URLV=(()=>{try{return new URL('villages.json',location.href).href}catch(e){return 'villages.json'}})();
+let etat='attente',V=null,grille=null,erreur='',t0=0,duree=0;
+function indexer(){grille=new Map();for(let i=0;i<V.length;i++){const v=V[i];const k=(Math.floor(v[1])+90)*360+(Math.floor(v[2])+180);let a=grille.get(k);if(!a){a=[];grille.set(k,a)}a.push(i)}}
+async function charger(){if(etat!=='attente')return;if(location.protocol==='file:'){etat='horsLigne';return}etat='chargement';t0=performance.now();
+ try{let res=null,cache=null;try{if('caches' in window)cache=await caches.open('gleason-villages-1')}catch(e){cache=null}
+  if(cache){try{res=await cache.match(URLV)}catch(e){res=null}}
+  if(!res){res=await fetch(URLV);if(!res.ok)throw new Error('HTTP '+res.status);if(cache){try{await cache.put(URLV,res.clone())}catch(e){}}}
+  const j=await res.json();V=j.v||j;indexer();duree=performance.now()-t0;etat='pret'}catch(e){etat='erreur';erreur=String(e&&e.message||e)}}
+/* lieux à moins de « rayon » km, par les cases de la grille d'un degré */
+function autour(pos,rayon){if(!V||!grille)return [];const la0=Math.floor(pos.la),lo0=Math.floor(pos.lo);const dLa=Math.ceil(rayon/111),dLo=Math.min(180,Math.ceil(rayon/(111*Math.max(0.08,Math.cos(pos.la*rad)))));const out=[];
+ for(let a=la0-dLa;a<=la0+dLa;a++){if(a<-90||a>89)continue;for(let o=lo0-dLo;o<=lo0+dLo;o++){const oo=((o+180)%360+360)%360-180;const cell=grille.get((a+90)*360+(oo+180));if(!cell)continue;for(const i of cell){const v=V[i];const d=dist(pos,{la:v[1],lo:v[2]});if(d<=rayon)out.push({nom:v[0],la:v[1],lo:v[2],cc:v[3],pop:v[4],d})}}}
+ out.sort((x,y)=>x.d-y.d);return out}
+/* les 493 villes de la montre sont déjà dites ailleurs : on les écarte (même nom à moins de 30 km, ou même point) */
+let villesMontre=null;function sansVilles(L){if(!villesMontre){const A=window.cl191;villesMontre=(A&&A.villes?A.villes():[]).map(v=>({n:plat(v.nom),la:v.la,lo:v.lo}))}
+ return L.filter(x=>{const n=plat(x.nom);return !villesMontre.some(c=>(c.n===n&&dist(c,x)<30)||dist(c,x)<2.5)})}
+const hab=p=>p>=1e6?(p/1e6).toFixed(1).replace('.',',').replace(',0','')+'\u00a0M\u00a0hab.':p.toLocaleString('fr-FR')+'\u00a0hab.';
+const cote=rel=>{rel=((rel%360)+360)%360;return rel<30||rel>330?'devant':rel<150?'à droite':rel<210?'derrière':'à gauche'};
+const hm=ms=>{try{const A=window.cl191,p=A&&A.position?A.position():null;const d=new Date(ms);return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+/* ---- ligne « Villages » de la face AIR */
+let survoles=[],dernierVol=false,dernierTxt='';
+function poser(){if($('cl246Row'))return true;const a=$('cl200Autour');if(!a)return false;const r=a.closest('.cl191l');if(!r)return false;const row=document.createElement('div');row.className='cl191l';row.id='cl246Row';row.innerHTML='<span>Villages</span><b id="cl246Sous">—</b>';r.after(row);return true}
+function maj(){const b=$('cl246Sous');if(!b)return;const A=window.cl191;const air=document.body.classList.contains('clx-air');if(!air){return}
+ const pos=A&&A.position?A.position():null;let txt;
+ if(etat==='attente'&&pos)charger();
+ if(!pos)txt='—';
+ else if(etat==='horsLigne')txt='Avec la montre en ligne (thisa13480.github.io/Montre) : 135 000 lieux du monde, chargés une fois.';
+ else if(etat==='chargement')txt='Chargement des villages du monde (1,9 Mo, une seule fois)…';
+ else if(etat==='erreur')txt='Villages indisponibles pour l’instant (réseau) · '+erreur;
+ else{const e=A.etat?A.etat():{};const vol=!!e.vol;if(vol&&!dernierVol)survoles=[];dernierVol=vol;
+  let hdg=pos.cap!=null&&isFinite(pos.cap)?pos.cap:null;if(hdg==null&&A.route){const r=A.route();if(r)hdg=r.cap}
+  const L=sansVilles(autour(pos,60));const now=(window.v54GetGleasonInstant?window.v54GetGleasonInstant():new Date()).getTime();
+  if(vol)L.filter(x=>x.d<=6).forEach(x=>{if(!survoles.some(s=>s.nom===x.nom)){survoles.push({nom:x.nom,pop:x.pop,t:now});if(survoles.length>8)survoles.shift()}});
+  const q=L.slice(0,4).map(x=>{const r=hdg!=null?cote(cap(pos,x)-hdg):null;return (x.d<=4?'sous l’avion : ':'')+x.nom+' · '+Math.round(x.d)+' km'+(r?' '+r:'')+' · '+hab(x.pop)});
+  txt=q.length?q.join('<br>'):'aucun lieu habité de 1 000 habitants à moins de 60 km';
+  if(vol&&survoles.length)txt+='<br><span class="cl246s">Survolés : '+survoles.slice().reverse().map(s=>s.nom+' '+hm(s.t)).join(' · ')+'</span>'}
+ if(txt!==dernierTxt){dernierTxt=txt;b.innerHTML=txt}}
+const css=document.createElement('style');css.id='cl246Css';css.textContent='#cl246Row{position:relative;padding-right:36px!important}#cl246Row>button.cl45-info{position:absolute;right:0;top:3px;margin:0!important}#cl246Row b{font-weight:500}#cl246Row .cl246s{display:block;margin-top:2px;font-size:11.5px;color:#cdbf9a}body.cl241papier #v5Desk #cl246Row .cl246s{color:#6a5a3a}';document.head.appendChild(css);
+/* ---- pour le hublot (CL218) : six villages au plus à moins de 120 km, les plus peuplés */
+function pourHublot(pos,rayon){if(etat!=='pret')return [];const L=sansVilles(autour(pos,rayon||60));L.sort((a,b)=>b.pop-a.pop);return L.slice(0,4)}/* à 11 km d'altitude, un village se distingue à quelques dizaines de kilomètres : 60 km, quatre au plus, pour ne pas encombrer l'horizon */
+/* ---- fiche « ? » */
+function aide(){const A=window.cl45Aide;if(!A||!$('cl246Row'))return false;if(!A.AIDE.some(e=>e.k==='cl246'))A.AIDE.push({k:'cl246',sel:'#cl246Row>span',p:1,t:'Villages',x:'Les lieux habités sous l’avion et autour, au-delà des 493 villes de la montre : les quatre plus proches à moins de 60 km, avec la distance, le côté (devant, à gauche, à droite, derrière) et le nombre d’habitants ; à moins de 4 km, « sous l’avion ». Pendant le vol, la ligne garde les derniers lieux survolés avec l’heure. Dans le hublot et le cockpit, les villages à moins de 60 km paraissent en lettres fines à leur relèvement (quatre au plus).\n\nSource : GeoNames (geonames.org), 135 233 lieux de 1 000 habitants et plus, monde entier — licence CC BY 4.0. Le fichier (1,9 Mo) est servi par le site de la montre et chargé une seule fois ; ouverte hors du web, la montre s’en passe.\n\nOù le voir : face AIR, ligne « Villages », et le hublot.'});try{A.install()}catch(e){}return true}
+let n=0;const t=setInterval(()=>{n++;try{poser();aide()}catch(e){console.warn('CL246',e)}if(($('cl246Row')&&document.querySelector('button.cl45-info[data-k="cl246"]'))||n>400)clearInterval(t)},150);
+setInterval(()=>{try{maj()}catch(e){console.warn('CL246',e)}},1000);
+window.cl246={etat:()=>({etat,n:V?V.length:0,duree:Math.round(duree),erreur,survoles:survoles.slice()}),autour:(la,lo,r)=>sansVilles(autour({la,lo},r||60)),pourHublot,charger};
+})();
+(()=>{'use strict';
+const TIT='CL246 · Les villages survolés';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL246')v.textContent='CL246'},300);
+})();
+}catch(e){console.error("cl246VillagesSurvoles",e);}
 </script>
 </body></html>
