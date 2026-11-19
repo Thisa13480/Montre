@@ -14593,7 +14593,7 @@ body.cl241papier #cl237Sheet .cl237H b{color:#6a4a10}body.cl241papier #cl237Shee
 /* encre : classes posées par balayage sur les textes clairs codés en dur */
 .cl241ink{color:#1b1407!important}.cl241or{color:#7a5a1a!important}.cl241vert{color:#1f6a2a!important}.cl241rouge{color:#8a1f1a!important}.cl241bleu{color:#1f4a8f!important}
 `;document.head.appendChild(css);
-const DARK='#v56ChronoStatus,#timerReadout,#v47TimeZoneInfo,#cl66Lect,#cl23Readout,#cl170Lun,#chronoState,#v201Coords,.cl191g,.v6-editor,svg,button,select,option,.cl45-info,.cl137m,#cl45Pop,.cl237S,input,textarea,#cl218Svg,#cl220Svg,#cl203Sis,#cl137Card,.cl2Grp';
+const DARK='#v56ChronoStatus,#timerReadout,#v47TimeZoneInfo,#cl66Lect,#cl23Readout,#cl170Lun,#chronoState,#v201Coords,.cl191g,.v6-editor,svg,button,select,option,.cl45-info,.cl137m,#cl45Pop,.cl237S,input,textarea,#cl218Svg,#cl220Svg,#cl203Sis,#cl137Card,.cl2Grp,#cl206Pan,#cl137Log,#cl136Txt';/* CL245 : le menu des villes de la face AIR (feuille sombre) et les deux plaques de l'onglet Voix gardent leurs textes clairs */
 const CL=['cl241ink','cl241or','cl241vert','cl241rouge','cl241bleu'];
 function teinte(c){const m=c.match(/\d+(\.\d+)?/g);if(!m||m.length<3)return null;const [r,g,b]=m.map(Number);if(m.length>3&&+m[3]===0)return null;const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};const L=.2126*f(r)+.7152*f(g)+.0722*f(b);if(L<0.3)return null;
  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx?(mx-mn)/mx:0;if(sat<0.22)return 'cl241ink';let h=0;const d=mx-mn;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360}
@@ -14732,9 +14732,70 @@ setInterval(lecture,1000);setTimeout(lecture,600);
 window.cl244={mouvements:()=>mouv,depuis:()=>depuis,dernier:()=>dernier,erreurs:()=>(window.__clErr||[]).slice()};
 })();
 (()=>{'use strict';
-const TIT='CL244 · La quiétude du pupitre';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL244')v.textContent='CL244'},300);
 })();
 }catch(e){console.error("cl244Quietude",e);}
+/* ───────── cl245RailEnColonne ───────── */
+try{
+/* CL245 — Le rail en colonne (Thierry, 19 novembre 2026, 14 h 12 : « ok pour les deux pistes » — la seconde piste du lot graphisme,
+   d'après les images Google : sur le téléphone, les onglets en colonne d'icônes d'or le long du pupitre, au lieu du bandeau à faire
+   défiler ; 18 h 43 : « Go 245 »).
+   • Cadran › Habillage, sous Interface : menu « Onglets » — « En bandeau » (comme avant) ou « En colonne ». Mémorisé
+     dans l'appareil (cl245Rail). Le menu n'apparaît que sur un écran de téléphone (≤ 760 px) : sur l'ordinateur, le rail est déjà
+     en colonne.
+   • En colonne : les dix onglets tiennent sous les yeux d'un coup (plus rien à faire défiler), chacun avec son icône d'or et son nom
+     sur une ou deux lignes ; la colonne coûte un cinquième de la largeur (76 px) et reste collée en haut pendant qu'on fait défiler
+     l'onglet ; sur un écran bas (téléphone couché), la colonne défile elle-même. Les onglets (ponts, barres Disposition, pastilles)
+     prennent le reste de la largeur.
+   • Sur l'ordinateur, les noms du rail ne sont plus coupés par des points de suspension (« Heure et… », « Chronog… ») : ils passent
+     sur deux lignes, le rail s'élargit de 68 à 84 px.
+   • Revue d'usage Papier, seconde passe (Thierry, 19 h 32, capture du menu des villes de la face AIR illisible : « aucun affichage
+     des villes… contrôler le reste ») — audit de contraste de tous les onglets, faces et feuilles (contraste.js) et relevé des boîtes
+     sombres (boites.js) : le menu des villes (feuille sombre) et les deux plaques de l'onglet Voix gardent leurs textes clairs (hors
+     encrage) ; les panneaux encore sombres deviennent papier : Données astronomiques (Soleil et Lune), Vue de l'observateur, Projection,
+     Étoiles et constellations, Assombrir le cadran (Ciel), Contrôle du temps sidéral (Atelier) ; « Lat. » et « Long. » (Heure et lieu)
+     encrés ; suffixes « ° S » « ° E » clairs dans leur plaque.
+   • Fiche « ? » du menu. Aucune commande déplacée après le montage (le menu est posé une fois, à côté d'Interface). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),KEY='cl245Rail';
+const lire=()=>{try{return localStorage.getItem(KEY)==='colonne'?'colonne':'bandeau'}catch(e){return 'bandeau'}};
+const css=document.createElement('style');css.id='cl245Css';css.textContent=`
+html body.cl241papier #v5Desk #v201Coords{color:#1b1407!important}/* revue d'usage : en Papier, « Lat. » et « Long. » restaient clairs sur le papier (couleur en ligne du conteneur, hors encrage) */
+/* revue d'usage Papier, seconde passe (Thierry, 19 h 32 : « aucun affichage des villes… contrôler le reste ») : les panneaux encore sombres deviennent papier */
+html body.cl241papier #v5Desk.cl3 #cl2Panels details:not(.cl2Flat),html body.cl241papier #v5Desk #cl2Panels #v205AstroPanel,html body.cl241papier #v5Desk #cl2Panels #cl23Panel,html body.cl241papier #v5Desk #cl2Panels #cl63Proj,html body.cl241papier #v5Desk #cl2Panels #v216AuditPanel{background:#efe6cf!important;background-image:none!important;border:1px solid #c9b486!important;color:#1b1407!important;box-shadow:inset 0 1px 0 #fff8!important}/* tous les volets (details) du pupitre : la règle CL3 les faisait bleu nuit */
+html body.cl241papier #v5Desk.cl3 #cl2Panels details:not(.cl2Flat)>summary{color:#6a4a10!important}
+html body.cl241papier #v5Desk #v205AstroPanel h4,html body.cl241papier #v5Desk #v205AstroPanel div,html body.cl241papier #v5Desk #v205AstroPanel span:not([id$='Cardinal']),html body.cl241papier #v5Desk #cl23Panel label,html body.cl241papier #v5Desk #cl23Panel span,html body.cl241papier #v5Desk #cl63Proj label,html body.cl241papier #v5Desk #v216AuditPanel p{color:#1b1407!important}
+html body.cl241papier #v5Desk #v204LatCardinal,html body.cl241papier #v5Desk #v204LonCardinal{color:#e4eef4!important}
+html body.cl241papier #v5Desk #cl137Log,html body.cl241papier #v5Desk #cl137Log *,html body.cl241papier #v5Desk #cl136Txt,html body.cl241papier #v5Desk #cl136Txt *{color:#efe7d4!important}/* plaques de l'onglet Voix : texte clair sur verre sombre *//* suffixes « ° S » « ° E » dans leur petite plaque sombre */
+html body.cl241papier #v5Desk #v205AstroPanel hr,html body.cl241papier #v5Desk #v205AstroPanel [style*='border-top']{border-color:#c9b486!important}
+#cl245Lab{display:flex;align-items:center;gap:8px;margin:2px 0 8px}#cl245Lab>span{min-width:62px}#cl245Sel{max-width:134px}
+@media (min-width:761px){#cl245Lab{display:none!important}
+ html body #v5Desk.cl3 #cl2Rail,html body.cl122P #v5Desk #cl2Rail#cl2Rail#cl2Rail#cl2Rail{width:84px!important;flex-basis:84px!important}
+ html body.cl122P #v5Desk #cl2Rail#cl2Rail#cl2Rail#cl2Rail button[data-k],html body #v5Desk.cl3 #cl2Rail button{width:100%!important;min-width:0!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.15!important;hyphens:auto;-webkit-hyphens:auto;padding-left:3px!important;padding-right:3px!important}}
+@media (max-width:760px){
+ html body.cl245v.v5-layout #v5Desk #cl2Main{flex-direction:row!important;align-items:flex-start!important}
+ html body.cl245v #cl2Rail#cl2Rail#cl2Rail#cl2Rail,html body.cl245v.cl122P #cl2Rail#cl2Rail#cl2Rail#cl2Rail{order:-1;flex:0 0 76px!important;width:76px!important;flex-direction:column!important;justify-content:flex-start!important;align-items:stretch!important;position:sticky;top:6px;z-index:40;max-height:calc(100vh - 12px);overflow-y:auto!important;overflow-x:hidden!important;gap:5px!important;padding:8px 3px!important;border-bottom:0!important;border-right:1px solid #6d5a33;border-radius:0 12px 12px 0;mask-image:none!important;-webkit-mask-image:none!important;scrollbar-width:none;overscroll-behavior:contain}
+ html body.cl245v #cl2Rail::-webkit-scrollbar{display:none}
+ html body.cl245v #cl2Rail#cl2Rail#cl2Rail#cl2Rail button[data-k],html body.cl245v.cl122P #cl2Rail#cl2Rail#cl2Rail#cl2Rail button[data-k]{width:100%!important;min-width:0!important;flex:0 0 auto!important;min-height:56px!important;padding:7px 2px 5px!important;font-size:9.5px!important;letter-spacing:0!important;line-height:1.15!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;hyphens:auto;-webkit-hyphens:auto;text-align:center}
+ html body.cl245v #cl2Rail#cl2Rail#cl2Rail#cl2Rail button[data-k] svg,html body.cl245v.cl122P #cl2Rail#cl2Rail#cl2Rail#cl2Rail button[data-k] svg{width:25px!important;height:25px!important;margin:0 auto 3px!important}
+ html body.cl245v.v5-layout #v5Desk #cl2Panels{flex:1 1 auto!important;min-width:0!important;width:auto!important}
+ html body.cl245v #cl2Panels .vgrid{grid-template-columns:1fr!important}html body.cl245v #cl2Panels #cl212Row,html body.cl245v #cl2Panels #cl124Row{flex-wrap:wrap;row-gap:4px}html body.cl245v #cl2Panels #cl212Row{margin-left:8px!important}html body.cl245v #cl2Panels #cl212Row>span{flex:1 0 100%}html body.cl245v #cl2Panels #cl239Sel,html body.cl245v #cl2Panels #cl245Sel{max-width:128px!important}html body.cl245v #cl2Panels #cl239Lab>span,html body.cl245v #cl2Panels #cl245Lab>span{min-width:56px}/* l'onglet, un cinquième plus étroit : grilles à une colonne, les deux lignes qui débordaient passent à la ligne, menus d'Habillage bornés */
+}`;
+document.head.appendChild(css);
+function appliquer(){const v=lire();document.body.classList.toggle('cl245v',v==='colonne');const s=$('cl245Sel');if(s&&s.value!==v)s.value=v}
+appliquer();
+function ui(){if($('cl245Sel'))return true;const ref=$('cl239Lab');if(!ref||!ref.isConnected)return false;
+ const l=document.createElement('label');l.id='cl245Lab';l.lang='fr';l.innerHTML='<span>Onglets</span><select id="cl245Sel" aria-label="Disposition du rail des onglets sur le téléphone"><option value="bandeau">En bandeau</option><option value="colonne">En colonne</option></select>';
+ ref.after(l);const s=l.querySelector('select');s.value=lire();s.addEventListener('change',()=>{try{localStorage.setItem(KEY,s.value)}catch(e){}appliquer()});
+ const r=$('cl2Rail');if(r&&!r.lang)r.lang='fr';/* césure française des noms d'onglets (Safari) */
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(e=>e.k==='cl245'))A.AIDE.push({k:'cl245',sel:'#cl245Lab',t:'Onglets',x:'Menu (sur le téléphone) :\n• En bandeau (par défaut) — les onglets en ligne au-dessus du pupitre, à faire défiler du doigt ; le bandeau reste visible pendant qu’on parcourt l’onglet.\n• En colonne — les dix onglets le long du pupitre, chacun avec son icône d’or et son nom ; tous sous les yeux d’un coup, plus rien à faire défiler. La colonne prend un cinquième de la largeur et reste collée en haut ; sur un écran bas (téléphone couché), elle défile elle-même.\n\nLe choix est mémorisé dans l’appareil. Sur l’ordinateur, le rail est déjà en colonne : le menu n’y apparaît pas.\n\nOù le voir : le rail des onglets, en haut ou à gauche du pupitre.'});
+ try{A&&A.install()}catch(e){}return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL245',e)}if(n>200)clearInterval(t)},150);
+window.cl245={etat:()=>({choix:lire(),colonne:document.body.classList.contains('cl245v'),menu:!!$('cl245Sel')}),choisir:v=>{try{localStorage.setItem(KEY,v)}catch(e){}appliquer()}};
+})();
+(()=>{'use strict';
+const TIT='CL245 · Le rail en colonne';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL245')v.textContent='CL245'},300);
+})();
+}catch(e){console.error("cl245RailEnColonne",e);}
 </script>
 </body></html>
