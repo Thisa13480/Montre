@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr"><head>
-<style id="cl242Rideau">body:not(.cl242pret) #v5Desk{opacity:0!important;pointer-events:none!important}#v5Desk{transition:opacity .5s ease}</style><!-- CL242 : rideau d'ouverture, le pupitre n'apparaît qu'une fois monté -->
+<!-- CL242 : rideau retiré par la CL243 (« supprimer toute attente ») ; la mesure de montage reste (window.cl242) -->
 <!-- CL78 · Pupitre_En_Livret_10_Onglets -->
 <!-- CL77 · Eclipses_A_Venir -->
 <!-- CL76 · Grande_Date_Regate_Reinitialiser -->
@@ -1466,7 +1466,7 @@ html{background:#0a111a}
 /* ===== cl134CSS ===== */
 /* CL134 — ouverture sans oscillation */
 #cl2Title span{display:block;min-height:2.5em}
-body:not(.cl134ok) #v5Desk,body:not(.cl134ok) #watch{opacity:0;animation:cl134vu .45s ease 3.5s forwards}
+body:not(.cl134ok) #v5Desk,body:not(.cl134ok) #watch{opacity:0;animation:cl134vu .45s ease 2.6s forwards}
 @keyframes cl134vu{to{opacity:1}}
 #v5Desk,#watch{transition:opacity .45s ease}
 /* la colonne « Affichage carte » de l’en-tête, vidée en cours de montage, ne s’ouvre plus quelques secondes */
@@ -6475,7 +6475,7 @@ function build(){
   const notes=[desk.querySelector('.v105note'),desk.querySelector('.v120hint'),$('v93MoonStatus')].filter(el=>el&&!P.labo.contains(el));
   const ng=P.labo.querySelector('.cl2Grp[data-g=notes]');notes.forEach(el=>ng?P.labo.insertBefore(el,ng.nextSibling):P.labo.appendChild(el));
  }
- setTimeout(relocateLabo,1200);setTimeout(relocateLabo,3500);
+ setTimeout(relocateLabo,500);setTimeout(relocateLabo,1200);setTimeout(relocateLabo,3500);
  function select(k){
   const prague=document.body.classList.contains('v5-prague');
   if((prague&&['carte','astres','ciel'].includes(k))||(!prague&&k==='prague'))k='temps';
@@ -6670,16 +6670,17 @@ function header(){
 }
 function ponts(){
  const P=k=>document.querySelector('.cl2Panel[data-k="'+k+'"]');
- const addGrp=(k,txt,before)=>{const p=P(k);if(!p)return;const g=document.createElement('div');g.className='cl2Grp';g.textContent=txt;const ref=before?p.querySelector(before):null;if(ref)p.insertBefore(g,ref);else p.prepend(g);};
+ const addGrp=(k,txt,before)=>{const p=P(k);if(!p)return;if([...document.querySelectorAll('.cl2Panel .cl2Grp')].some(x=>x.textContent.replace(/\?/g,'').trim()===txt))return;/* CL243 : rejouable, un groupe n'est posé qu'une fois */const g=document.createElement('div');g.className='cl2Grp';g.textContent=txt;const ref=before?p.querySelector(before):null;if(ref)p.insertBefore(g,ref);else p.prepend(g);};
  addGrp('carte','Carte et cadran',':scope>.vonly.gleason');
  addGrp('lieu','Ville et fuseau',null);
  addGrp('astres','Soleil et Lune',':scope>.vonly.gleason');
  addGrp('ciel','Astres du ciel',':scope>.vonly.gleason');
  addGrp('outils','Chronomètre et minuteur',null);
- const moon=$('v19MoonPhaseNote');if(moon&&P('astres')){const g=document.createElement('div');g.className='cl2Grp';g.textContent='Phase de la Lune';P('astres').insertBefore(g,moon);}
+ const moon=$('v19MoonPhaseNote');if(moon&&P('astres')&&moon.parentElement===P('astres')&&![...P('astres').querySelectorAll('.cl2Grp')].some(x=>/Phase de la Lune/.test(x.textContent))){const g=document.createElement('div');g.className='cl2Grp';g.textContent='Phase de la Lune';P('astres').insertBefore(g,moon);}/* CL243 : idem */
  document.querySelectorAll('.cl2Panel').forEach(p=>{
   const kids=[...p.children];let cur=null;
   kids.forEach(el=>{
+   if(el.classList.contains('cl3Pont')){cur=null;return}/* CL243 : ponts() peut être rejoué — un pont déjà posé ferme le groupe courant */
    if(el.classList.contains('cl2Grp')){cur=document.createElement('div');cur.className='cl3Pont';p.insertBefore(cur,el);vis(cur,{left:'6px'});vis(cur,{right:'6px'});cur.appendChild(el);}
    else if(cur)cur.appendChild(el);
   });
@@ -6701,7 +6702,7 @@ function init(){
  const tt=document.querySelector('#cl2Title strong');if(tt)tt.textContent='Pupitre astronomique';
  header();
  vis(desk,{top:'8px',left:'8px'});vis(desk,{top:'8px',right:'8px'});vis(desk,{bottom:'8px',left:'8px'});vis(desk,{bottom:'8px',right:'8px'});
- setTimeout(()=>{['v201LatDisplay','v201LonDisplay'].forEach(id=>{const e=$(id);if(e){e.style.setProperty('background','#03070b','important');e.style.setProperty('border-color','#4a3f2b','important');e.style.setProperty('color','#efe7d6','important');}});ponts();stripEmoji(desk);stripEmoji($('faceSwitcher')||document.createElement('i'));ranges();},2600);
+ const tard=()=>{['v201LatDisplay','v201LonDisplay'].forEach(id=>{const e=$(id);if(e){e.style.setProperty('background','#03070b','important');e.style.setProperty('border-color','#4a3f2b','important');e.style.setProperty('color','#efe7d6','important');}});ponts();stripEmoji(desk);stripEmoji($('faceSwitcher')||document.createElement('i'));ranges();};[250,1200,2600].forEach(d=>setTimeout(tard,d));/* CL243 : les ponts dès 0,25 s (plus 2,6 s d'attente), repris à 1,2 et 2,6 s pour les groupes arrivés depuis */
  document.addEventListener('input',e=>{if(e.target.type==='range')ranges();},true);
  setInterval(ranges,700);
  let pend=false;
@@ -7920,7 +7921,7 @@ function install(){let n=0;for(const e0 of AIDE){const list=e0.all?targetsAll(e0
  else a.after(b);n++;}}
  place();return n;}
 setInterval(place,300);window.addEventListener('scroll',place,true);window.addEventListener('resize',place);
-[1500,3000,5000,8000,12000].forEach(d=>setTimeout(install,d));
+[400,800,1500,3000,5000,8000,12000].forEach(d=>setTimeout(install,d));/* CL243 */
 document.addEventListener('click',ev=>{if(ev.target.closest&&ev.target.closest('[role=tab],summary'))setTimeout(install,150)});
 window.cl45Aide={install,AIDE};
 })();
@@ -9108,7 +9109,7 @@ function montrer(z){const ov=document.querySelector('#watch svg.overlay');if(!ov
  g.innerHTML='<g stroke="#ffd36b" style="filter:drop-shadow(0 0 4px #ffd36b)">'+S+'</g>';g.animate([{opacity:0},{opacity:1},{opacity:.2},{opacity:1},{opacity:0}],{duration:2600});setTimeout(()=>{if(g)g.innerHTML=''},2600)}
 // aides : les pastilles de l’en-tête déplacées passent dans le texte
 function aides(){const A=window.cl45Aide;if(!A)return;let ch=false;for(const k of ['guichet','finition','aiguilles']){const e=A.AIDE.find(x=>x.k===k);if(e&&e.h){e.h=0;document.querySelectorAll('button.cl45-info[data-k="'+k+'"]').forEach(b=>b.remove());ch=true}}if(ch)A.install()}
-let n=0;const t=setInterval(()=>{n++;if(n>=10){try{structure();aides()}catch(e){console.warn('CL78',e)}}if(n>40)clearInterval(t)},400);
+let n=0;const t=setInterval(()=>{n++;if(n>=1){try{structure();aides()}/* CL243 : dès 0,4 s, plus 4 s d'attente */catch(e){console.warn('CL78',e)}}if(n>40)clearInterval(t)},400);
 setInterval(()=>{try{if($('cl2Rail'))structure()}catch(e){}},3000);
 const AI=window.cl45Aide;if(AI){const e={k:'cl78liv',sel:'#cl78Liv .cl2Grp',t:'Livret',x:'Le mode d’emploi intégré à la montre.\n\n• Sommaire — les dix onglets du pupitre, dans l’ordre du livret d’une grande complication ; « Ouvrir » y mène.\n• Anatomie du cadran — chaque élément du cadran : « Montrer » le fait clignoter sur le cadran, « Réglage » ouvre l’onglet et désigne la commande.\n• À propos — la version, les sources et les calculs ; le lien vers le livret complet (R05), à lire et à imprimer.'};if(!AI.AIDE.find(x=>x.k===e.k))AI.AIDE.push(e);[5000,8000].forEach(d=>setTimeout(()=>AI.install(),d))}
 })();
@@ -9823,7 +9824,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
  clearTimeout(tm);const n=remettre(P);b.classList.remove('arm');arme=null;b.classList.add('fait');b.textContent='Fait : '+n+' réglage'+(n>1?'s':'')+' remis';setTimeout(()=>{b.classList.remove('fait');b.textContent=b.dataset.t},1800);
  n0.textContent=n+' réglage'+(n>1?'s':'')+' remis à l’origine.';setTimeout(()=>{n0.textContent='Remet les commandes de cet onglet seulement dans l’état d’une montre neuve. Les autres onglets et les mesures en cours ne changent pas.'},6000)},true);
 const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl89')){A.AIDE.push({k:'cl89',sel:'.cl89Card .cl2Grp',t:'Réglages d’origine',x:'Chaque onglet a son bouton de remise à zéro, en bas.\n\n• Premier appui — le bouton passe au rouge et dit combien de réglages diffèrent de l’origine.\n• Second appui, dans les dix secondes — ces réglages reprennent leur valeur d’une montre neuve (celle marquée « par défaut » dans les explications).\n\nSeul l’onglet ouvert est concerné : les autres onglets, l’heure affichée et les mesures en cours (chronomètre, minuteur) ne changent pas. Pour tout remettre à zéro d’un coup, « Réinitialiser les préférences » (Atelier) efface tous les réglages et recharge la montre.'});[1500,4000,8000].forEach(d=>setTimeout(()=>A.install(),d))}
-setInterval(()=>{try{placer()}catch(e){}},1500);
+[300,800].forEach(d=>setTimeout(()=>{try{placer()}catch(e){}},d));setInterval(()=>{try{placer()}catch(e){}},1500);/* CL243 */
 window.cl89Test=k=>{const P=document.querySelector('.cl2Panel[data-k="'+k+'"]');return P?ecarts(P).map(x=>x[0].id+'→'+x[1]):null};
 })();
 }catch(e){console.error("cl89Reinit",e);}
@@ -10893,7 +10894,7 @@ function build(){if($('cl122Pastilles'))return true;const P=document.querySelect
  const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl122')){A.AIDE.push({k:'cl122',id:'cl122Pastilles',t:'Bandeau en pastilles colorées',x:'• coché (par défaut) — chaque onglet du bandeau est une pastille encadrée, comme le bouton « Choisir mes favoris », avec un grand pictogramme de la couleur de son thème : Livret ivoire, Heure et lieu rouge, Cadran doré, Chronographe turquoise, Calendrier corail, Soleil et Lune orange, Ciel violet, Sonneries vert, Atelier acier. L’onglet ouvert est plein et doré et vient se placer au milieu du bandeau ; le fondu au bord droit signale qu’on peut faire défiler pour voir les autres.\n• décoché — l’ancien bandeau plat, plus discret.\n\nDans les deux cas, un appui court sans glisser ouvre l’onglet dès que le doigt se lève.\n\nOù le voir : le bandeau des onglets, en haut du pupitre.'});[300,2500].forEach(d=>setTimeout(()=>A.install(),d))}
  return true}
 let n=0;const t=setInterval(()=>{n++;try{if(build()){appl();if(n>3)clearInterval(t)}}catch(e){console.warn('CL122',e)}if(n>60)clearInterval(t)},500);
-setInterval(appl,1500);setTimeout(centre,4000);
+setInterval(appl,1500);setTimeout(centre,1200);setTimeout(centre,4000);
 })();
 }catch(e){console.error("cl122Bandeau",e);}
 
@@ -11157,7 +11158,7 @@ window.cl134Titre=v=>{const s=document.querySelector('#cl2Title span');if(s)D.se
 // fondu d'ouverture : on attend que la mise en page soit calme
 let calme=performance.now();const fin=()=>document.body.classList.add('cl134ok');
 try{new PerformanceObserver(l=>{for(const e of l.getEntries())if(e.value>0.002)calme=performance.now()}).observe({type:'layout-shift',buffered:true})}catch(e){}
-const t0=performance.now();const iv=setInterval(()=>{const n=performance.now();if((n-calme>400&&n-t0>700)||n-t0>3000){clearInterval(iv);fin()}},100);
+const t0=performance.now();const iv=setInterval(()=>{const n=performance.now();if((n-calme>250&&n-t0>300&&document.body.classList.contains('cl242pret'))||n-t0>2500)/* CL243 : la montre paraît dès que le pupitre est monté et la page calme, 2,5 s au plus */{clearInterval(iv);fin()}},100);
 })();
 }catch(e){console.error("cl134OuvertureStable",e);}
 
@@ -14611,7 +14612,7 @@ try{
 const $=id=>document.getElementById(id);const t0=performance.now();
 const css=document.createElement('style');css.id='cl242Css';css.textContent='#cl242Attente{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99990;font:600 11px "Cinzel",serif;letter-spacing:.18em;text-transform:uppercase;color:#c9a45c;background:#0a1322e6;border:1px solid #7a6440;border-radius:999px;padding:8px 16px;box-shadow:0 4px 14px #0008;pointer-events:none;opacity:0;transition:opacity .4s}#cl242Attente.v{opacity:1}body.cl242pret #cl242Attente{display:none}';
 document.head.appendChild(css);
-let att=null;setTimeout(()=>{if(document.body.classList.contains('cl242pret'))return;att=document.createElement('div');att.id='cl242Attente';att.textContent='Pupitre en préparation';document.body.appendChild(att);requestAnimationFrame(()=>att&&att.classList.add('v'))},900);
+let att=null;/* CL243 : plus de mention d'attente */
 const conditions={
  pupitre:()=>{const d=$('v5Desk');return !!d&&d.classList.contains('cl2')},
  navigation:()=>!!$('cl236Nav'),
@@ -14626,9 +14627,27 @@ const t=setInterval(()=>{try{const manque=Object.keys(conditions).filter(k=>{try
 window.cl242={pret:()=>pret,raison:()=>raison,manque:()=>Object.keys(conditions).filter(k=>{try{return !conditions[k]()}catch(e){return true}})};
 })();
 (()=>{'use strict';
-const TIT='CL242 · Le rideau d’ouverture';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL242')v.textContent='CL242'},300);
 })();
 }catch(e){console.error("cl242Rideau",e);}
+/* ───────── cl243OuvertureDUnCoup ───────── */
+try{
+/* CL243 — L'ouverture d'un coup (Thierry, 19 novembre 2026, 15 h 13 : « supprimer toute attente, c'est insupportable, et pas digne
+   d'un garde-temps d'exception »).
+   • Le rideau de la CL242 est retiré (plus de pupitre masqué, plus de mention « en préparation »). La cause est traitée : la chaîne
+     de montage attendait. Le regroupement des onglets (CL78) ne démarrait qu'après 4 s, et tout ce qui en dépend (panneau Navigation
+     temporelle, noms d'onglets, menu Interface, boutons Disposition, symboles) suivait entre 4 et 5 s : il démarre désormais à 0,4 s.
+     Les pastilles « ? » se posent dès 0,4 s ; le fondu d'ouverture (CL134) lève la montre et le pupitre dès que le montage est fini et la
+     page calme (≈ 1,9 s sur ordinateur, 2,5 s au plus, au lieu de 3,5 s) ; l'Atelier et le bandeau se recentrent plus tôt.
+   • Mesure sur iPhone émulé : pupitre complet (dernière couche posée) à ≈ 1,9 s au lieu de ≈ 4,9 s, montré fini.
+     Sur l'iPhone réel, le temps est celui de la lecture du fichier et de son exécution — plus d'attente ajoutée par la montre.
+   • Les ponts vissés (CL3) attendaient 2,6 s après le pupitre : posés dès 0,25 s, et repris à 1,2 et 2,6 s pour les groupes arrivés
+     entre-temps (ponts() rejouable sans emboîter) ; « Réglages d'origine » (CL89) posé dès 0,3 s.
+   Retouches p243 (11 points). Module témoin seul. */
+(()=>{'use strict';window.cl243={ouverture:'d’un coup'};})();
+(()=>{'use strict';
+const TIT='CL243 · L’ouverture d’un coup';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL243')v.textContent='CL243'},300);
+})();
+}catch(e){console.error("cl243OuvertureDUnCoup",e);}
 </script>
 </body></html>
