@@ -14356,7 +14356,7 @@ body.cl238 #cl237Sheet .cl237m,body.cl238 #cl237Sheet .cl237p{color:#d2ad63}
 const lire=()=>{try{const v=localStorage.getItem(KEY);return v===null?true:v==='1'}catch(e){return true}};
 const poser=on=>{document.body.classList.toggle('cl238',!!on);try{localStorage.setItem(KEY,on?'1':'0')}catch(e){}};
 poser(lire());
-function ui(){if($('cl238Box'))return true;const P=document.querySelector('#cl2Panels .cl2Panel[data-k=carte]');if(!P)return false;
+function ui(){if($('cl238Box')||$('cl239Sel'))return true;/* CL239 : le menu Interface remplace la case */const P=document.querySelector('#cl2Panels .cl2Panel[data-k=carte]');if(!P)return false;
  const pont=[...P.querySelectorAll(':scope>.cl3Pont')].find(c=>/^Habillage/.test(((c.querySelector('.cl2Grp')||{}).textContent||'').trim()));if(!pont)return false;
  const l=document.createElement('label');l.id='cl238Lab';l.innerHTML='<input type="checkbox" id="cl238Box"'+(lire()?' checked':'')+'><span>Pupitre horloger</span>';pont.appendChild(l);
  $('cl238Box').addEventListener('change',e=>poser(e.target.checked));
@@ -14366,9 +14366,94 @@ let n=0;const t=setInterval(()=>{n++;try{if(ui()&&n>4)clearInterval(t)}catch(e){
 window.cl238={actif:()=>document.body.classList.contains('cl238'),poser};
 })();
 (()=>{'use strict';
-const TIT='CL238 · Le pupitre horloger';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL238')v.textContent='CL238'},300);
 })();
 }catch(e){console.error("cl238PupitreHorloger",e);}
+/* ───────── cl239Interface ───────── */
+try{
+/* CL239 — Le choix de l'interface (Thierry, 19 novembre 2026, 10 h 50 : « je souhaiterais surtout une commande pour choisir
+   plusieurs interfaces possibles »). Dans Cadran › Habillage, un menu « Interface » remplace la case « Pupitre horloger » :
+   • Horloger · or (par défaut) — l'habit de la CL238, d'après les images Google : plaques brossées bleu nuit, lunettes et vis d'or,
+     plaques d'or, cuivre pour « en marche » ;
+   • Horloger · acier — même structure, palette argent et saphir : plaques d'acier, vis d'argent, bleu saphir pour « en marche » ;
+   • Nuit et or — le pupitre « Nuit et or » de la veille (CL3 → CL237) ;
+   • Ardoise — le pupitre sobre d'origine (CL2) : ardoise plate, caractères système, interrupteurs simples.
+   Le choix s'applique aussitôt et il est mémorisé. La feuille de style horlogère est récrite avec des variables de palette (une
+   seule structure, deux palettes) ; les commandes, textes et corps ne changent dans aucune interface. Pastille « ? » sur le menu. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);const KEY='cl239';
+const SCREW="radial-gradient(circle at X Y,var(--sc1) 0 1.1px,var(--sc2) 1.3px 2.9px,var(--sc3) 3.1px 3.7px,transparent 4.2px)";
+const screws=[['12px','12px'],['calc(100% - 12px)','12px'],['12px','calc(100% - 12px)'],['calc(100% - 12px)','calc(100% - 12px)']].map(([x,y])=>SCREW.replace('X',x).replace('Y',y)).join(',');
+const star=c=>"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z' fill='%23"+c+"'/%3E%3C/svg%3E\")";
+const CHEV="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232a1d08' stroke-width='1.8'/%3E%3C/svg%3E\")";
+const PL='linear-gradient(var(--pl1),var(--pl2) 52%,var(--pl3))',ON='linear-gradient(var(--on1),var(--on2) 55%,var(--on3))';
+const CSS=`
+/* ===== CL239 · pupitre horloger à palettes (remplace la feuille CL238) ===== */
+body.cl238{--pl1:#f6e4b4;--pl2:#d2ad63;--pl3:#a97f3b;--pltx:#1b1407;--plb:#6d5427;--bz:#d6b56a;--bz2:#7a6440;--bz0:#0a1322;--ti:#ecd6a0;--tiglow:#c9a45c40;--sc1:#fff3c9;--sc2:#d2ad63;--sc3:#5a4722;--acc:#c9a45c;--acc2:#d2ad63;--on1:#e7b188;--on2:#b8734a;--on3:#7a4423;--onb:#5a2f18;--onglow:#ffb98a55;--tg1:#c98a5f;--tg2:#8a5330;--kon1:#ffd9c0;--kon2:#d08a5e;--kon3:#7a4423;--kn1:#fff4d2;--kn2:#d9b56c;--kn3:#8a6a35;--q1:#f8ead0;--q2:#cfa95c;--q3:#7a5d2c;--star:${star('e3c78c')};--gl:#8a7448;--digit:#f6e4b4;--diglow:#e3c78c66;--loc:#d8c38d;--rd:#ffe9b8;--rr:#d2ad63;--rg:#e3c78c88;--tr1:#8d6a33;--tr2:#f0d79a;--sheetb:#d6b56a;--smalltx:#3a2a10;--optbg:#f3e2b0}
+body.cl238.cl239acier{--pl1:#f7f9fb;--pl2:#c9d1d9;--pl3:#8a96a3;--pltx:#0f1720;--plb:#5c6974;--bz:#c4ced8;--bz2:#5c6974;--bz0:#0a1322;--ti:#dfe6ee;--tiglow:#9fb4c840;--sc1:#ffffff;--sc2:#c9d1d9;--sc3:#4a5663;--acc:#aebbc8;--acc2:#c4ced8;--on1:#8fb6ea;--on2:#3f7bd0;--on3:#1f4a8f;--onb:#173a70;--onglow:#8fb6ea66;--tg1:#4f86d6;--tg2:#244f96;--kon1:#dbe9ff;--kon2:#5f93df;--kon3:#1f4a8f;--kn1:#ffffff;--kn2:#c9d1d9;--kn3:#6f7c89;--q1:#ffffff;--q2:#c9d1d9;--q3:#5c6974;--star:${star('c4ced8')};--gl:#7f8b97;--digit:#e8f0f8;--diglow:#9fb4c866;--loc:#c4ced8;--rd:#dbe9ff;--rr:#8fb6ea;--rg:#8fb6ea88;--tr1:#5c6974;--tr2:#dfe6ee;--sheetb:#c4ced8;--smalltx:#1e2a36;--optbg:#e8eef4}
+body.cl238 #v5Desk.cl3 #cl2Panels{background-color:#0b1626!important;background-image:repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 0%,#1c3150 0%,#0b1626 65%)!important;background-size:auto,auto!important}
+body.cl238 #v5Desk.cl3 #cl2Head{background-color:#0a1322!important;background-image:repeating-linear-gradient(90deg,#ffffff06 0 1px,transparent 1px 3px)!important}
+body.cl238 #v5Desk.cl3 .cl3Pont,body.cl238 #v5Desk.cl3 #cl236Nav,body.cl238 #v5Desk.cl3 #cl85Fav,body.cl238 #v5Desk.cl3 #cl191Card{border:1px solid var(--bz)!important;border-radius:12px!important;background-image:${screws},repeating-linear-gradient(90deg,#ffffff05 0 1px,transparent 1px 4px),linear-gradient(170deg,#17294a,#0b172c)!important;background-color:#0f1d33!important;box-shadow:0 0 0 3px var(--bz0),0 0 0 4px var(--bz2),inset 0 1px 0 #ffffff1a,inset 0 -1px 0 #000000a0,0 8px 18px #0009!important;padding:18px 16px 14px!important;margin:0 0 18px!important}
+body.cl238 #v5Desk.cl3 #cl85Fav{padding:12px 16px!important;margin:8px 0 18px!important}
+body.cl238 #v5Desk.cl3 .cl3Pont>.cl2Grp,body.cl238 #v5Desk.cl3 #cl236Nav>.cl2Grp,body.cl238 #v5Desk.cl3 .cl2Grp{font:600 11px 'Cinzel',serif!important;letter-spacing:.2em!important;color:var(--ti)!important;text-shadow:0 1px 0 #000,0 0 10px var(--tiglow);padding-left:17px!important;background:var(--star) no-repeat 0 50%/11px 11px!important}
+body.cl238 #v5Desk.cl3 #cl236Nav>.cl2Grp{border-bottom:1px solid var(--bz2)!important;padding-bottom:6px!important}
+body.cl238 #v5Desk.cl3 #cl2Title{background:linear-gradient(90deg,#0d1a2b,#17294a 50%,#0d1a2b)!important;border:1px solid var(--acc)!important;border-radius:10px!important;padding:8px 12px!important;margin:6px 0 8px!important;box-shadow:0 0 0 3px var(--bz0),0 0 0 4px var(--bz2),inset 0 1px 0 #ffffff1a!important;display:flex!important;align-items:baseline!important;gap:10px!important;flex-wrap:wrap!important}
+body.cl238 #v5Desk.cl3 #cl2Title strong{font:700 15px 'Cinzel',serif!important;letter-spacing:.16em!important;text-transform:uppercase!important;color:var(--ti)!important;text-shadow:0 1px 0 #000,0 0 12px var(--tiglow)!important}
+body.cl238 #v5Desk.cl3 #cl2Title span{margin-left:auto!important;font:500 10.5px 'Jost',sans-serif!important;color:var(--acc)!important;letter-spacing:.04em}
+body.cl238 #v5Desk.cl3 #cl2Panels button:not(.cl45-info):not(.cl137m):not(.cl237m):not(.cl237p):not(.on):not(.fait):not(#cl144Now):not(.cl2Face),body.cl238 #v5Desk.cl3 #cl2Head .v13-time-row button:not(#v13Now),body.cl238 #v5Desk.cl3 #cl2Head .v6-side,body.cl238 #v5Desk.cl3 #cl2Head #cl191Card button:not(.cl45-info):not(.on):not(.cl137m),body.cl238 #cl237Sheet .cl237F button{background:${PL}!important;color:var(--pltx)!important;border:1px solid var(--plb)!important;box-shadow:inset 0 1px 0 #fff8,inset 0 -1px 0 #0006,0 2px 4px #000a!important;font-weight:600!important;text-shadow:0 1px 0 #ffffff55}
+body.cl238 #v5Desk.cl3 #cl2Panels button:not(.cl45-info) svg.cl174i,body.cl238 #v5Desk.cl3 #cl2Head #cl191Card button:not(.cl45-info):not(.on) svg.cl174i,body.cl238 #v5Desk.cl3 #cl2Head .v6-side svg{color:var(--pltx)!important;stroke:var(--pltx)}
+body.cl238 #v5Desk.cl3 #cl2Panels button.on:not(.cl137m){background:${ON}!important;color:var(--pltx)!important;border-color:var(--onb)!important;box-shadow:inset 0 1px 0 #fff6,inset 0 -1px 0 #0006,0 0 0 1px var(--onglow),0 2px 4px #000a!important;font-weight:600!important}
+body.cl238 #v5Desk.cl3 #cl2Panels button:disabled{opacity:.45!important}
+body.cl238 #v5Desk.cl3 #cl2Panels button:not(.cl45-info):not(.on) small{color:var(--smalltx)!important}
+html body.cl238 #v5Desk.cl3 #cl2Rail button{color:var(--acc2)!important}
+html body.cl238 #v5Desk.cl3 #cl2Rail button[aria-selected="true"]{color:var(--pltx)!important}
+html body.cl238.cl122P #cl2Rail#cl2Rail#cl2Rail button[aria-selected="true"],body.cl238 #v5Desk.cl3 #cl2Rail button[aria-selected="true"]{background:${PL}!important;color:var(--pltx)!important;border-color:var(--pl1)!important;box-shadow:inset 0 1px 0 #fff8,inset 0 -1px 0 #0006,0 0 0 3px var(--onglow),0 2px 4px #000a!important}
+html body.cl238.cl122P #cl2Rail#cl2Rail#cl2Rail button[aria-selected="true"] svg,body.cl238 #v5Desk.cl3 #cl2Rail button[aria-selected="true"] svg{stroke:var(--pltx)!important;color:var(--pltx)!important}
+html body.cl238 #v5Desk.cl3 #cl85Fav .cl2Grp,html body.cl238 #v5Desk.cl3 #cl2Panels .cl2Grp{color:var(--ti)!important}
+body.cl238 #v5Desk.cl3 #cl2Rail button svg{stroke:var(--acc2)!important;color:var(--acc2)!important}
+body.cl238 #v5Desk.cl3 #cl2Rail{background-color:#07101c!important;background-image:repeating-linear-gradient(115deg,#ffffff00 0 9px,#ffffff07 9px 12px,#ffffff00 12px 18px)!important;border-color:var(--bz2)!important}
+body.cl238 #v5Desk.cl3 #cl2Panels button.cl45-info,body.cl238 #v5Desk.cl3 #cl2Head button.cl45-info,body.cl238 #v5Desk.cl3 #cl2Head #cl3Cadran button.cl45-info,body.cl238 #v5Desk.cl3 #cl2Panels .cl2Panel button.cl45-info,html body.cl238 #v5Desk.cl3 button.cl45-info{background:radial-gradient(circle at 40% 35%,var(--q1),var(--q2) 58%,var(--q3))!important;color:var(--pltx)!important;border:1px solid var(--sc3)!important;box-shadow:0 1px 2px #000a,inset 0 1px 0 #fff8!important;font-weight:700!important;opacity:1!important}
+body.cl238 #v5Desk.cl3 #cl2Head select,body.cl238 #v5Desk.cl3 #cl2Panels select{color:var(--pltx)!important;border:1px solid var(--plb)!important;background-image:${CHEV},${PL}!important;box-shadow:inset 0 1px 0 #fff8,inset 0 -1px 0 #0006,0 2px 4px #000a!important;font-weight:600!important}
+body.cl238 #v5Desk.cl3 #cl2Panels select option{background:var(--optbg);color:var(--pltx)}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=text],body.cl238 #v5Desk.cl3 #cl2Panels input[type=number],body.cl238 #v5Desk.cl3 #cl2Panels input[type=time],body.cl238 #v5Desk.cl3 #cl2Panels input[type=date],body.cl238 #v5Desk.cl3 #cl2Panels textarea{background:linear-gradient(#050a12,#101c2c)!important;border:1px solid var(--gl)!important;box-shadow:inset 0 2px 4px #000d,0 1px 0 #ffffff12!important;color:var(--digit)!important;border-radius:8px!important}
+body.cl238 #v5Desk.cl3 #cl2Head .v6-editor{background:linear-gradient(#050a12,#0e1a2a)!important;border:1px solid var(--acc)!important;box-shadow:inset 0 2px 6px #000e,0 0 0 3px var(--bz0),0 0 0 4px var(--plb)!important;border-radius:8px!important}
+body.cl238 #v5Desk.cl3 #cl2Head .v6-digit{color:var(--digit)!important;text-shadow:0 0 6px var(--diglow)}
+body.cl238 #v5Desk.cl3 #cl3Loc{color:var(--loc)!important}
+body.cl238 #v5Desk.cl3 .cl191g>div{background:linear-gradient(#050a12,#101c2c)!important;border:1px solid var(--gl)!important;box-shadow:inset 0 2px 4px #000d!important;border-radius:8px!important}
+body.cl238 #v5Desk.cl3 .cl191g b{color:var(--digit)!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox],body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]{width:40px!important;height:21px!important;border-radius:11px!important;background:linear-gradient(#0a1220,#1a2a40)!important;box-shadow:inset 0 2px 4px #000d,0 0 0 1px var(--gl),0 1px 0 #ffffff14!important;border:0!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox]::before,body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]::before{top:2px!important;left:2px!important;width:17px!important;height:17px!important;border-radius:50%!important;background:radial-gradient(circle at 35% 30%,var(--kn1),var(--kn2) 45%,var(--kn3) 95%)!important;box-shadow:0 1px 2px #000c,inset 0 -1px 1px #0006!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox]:checked,body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]:checked{background:linear-gradient(var(--tg1),var(--tg2))!important;box-shadow:inset 0 2px 4px #0009,0 0 0 1px var(--acc2),0 0 8px var(--tiglow)!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox]:checked::before,body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]:checked::before{left:21px!important;background:repeating-radial-gradient(circle at 50% 50%,#0000 0 1.2px,#0004 1.2px 2.2px),radial-gradient(circle at 35% 30%,var(--kon1),var(--kon2) 45%,var(--kon3) 95%)!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=radio],body.cl238 #v5Desk.cl3 #cl2Head input[type=radio]{appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;border:0;margin:0 6px 0 0;vertical-align:middle;background:radial-gradient(circle,#0a1220 0 4px,#56493a 4.5px 6px,#1a2a40 6.5px);box-shadow:0 0 0 1px var(--acc),inset 0 1px 2px #000c;cursor:pointer}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=radio]:checked,body.cl238 #v5Desk.cl3 #cl2Head input[type=radio]:checked{background:radial-gradient(circle,var(--rd) 0 3.6px,var(--rr) 4px 6px,#1a2a40 6.5px);box-shadow:0 0 0 1px var(--rr),0 0 8px var(--rg)}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--tr1),var(--tr2) var(--p),#04080c var(--p))!important;box-shadow:inset 0 1px 2px #000,0 0 0 1px var(--sc3),0 1px 0 #ffffff14!important}
+body.cl238 #cl237Sheet .cl237S{border-color:var(--sheetb);box-shadow:0 0 0 3px var(--bz0),0 0 0 4px var(--bz2),0 -8px 30px #000a;background-image:repeating-linear-gradient(90deg,#ffffff05 0 1px,transparent 1px 4px),linear-gradient(170deg,#17294a,#0b172c)}
+body.cl238 #cl237Sheet .cl237m,body.cl238 #cl237Sheet .cl237p{color:var(--acc2)}
+#cl239Lab{display:flex;align-items:center;gap:8px;margin:2px 0 8px}#cl239Lab>span{min-width:62px}
+`;
+const INTERFACES=[['horloger','Horloger · or'],['acier','Horloger · acier'],['nuit','Nuit et or'],['ardoise','Ardoise']];
+const lire=()=>{try{const v=localStorage.getItem(KEY);if(v&&INTERFACES.some(x=>x[0]===v))return v;const a=localStorage.getItem('cl238');return a==='0'?'nuit':'horloger'}catch(e){return 'horloger'}};
+function appliquer(v){const desk=$('v5Desk');const horl=(v==='horloger'||v==='acier');document.body.classList.toggle('cl238',horl);document.body.classList.toggle('cl239acier',v==='acier');
+ if(desk){desk.classList.toggle('cl3',v!=='ardoise');document.body.classList.toggle('cl3-on',v!=='ardoise')}
+ try{localStorage.setItem(KEY,v);localStorage.setItem('cl238',horl?'1':'0')}catch(e){}
+ const s=$('cl239Sel');if(s&&s.value!==v)s.value=v}
+// la feuille : remplace celle de la CL238
+function feuille(){let st=$('cl238Css');if(!st){st=document.createElement('style');st.id='cl238Css';document.head.appendChild(st)}if(st.dataset.cl239!=='1'){st.textContent=CSS;st.dataset.cl239='1'}}
+feuille();
+function ui(){const old=$('cl238Lab');if(old)old.remove();if($('cl239Sel'))return true;const P=document.querySelector('#cl2Panels .cl2Panel[data-k=carte]');if(!P)return false;
+ const pont=[...P.querySelectorAll(':scope>.cl3Pont')].find(c=>/^Habillage/.test(((c.querySelector('.cl2Grp')||{}).textContent||'').trim()));if(!pont)return false;
+ const l=document.createElement('label');l.id='cl239Lab';l.innerHTML='<span>Interface</span><select id="cl239Sel" aria-label="Interface du pupitre">'+INTERFACES.map(([v,n])=>'<option value="'+v+'">'+n+'</option>').join('')+'</select>';
+ const grp=pont.querySelector('.cl2Grp');if(grp)grp.after(l);else pont.prepend(l);
+ const s=$('cl239Sel');s.value=lire();s.addEventListener('change',()=>appliquer(s.value));
+ const A=window.cl45Aide;if(A){if(!A.AIDE.find(e=>e.k==='cl239'))A.AIDE.push({k:'cl239',sel:'#cl239Lab',t:'Interface',x:'Menu :\n• Horloger · or (par défaut) — plaques de métal brossé bleu nuit, lunettes et vis d’or, boutons et menus en plaque d’or, cuivre pour « en marche » (d’après les images Google du 19 novembre 2026).\n• Horloger · acier — même structure, palette argent et saphir.\n• Nuit et or — le pupitre bleu nuit et or de la veille.\n• Ardoise — le pupitre sobre d’origine : ardoise plate, caractères système, interrupteurs simples.\n\nLe choix s’applique aussitôt à tout le pupitre et il est mémorisé dans l’appareil. Les commandes, leurs textes et leurs tailles ne changent pas : seule la finition change.\n\nÀ dire : « choisis horloger acier ».'});try{A.install()}catch(x){}}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{feuille();const desk=$('v5Desk');if(desk&&desk.classList.contains('cl2')&&(desk.classList.contains('cl3')||n>20)){appliquer(lire())}ui();if($('cl239Sel')&&n>12)clearInterval(t)}catch(e){console.warn('CL239',e)}if(n>150)clearInterval(t)},400);
+window.cl239={interfaces:INTERFACES.map(x=>x[0]),actuelle:lire,appliquer};
+})();
+(()=>{'use strict';
+const TIT='CL239 · Le choix de l’interface';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL239')v.textContent='CL239'},300);
+})();
+}catch(e){console.error("cl239Interface",e);}
 </script>
 </body></html>
