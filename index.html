@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr"><head>
+<style id="cl242Rideau">body:not(.cl242pret) #v5Desk{opacity:0!important;pointer-events:none!important}#v5Desk{transition:opacity .5s ease}</style><!-- CL242 : rideau d'ouverture, le pupitre n'apparaît qu'une fois monté -->
 <!-- CL78 · Pupitre_En_Livret_10_Onglets -->
 <!-- CL77 · Eclipses_A_Venir -->
 <!-- CL76 · Grande_Date_Regate_Reinitialiser -->
@@ -14167,11 +14168,11 @@ function build(){if(fait)return true;
  if(!head||!bar||!loc||!row||!now||!play||!speed||!temps)return false;
  const nav=pontDe('Navigation temporelle'),dat=pontDe('Dateur'),mic=temps.querySelector(':scope>.cl137m');
  // attendre que la carte à retirer soit complète (Maintenant vert, Lune) et le micro posé — 20 s au plus
- if((!nav||!$('cl144Now')||!$('cl170Lun')||!mic)&&Date.now()-t0<20000)return false;
+ if(!nav&&Date.now()-t0<20000)return false;/* CL242 : ne plus attendre la carte complète ni le micro */
  const W=document.createElement('div');W.id='cl236Nav';
  const T=document.createElement('div');T.className='cl2Grp';T.innerHTML='<span>Navigation temporelle</span>';W.appendChild(T);
  bar.before(W);W.appendChild(bar);W.appendChild(loc);W.appendChild(row);
- if(mic)row.appendChild(mic);
+ if(mic)row.appendChild(mic);else{const w=setInterval(()=>{const m=temps.querySelector(':scope>.cl137m');if(m){row.appendChild(m);clearInterval(w)}},300);setTimeout(()=>clearInterval(w),30000)}/* CL242 : le micro rejoint le panneau dès qu'il est posé */
  if(nav)nav.classList.add('cl236Off');if(dat)dat.classList.add('cl236Off');
  // Maintenant : vert, et rougit un instant quand c'est fait
  now.addEventListener('click',()=>{now.classList.add('fait');setTimeout(()=>now.classList.remove('fait'),1200);if(window.cl136Dire)try{window.cl136Dire('Retour à maintenant.')}catch(e){}});
@@ -14431,9 +14432,9 @@ body.cl238 #cl237Sheet .cl237S{border-color:var(--sheetb);box-shadow:0 0 0 3px v
 body.cl238 #cl237Sheet .cl237m,body.cl238 #cl237Sheet .cl237p{color:var(--acc2)}
 #cl239Lab{display:flex;align-items:center;gap:8px;margin:2px 0 8px}#cl239Lab>span{min-width:62px}
 `;
-const INTERFACES=[['horloger','Horloger · or'],['acier','Horloger · acier'],['nuit','Nuit et or'],['ardoise','Ardoise']];
+const INTERFACES=[['horloger','Horloger · or'],['acier','Horloger · acier'],['papier','Papier · encre'],['nuit','Nuit et or'],['ardoise','Ardoise']];/* CL241 : Papier · encre */
 const lire=()=>{try{const v=localStorage.getItem(KEY);if(v&&INTERFACES.some(x=>x[0]===v))return v;const a=localStorage.getItem('cl238');return a==='0'?'nuit':'horloger'}catch(e){return 'horloger'}};
-function appliquer(v){const desk=$('v5Desk');const horl=(v==='horloger'||v==='acier');document.body.classList.toggle('cl238',horl);document.body.classList.toggle('cl239acier',v==='acier');
+function appliquer(v){const desk=$('v5Desk');const horl=(v==='horloger'||v==='acier'||v==='papier');document.body.classList.toggle('cl238',horl);document.body.classList.toggle('cl239acier',v==='acier');document.body.classList.toggle('cl241papier',v==='papier');
  if(desk){desk.classList.toggle('cl3',v!=='ardoise');document.body.classList.toggle('cl3-on',v!=='ardoise')}
  try{localStorage.setItem(KEY,v);localStorage.setItem('cl238',horl?'1':'0')}catch(e){}
  const s=$('cl239Sel');if(s&&s.value!==v)s.value=v}
@@ -14445,7 +14446,7 @@ function ui(){const old=$('cl238Lab');if(old)old.remove();if($('cl239Sel'))retur
  const l=document.createElement('label');l.id='cl239Lab';l.innerHTML='<span>Interface</span><select id="cl239Sel" aria-label="Interface du pupitre">'+INTERFACES.map(([v,n])=>'<option value="'+v+'">'+n+'</option>').join('')+'</select>';
  const grp=pont.querySelector('.cl2Grp');if(grp)grp.after(l);else pont.prepend(l);
  const s=$('cl239Sel');s.value=lire();s.addEventListener('change',()=>appliquer(s.value));
- const A=window.cl45Aide;if(A){if(!A.AIDE.find(e=>e.k==='cl239'))A.AIDE.push({k:'cl239',sel:'#cl239Lab',t:'Interface',x:'Menu :\n• Horloger · or (par défaut) — plaques de métal brossé bleu nuit, lunettes et vis d’or, boutons et menus en plaque d’or, cuivre pour « en marche » (d’après les images Google du 19 novembre 2026).\n• Horloger · acier — même structure, palette argent et saphir.\n• Nuit et or — le pupitre bleu nuit et or de la veille.\n• Ardoise — le pupitre sobre d’origine : ardoise plate, caractères système, interrupteurs simples.\n\nLe choix s’applique aussitôt à tout le pupitre et il est mémorisé dans l’appareil. Les commandes, leurs textes et leurs tailles ne changent pas : seule la finition change.\n\nÀ dire : « choisis horloger acier ».'});try{A.install()}catch(x){}}
+ const A=window.cl45Aide;if(A){if(!A.AIDE.find(e=>e.k==='cl239'))A.AIDE.push({k:'cl239',sel:'#cl239Lab',t:'Interface',x:'Menu :\n• Horloger · or (par défaut) — plaques de métal brossé bleu nuit, lunettes et vis d’or, boutons et menus en plaque d’or, cuivre pour « en marche » (d’après les images Google du 19 novembre 2026).\n• Horloger · acier — même structure, palette argent et saphir.\n• Papier · encre — la même structure sur papier clair, encre sombre : lisible en plein soleil.\n• Nuit et or — le pupitre bleu nuit et or de la veille.\n• Ardoise — le pupitre sobre d’origine : ardoise plate, caractères système, interrupteurs simples.\n\nLe choix s’applique aussitôt à tout le pupitre et il est mémorisé dans l’appareil. Les commandes, leurs textes et leurs tailles ne changent pas : seule la finition change.\n\nÀ dire : « choisis horloger acier ».'});try{A.install()}catch(x){}}
  return true}
 let n=0;const t=setInterval(()=>{n++;try{feuille();const desk=$('v5Desk');if(desk&&desk.classList.contains('cl2')&&(desk.classList.contains('cl3')||n>20)){appliquer(lire())}ui();if($('cl239Sel')&&n>12)clearInterval(t)}catch(e){console.warn('CL239',e)}if(n>150)clearInterval(t)},400);
 window.cl239={interfaces:INTERFACES.map(x=>x[0]),actuelle:lire,appliquer};
@@ -14509,9 +14510,125 @@ setInterval(()=>{try{lune()}catch(e){}},2000);
 window.cl240={lune:()=>{const s=$('cl240Lune');return s?{key:s.dataset.key,html:s.innerHTML.length,dansPont:!!s.closest('.cl3Pont')}:null},symboles:()=>[...document.querySelectorAll('#cl2Panels .cl2Panel[data-k]')].filter(P=>P.style.getPropertyValue('--star')).map(P=>P.dataset.k)};
 })();
 (()=>{'use strict';
-const TIT='CL240 · Les détails horlogers';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL240')v.textContent='CL240'},300);
 })();
 }catch(e){console.error("cl240DetailsHorlogers",e);}
+/* ───────── cl241PapierEncre ───────── */
+try{
+/* CL241 — Papier et encre (Thierry, 19 novembre 2026, 14 h 12 : « ok pour les deux pistes »). Cinquième interface du menu
+   « Interface » : la structure horlogère (ponts à lunette et vis, plaques d'or, interrupteurs, afficheurs) posée sur un papier
+   ivoire grainé, encre sombre — faite pour la lecture en plein soleil. Afficheurs (date-heure, chronomètre, lectures de la face AIR)
+   gardés en verre sombre pour le contraste ; feuille de disposition et rail des onglets en clair. Les variables de couleur du pupitre
+   (textes, lignes, or) sont redéfinies sous body.cl241papier ; les textes clairs codés en dur dans les modules sont repris un à un
+   (revue par balayage des 13 onglets : tout texte visible plus clair que le papier, hors plaques sombres, a été corrigé). Aucune
+   commande, aucun texte, aucun corps changé. */
+(()=>{'use strict';
+const star=c=>"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z' fill='%23"+c+"'/%3E%3C/svg%3E\")";
+const css=document.createElement('style');css.id='cl241Css';css.textContent=`
+body.cl238.cl241papier{--pltx:#1b1407;--plb:#6d5427;--bz:#a98a4a;--bz2:#8a6a35;--bz0:#efe7d6;--ti:#6a4a10;--tiglow:#0000;--sc1:#fff3c9;--sc2:#c9a45c;--sc3:#6d5427;--acc:#8a6a35;--acc2:#7a5a1a;--onglow:#b8734a55;--q1:#f8ead0;--q2:#cfa95c;--q3:#7a5d2c;--star:${star('8a6a35')};--gl:#8a7448;--loc:#5a4a2a;--tr1:#a98a4a;--tr2:#c9a45c;--sheetb:#a98a4a;--smalltx:#3a2a10;--optbg:#f3e2b0;
+ --cl2-tx:#1b1407;--cl2-mu:#5a4a2a;--cl2-gold:#7a5a1a;--cl2-gold2:#8a6a35;--cl2-line:#cdbf9a;--cl2-line2:#a98a4a;--cl2-panel:#efe7d6;--cl2-card:#f7f1e3;--cl2-bg:#e8dfc9;--cl2-blue:#1f4a8f;--h-ivoire:#1b1407;--h-plat:#5a4a2a;--h-or:#7a5a1a;--h-or2:#a98a4a;--h-orf:#a98a4a;--h-rose:#8a4a2a;--h-nuit:#efe7d6;--h-nuit2:#e8dfc9;--h-pont:#a98a4a}
+body.cl3-on.cl241papier{background:#e3d9c2!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels{background-color:#efe7d6!important;background-image:repeating-linear-gradient(90deg,#00000006 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 0%,#fbf6ea 0%,#efe7d6 65%)!important;color:#1b1407}
+body.cl241papier #v5Desk.cl3 #cl2Head{background-color:#e8dfc9!important;background-image:repeating-linear-gradient(90deg,#00000005 0 1px,transparent 1px 3px)!important;color:#1b1407}
+body.cl241papier #v5Desk.cl3 .cl3Pont,body.cl241papier #v5Desk.cl3 #cl236Nav,body.cl241papier #v5Desk.cl3 #cl85Fav,body.cl241papier #v5Desk.cl3 #cl191Card{background-image:radial-gradient(circle at 12px 12px,var(--sc1) 0 1.1px,var(--sc2) 1.3px 2.9px,var(--sc3) 3.1px 3.7px,transparent 4.2px),radial-gradient(circle at calc(100% - 12px) 12px,var(--sc1) 0 1.1px,var(--sc2) 1.3px 2.9px,var(--sc3) 3.1px 3.7px,transparent 4.2px),radial-gradient(circle at 12px calc(100% - 12px),var(--sc1) 0 1.1px,var(--sc2) 1.3px 2.9px,var(--sc3) 3.1px 3.7px,transparent 4.2px),radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),var(--sc1) 0 1.1px,var(--sc2) 1.3px 2.9px,var(--sc3) 3.1px 3.7px,transparent 4.2px),repeating-linear-gradient(90deg,#00000004 0 1px,transparent 1px 4px),linear-gradient(170deg,#fcf8ee,#f0e7d3)!important;background-color:#f5eedd!important;box-shadow:0 0 0 3px var(--bz0),0 0 0 4px var(--bz2),inset 0 1px 0 #ffffffc0,inset 0 -1px 0 #0000001a,0 6px 14px #0003!important;color:#1b1407}
+body.cl241papier #v5Desk.cl3 .cl2Grp,body.cl241papier #v5Desk.cl3 .cl3Pont>.cl2Grp,body.cl241papier #v5Desk.cl3 #cl236Nav>.cl2Grp{text-shadow:none!important}
+body.cl241papier #v5Desk.cl3 #cl2Title{background:linear-gradient(90deg,#efe6d2,#fbf6ea 50%,#efe6d2)!important}
+body.cl241papier #v5Desk.cl3 #cl2Title strong{text-shadow:none!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels input[type=checkbox],body.cl241papier #v5Desk.cl3 #cl3Loc input[type=checkbox]{background:linear-gradient(#d9cfb8,#c4b899)!important;box-shadow:inset 0 2px 4px #0005,0 0 0 1px #a98a4a!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels input[type=radio],body.cl241papier #v5Desk.cl3 #cl2Head input[type=radio]{background:radial-gradient(circle,#f3ead6 0 4px,#a98a4a 4.5px 6px,#e4dac4 6.5px);box-shadow:0 0 0 1px #a98a4a,inset 0 1px 2px #0004}
+body.cl241papier #v5Desk.cl3 #cl2Panels input[type=radio]:checked,body.cl241papier #v5Desk.cl3 #cl2Head input[type=radio]:checked{background:radial-gradient(circle,#7a5a1a 0 3.6px,#c9a45c 4px 6px,#e4dac4 6.5px);box-shadow:0 0 0 1px #a98a4a,0 0 6px #c9a45c88}
+body.cl241papier #v5Desk.cl3 #cl2Panels input[type=text],body.cl241papier #v5Desk.cl3 #cl2Panels input[type=number],body.cl241papier #v5Desk.cl3 #cl2Panels input[type=time],body.cl241papier #v5Desk.cl3 #cl2Panels input[type=date],body.cl241papier #v5Desk.cl3 #cl2Panels textarea{background:linear-gradient(#fffdf7,#f3ecdb)!important;color:#1b1407!important;border:1px solid #a98a4a!important;box-shadow:inset 0 1px 3px #0002!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--tr1),var(--tr2) var(--p),#cdbf9a var(--p))!important;box-shadow:inset 0 1px 2px #0004,0 0 0 1px #a98a4a!important}
+html body.cl241papier #v5Desk.cl3 #cl2Rail{background-color:#e3d9c2!important;background-image:repeating-linear-gradient(115deg,#00000000 0 9px,#00000006 9px 12px,#00000000 12px 18px)!important;border-color:#a98a4a!important}
+html body.cl241papier #v5Desk.cl3 #cl2Rail button{color:#5a4a2a!important;background:linear-gradient(#f7f1e3,#e9dfc8)!important;border-color:#cdbf9a!important}
+html body.cl241papier #v5Desk.cl3 #cl2Rail button svg{stroke:#7a5a1a!important;color:#7a5a1a!important}
+html body.cl241papier #v5Desk.cl3 #cl2Rail button[aria-selected="true"]{color:#1b1407!important;background:linear-gradient(var(--pl1),var(--pl2) 52%,var(--pl3))!important}
+/* rail des onglets sur téléphone (sélecteurs à triple id de la CL122) */
+html body.cl241papier.cl122P #cl2Rail#cl2Rail#cl2Rail{background:#e3d9c2!important;border-color:#a98a4a!important}
+html body.cl241papier.cl122P #cl2Rail#cl2Rail#cl2Rail button{color:#5a4a2a!important;background:linear-gradient(#f7f1e3,#e9dfc8)!important;border-color:#cdbf9a!important;box-shadow:inset 0 1px 0 #fff,0 1px 2px #0003!important}
+html body.cl241papier.cl122P #cl2Rail#cl2Rail#cl2Rail button svg{stroke:#7a5a1a!important}
+html body.cl241papier.cl122P #cl2Rail#cl2Rail#cl2Rail button[aria-selected="true"]{background:linear-gradient(#f6e4b4,#d2ad63 52%,#a97f3b)!important;color:#1b1407!important;border-color:#a97f3b!important}
+html body.cl241papier.cl122P #cl2Rail#cl2Rail#cl2Rail button[aria-selected="true"] svg{stroke:#1b1407!important}
+/* textes posés sur verre sombre : restent clairs */
+body.cl241papier #v5Desk.cl3 #cl2Head .v6-sep{color:#c9a45c!important}
+body.cl241papier #v5Desk.cl3 .cl191g>div span,body.cl241papier #v5Desk.cl3 .cl191g>div small{color:#d8c38d!important}
+body.cl241papier #v5Desk.cl3 .cl191g>div b{color:#f6e4b4!important}
+html body.cl238 #v5Desk.cl3 #cl2Panels #cl170Ph button small,html body.cl238 #v5Desk.cl3 #cl2Panels button.cl174sm:not(.on) small{color:var(--smalltx)!important}
+/* face : cadrans et boutons de l'en-tête */
+body.cl241papier #v5Desk.cl3 #cl3Cadran button,body.cl241papier #v5Desk.cl3 #cl2Head .v46-face-row button,html body.cl241papier #v5Desk.cl3 #cl2Head #cl2Face3D{color:#1b1407!important;background:linear-gradient(#f7f1e3,#e9dfc8)!important;border-color:#a98a4a!important;box-shadow:inset 0 1px 0 #fff,0 1px 2px #0003!important}
+html body.cl241papier.clx-air #v5Desk.cl3 #cl3Cadran #v5G,html body.cl241papier.clx-navi #v5Desk.cl3 #cl3Cadran #v5G,html body.cl241papier.clx-3d #v5Desk.cl3 #cl3Cadran #v5G{color:#1b1407!important;background:linear-gradient(#f7f1e3,#e9dfc8)!important;border-color:#a98a4a!important}
+html body.cl241papier:not(.v5-prague):not(.clx-air):not(.clx-navi):not(.clx-3d) #v5Desk.cl3 #cl3Cadran #v5G,html body.cl241papier.v5-prague #v5Desk.cl3 #cl3Cadran #v5P,html body.cl241papier.clx-3d #v5Desk.cl3 #cl3Cadran #cl2Face3D{color:#1d160a!important;background:linear-gradient(#f4dea6,#c39a55)!important;border-color:#a97f3b!important}
+body.cl241papier #v5Desk.cl3 #cl3Aff,body.cl241papier #v5Desk.cl3 #cl3Aff .cl3Lab,body.cl241papier #v5Desk.cl3 #cl3Aff label{color:#1b1407!important}
+/* textes clairs codés en dur dans les modules */
+body.cl241papier #v5Desk.cl3 #cl2Panels .n,body.cl241papier #v5Desk.cl3 #cl2Panels div.n,body.cl241papier #v5Desk.cl3 #cl2Panels .tiny,body.cl241papier #v5Desk.cl3 #cl2Panels .cl191m,body.cl241papier #v5Desk.cl3 #cl2Panels .cl66n,body.cl241papier #v5Desk.cl3 #cl2Panels .v6-hint,body.cl241papier #v5Desk.cl3 #cl2Panels small,body.cl241papier #v5Desk.cl3 #cl2Panels .cl2Grp small,body.cl241papier #v5Desk.cl3 #cl2Panels .cl170PhN,body.cl241papier #v5Desk.cl3 #cl2Panels #cl170PhN,body.cl241papier #v5Desk.cl3 #cl2Panels .cl211n,body.cl241papier #v5Desk.cl3 #cl2Panels .cl220n,body.cl241papier #v5Desk.cl3 #cl2Panels .cl218n,body.cl241papier #v5Desk.cl3 #cl2Panels .v87-help-text,body.cl241papier #v5Desk.cl3 #cl2Panels .cl2Panel p,body.cl241papier #v5Desk.cl3 #cl2Panels .cl2Panel li,body.cl241papier #v5Desk.cl3 #cl2Panels label,body.cl241papier #v5Desk.cl3 #cl2Panels summary,body.cl241papier #v5Desk.cl3 #cl2Panels legend,body.cl241papier #v5Desk.cl3 #cl2Panels td,body.cl241papier #v5Desk.cl3 #cl2Panels th,body.cl241papier #v5Desk.cl3 #cl2Panels .cl3Lab,body.cl241papier #v5Desk.cl3 #cl2Panels .cl191l,body.cl241papier #v5Desk.cl3 #cl2Panels .cl226 .n,body.cl241papier #v5Desk.cl3 #cl2Panels #cl226Box,body.cl241papier #v5Desk.cl3 #cl2Panels #cl193Box,body.cl241papier #v5Desk.cl3 #cl2Panels #cl170Lun,body.cl241papier #v5Desk.cl3 #cl2Panels #v19MoonPhaseNote,body.cl241papier #v5Desk.cl3 #cl2Panels #v47TimeZoneInfo{color:#1b1407!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels #v19MoonPhaseNote strong,body.cl241papier #v5Desk.cl3 #cl2Panels strong,body.cl241papier #v5Desk.cl3 #cl2Panels b:not(.cl191g b){color:#5a3a0a!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels .big,body.cl241papier #v5Desk.cl3 #cl2Panels #cl193Box .big,body.cl241papier #v5Desk.cl3 #cl2Panels #cl226Box .big{color:#7a5a1a!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels .r{color:#1b1407!important;border-color:#cdbf9a!important}
+/* plaques de lecture : verre sombre gardé (chiffres clairs) */
+body.cl241papier #v5Desk.cl3 #v47TimeZoneInfo,body.cl241papier #v5Desk.cl3 #cl66Lect,body.cl241papier #v5Desk.cl3 #cl23Readout,body.cl241papier #v5Desk.cl3 #cl170Lun,body.cl241papier #v5Desk.cl3 #chronoState,body.cl241papier #v5Desk.cl3 #v201Coords>span>span,body.cl241papier #v5Desk.cl3 #v56ChronoStatus,body.cl241papier #v5Desk.cl3 #timerReadout,body.cl241papier #v5Desk.cl3 #cl2Panels #v19MoonPhaseNote.cl240n{color:#f6e4b4!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels #v19MoonPhaseNote.cl240n{color:#1b1407!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels #v19MoonPhaseNote.cl240n strong{color:#5a3a0a!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels #v47TimeZoneInfo,body.cl241papier #v5Desk.cl3 #cl2Panels #cl170Lun{color:#f6e4b4!important}
+body.cl241papier #v5Desk.cl3 #cl2Panels #cl170Lun small,body.cl241papier #v5Desk.cl3 #cl2Panels #cl170Lun b{color:#f6e4b4!important}
+/* feuille Disposition en clair */
+body.cl241papier #cl237Sheet .cl237S{background:#fbf6ea;background-image:repeating-linear-gradient(90deg,#00000004 0 1px,transparent 1px 4px),linear-gradient(170deg,#fcf8ee,#f0e7d3);color:#1b1407;border-color:#a98a4a}
+body.cl241papier #cl237Sheet .cl237H b{color:#6a4a10}body.cl241papier #cl237Sheet .cl237r{background:transparent;border-color:#00000014}body.cl241papier #cl237Sheet .cl237X{background:#f3ecdb;color:#1b1407;border-color:#a98a4a}body.cl241papier #cl237Sheet .cl237N,body.cl241papier #cl237Sheet .cl237T{color:#5a4a2a}body.cl241papier #cl237Sheet .cl237h{color:#7a5a1a}body.cl241papier #cl237Sheet .cl237m,body.cl241papier #cl237Sheet .cl237p{color:#a97f3b}
+/* encre : classes posées par balayage sur les textes clairs codés en dur */
+.cl241ink{color:#1b1407!important}.cl241or{color:#7a5a1a!important}.cl241vert{color:#1f6a2a!important}.cl241rouge{color:#8a1f1a!important}.cl241bleu{color:#1f4a8f!important}
+`;document.head.appendChild(css);
+const DARK='#v56ChronoStatus,#timerReadout,#v47TimeZoneInfo,#cl66Lect,#cl23Readout,#cl170Lun,#chronoState,#v201Coords,.cl191g,.v6-editor,svg,button,select,option,.cl45-info,.cl137m,#cl45Pop,.cl237S,input,textarea,#cl218Svg,#cl220Svg,#cl203Sis,#cl137Card,.cl2Grp';
+const CL=['cl241ink','cl241or','cl241vert','cl241rouge','cl241bleu'];
+function teinte(c){const m=c.match(/\d+(\.\d+)?/g);if(!m||m.length<3)return null;const [r,g,b]=m.map(Number);if(m.length>3&&+m[3]===0)return null;const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};const L=.2126*f(r)+.7152*f(g)+.0722*f(b);if(L<0.3)return null;
+ const mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx?(mx-mn)/mx:0;if(sat<0.22)return 'cl241ink';let h=0;const d=mx-mn;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360}
+ if(h>=70&&h<=170)return 'cl241vert';if(h<22||h>=330)return 'cl241rouge';if(h>=190&&h<=265)return 'cl241bleu';return 'cl241or'}
+let vu=new Set();
+function encrer(){const on=document.body.classList.contains('cl241papier');if(!on){if(vu.size){vu.forEach(e=>e.classList.remove(...CL));vu=new Set()}return}
+ const roots=[document.querySelector('#cl2Panels .cl2Panel.on'),document.getElementById('cl2Head'),document.getElementById('cl85Fav')].filter(Boolean);
+ for(const root of roots){const it=document.createNodeIterator(root,NodeFilter.SHOW_TEXT);let n;while((n=it.nextNode())){const t=n.textContent;if(!t||t.trim().length<2)continue;const e=n.parentElement;if(!e||vu.has(e)||e.closest(DARK))continue;const cs=getComputedStyle(e);if(cs.display==='none'||cs.visibility==='hidden')continue;const k=teinte(cs.color);if(k){e.classList.add(k);vu.add(e)}}}}
+setInterval(()=>{try{encrer()}catch(e){}},1200);
+document.addEventListener('click',()=>setTimeout(()=>{try{encrer()}catch(e){}},250),true);
+window.cl241={actif:()=>document.body.classList.contains('cl241papier'),encrer,teinte,n:()=>vu.size};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("cl241PapierEncre",e);}
+/* ───────── cl242Rideau ───────── */
+try{
+/* CL242 — Le rideau d'ouverture (Thierry, 19 novembre 2026, 14 h 20, capture d'un iPhone à l'ouverture d'un fichier : « j'ai eu très
+   rapidement cette interface ancienne qui n'a pas été retirée… chercher s'il en existe d'autres »).
+   • Ce qu'il a vu n'est pas une interface restée dans le fichier : c'est le pupitre en cours de montage. La montre se construit par
+     couches (plus de deux cents modules, chacun transforme la page quand ce qu'il attend est prêt) ; pendant quelques secondes — plus
+     sur un iPhone qui ouvre un fichier de 3,5 Mo — on voyait les états intermédiaires : l'ancienne rangée « −1 h · ⏸ · +1 h », la carte
+     des sauts, les anciens noms d'onglets (Navigation, Outils, Lieu, Carte, Soleil·Lune, Ciel), avant que les modules récents ne les
+     reprennent. Il n'existe donc pas d'autre « ancienne interface » dans le fichier : il y a un seul pupitre, et il était montré
+     avant d'être fini.
+   • Remède : un rideau. Le pupitre reste invisible (une feuille de style placée en tête du fichier, avant tout affichage) jusqu'à ce
+     que les dernières couches soient posées — panneau Navigation temporelle, noms d'onglets, menu Interface, boutons Disposition,
+     habit choisi — puis il apparaît en fondu, fini. Garde-fou : quinze secondes au plus, puis il apparaît quoi qu'il arrive. Pendant
+     l'attente, une discrète mention « Pupitre en préparation ». La montre elle-même garde son ouverture à 3,5 s (CL134).
+   • Les attentes inutiles sont raccourcies : le panneau Navigation temporelle n'attend plus la carte complète ni le micro (le micro le
+     rejoint dès qu'il est posé). Retouches p242 (3 points). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);const t0=performance.now();
+const css=document.createElement('style');css.id='cl242Css';css.textContent='#cl242Attente{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99990;font:600 11px "Cinzel",serif;letter-spacing:.18em;text-transform:uppercase;color:#c9a45c;background:#0a1322e6;border:1px solid #7a6440;border-radius:999px;padding:8px 16px;box-shadow:0 4px 14px #0008;pointer-events:none;opacity:0;transition:opacity .4s}#cl242Attente.v{opacity:1}body.cl242pret #cl242Attente{display:none}';
+document.head.appendChild(css);
+let att=null;setTimeout(()=>{if(document.body.classList.contains('cl242pret'))return;att=document.createElement('div');att.id='cl242Attente';att.textContent='Pupitre en préparation';document.body.appendChild(att);requestAnimationFrame(()=>att&&att.classList.add('v'))},900);
+const conditions={
+ pupitre:()=>{const d=$('v5Desk');return !!d&&d.classList.contains('cl2')},
+ navigation:()=>!!$('cl236Nav'),
+ onglets:()=>{const b=document.querySelector('#cl2Rail button[data-k="temps"]');return !!b&&/Heure et lieu/.test(b.textContent)},
+ interface:()=>!!$('cl239Sel'),
+ disposition:()=>document.querySelectorAll('#cl2Panels .cl2Panel .cl237Bar').length>=5,
+ symboles:()=>{const P=document.querySelector('#cl2Panels .cl2Panel[data-k=carte]');return !!P&&!!P.style.getPropertyValue('--star')}
+};
+let pret=null,raison='';
+function lever(r){if(pret!==null)return;pret=Math.round(performance.now()-t0);raison=r;document.body.classList.add('cl242pret');if(att){att.classList.remove('v');setTimeout(()=>att&&att.remove(),500)}}
+const t=setInterval(()=>{try{const manque=Object.keys(conditions).filter(k=>{try{return !conditions[k]()}catch(e){return true}});if(!manque.length){lever('prêt');clearInterval(t)}else if(performance.now()-t0>15000){lever('délai : '+manque.join(', '));clearInterval(t)}}catch(e){lever('erreur');clearInterval(t)}},100);
+window.cl242={pret:()=>pret,raison:()=>raison,manque:()=>Object.keys(conditions).filter(k=>{try{return !conditions[k]()}catch(e){return true}})};
+})();
+(()=>{'use strict';
+const TIT='CL242 · Le rideau d’ouverture';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL242')v.textContent='CL242'},300);
+})();
+}catch(e){console.error("cl242Rideau",e);}
 </script>
 </body></html>
