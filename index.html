@@ -14266,13 +14266,109 @@ function glisser(L){let r=null,ph=null,dy=0,h0=0;
 const panneaux=()=>[...document.querySelectorAll('#cl2Panels .cl2Panel[data-k]')];
 function barre(P){const has=P.querySelector(':scope>.cl237Bar');if(groupes(P).length<2){if(has)has.remove();return}if(has)return;/* un onglet vidé par un regroupement perd sa barre */const bar=document.createElement('div');bar.className='cl237Bar';const b=document.createElement('button');b.type='button';b.className='cl237Btn cl174sm';b.innerHTML=SYM+'Disposition';b.setAttribute('aria-label','Disposition personnalisée de cet onglet');b.addEventListener('click',()=>ouvrir(P));bar.appendChild(b);
  const first=P.querySelector(':scope>.cl3Pont');if(first)first.before(bar);else P.appendChild(bar)}
-let n=0;const t=setInterval(()=>{n++;try{const Ps=panneaux();if(Ps.length){Ps.forEach(P=>{appliquer(P);barre(P)})}if(n===12||n===40||n===80){const A=window.cl45Aide;if(A){if(!A.AIDE.find(e=>e.k==='cl237'))A.AIDE.push({k:'cl237',all:true,txt:'Disposition',t:'Disposition personnalisée',x:'Chaque onglet se range à votre goût : touchez « Disposition » pour voir ses rubriques, numérotées dans l’ordre où elles s’affichent.\n\n• La poignée ≡ — glissez-la pour changer l’ordre (au clavier : flèches haut et bas).\n• − — masque la rubrique ; elle passe sous « Masqués ».\n• + — la remet à sa place.\n• Réinitialiser cet onglet — l’ordre et les rubriques d’origine de cet onglet.\n• Tout réinitialiser — tous les onglets (second appui pour confirmer).\n\nL’onglet se met à jour aussitôt, derrière la feuille ; la disposition est gardée dans l’appareil et retrouvée à chaque ouverture. « Réglages d’origine » reste toujours en dernier.\n\nÀ dire : « appuie sur disposition ».'});try{A.install()}catch(x){}}}}catch(e){console.warn('CL237',e)}if(n>120)clearInterval(t)},400);
+let n=0;const t=setInterval(()=>{n++;try{const Ps=panneaux();if(Ps.length){Ps.forEach(P=>{appliquer(P);barre(P);const bar=P.querySelector(':scope>.cl237Bar'),f=P.querySelector(':scope>.cl3Pont');if(bar&&f&&(bar.compareDocumentPosition(f)&Node.DOCUMENT_POSITION_PRECEDING))f.before(bar)})/* CL238 : la barre reste en tête même si un pont est ajouté après elle */}if(n===12||n===40||n===80){const A=window.cl45Aide;if(A){if(!A.AIDE.find(e=>e.k==='cl237'))A.AIDE.push({k:'cl237',all:true,txt:'Disposition',t:'Disposition personnalisée',x:'Chaque onglet se range à votre goût : touchez « Disposition » pour voir ses rubriques, numérotées dans l’ordre où elles s’affichent.\n\n• La poignée ≡ — glissez-la pour changer l’ordre (au clavier : flèches haut et bas).\n• − — masque la rubrique ; elle passe sous « Masqués ».\n• + — la remet à sa place.\n• Réinitialiser cet onglet — l’ordre et les rubriques d’origine de cet onglet.\n• Tout réinitialiser — tous les onglets (second appui pour confirmer).\n\nL’onglet se met à jour aussitôt, derrière la feuille ; la disposition est gardée dans l’appareil et retrouvée à chaque ouverture. « Réglages d’origine » reste toujours en dernier.\n\nÀ dire : « appuie sur disposition ».'});try{A.install()}catch(x){}}}}catch(e){console.warn('CL237',e)}if(n>120)clearInterval(t)},400);
 window.cl237={ouvrir:k=>{const P=document.querySelector('#cl2Panels .cl2Panel[data-k="'+k+'"]');if(P)ouvrir(P)},fermer,lire,etat:()=>({ouvert:!!sheet&&!sheet.hidden,onglet:cur?cur.dataset.k:null,liste:sheet?[...sheet.querySelectorAll('.cl237L .cl237r .cl237t')].map(e=>e.textContent):[],masques:sheet?[...sheet.querySelectorAll('.cl237ML .cl237r .cl237t')].map(e=>e.textContent):[]}),groupes:k=>{const P=document.querySelector('#cl2Panels .cl2Panel[data-k="'+k+'"]');return P?groupes(P).map(g=>({titre:g.titre,cache:g.el.classList.contains('cl237Cache')})):[]}};
 })();
 (()=>{'use strict';
-const TIT='CL237 · La disposition personnalisée des onglets';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL237')v.textContent='CL237'},300);
 })();
 }catch(e){console.error("cl237Disposition",e);}
+/* ───────── cl238PupitreHorloger ───────── */
+try{
+/* CL238 — Le pupitre horloger (Thierry, 19 novembre 2026, 10 h 12 et 10 h 14, document « GOOGLE_AI_VERSION » : cinq images d'un
+   pupitre imaginé par Google — plaques de métal brossé bleu nuit, lunettes dorées vissées, poussoirs et interrupteurs texturés,
+   réglettes à aiguille, afficheurs en verre biseauté, titres gravés à l'or ; « remplacer intégralement l'ensemble du nôtre par
+   celui-ci à l'identique, et l'adapter à l'idée identique pour certains onglets »).
+   • Ce module habille tout le pupitre (en-tête, rail des onglets, panneaux, ponts, commandes) dans ce langage, sans changer une
+     commande ni un texte : seule la feuille de style change. Les contenus inventés par l'image (NAVI-TIME, concordance des horloges,
+     couleur des aiguilles, Europe référence solaire…) ne sont pas repris : ce sont nos commandes réelles qui prennent cet habit.
+   • Plaques : fond brossé (fines rayures), ponts à double lunette (filet sombre + filet or), quatre vis dorées aux angles, titres
+     gravés à l'or précédés d'une étoile ; en-tête « PUPITRE ASTRONOMIQUE » sur plaque gravée, version à droite.
+   • Commandes : boutons et menus en plaque d'or à texte sombre ; interrupteurs à glissière sombre, bouton d'or (arrêt) ou de cuivre
+     pointillé (marche) ; boutons radio à jewel ; réglettes à aiguille Breguet conservées ; afficheurs (date-heure, lectures) en verre
+     sombre biseauté à filet d'or ; pastilles « ? » en vis d'or. Les couleurs qui ont un sens sont gardées (Maintenant vert, arrêt
+     rouge, micro en écoute).
+   • Réglage : case « Pupitre horloger » dans Cadran › Habillage (cochée par défaut, mémorisée) — décochée, le pupitre « Nuit et or »
+     de la veille revient tel quel. Lisibilité inchangée : aucun corps de texte n'est réduit.
+   • Revue CL237 : le bouton « Disposition » est maintenant toujours en tête de l'onglet (il pouvait se glisser sous un pont ajouté
+     après lui). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);const KEY='cl238';
+const SCREW="radial-gradient(circle at X Y,#fff3c9 0 1.1px,#d2ad63 1.3px 2.9px,#5a4722 3.1px 3.7px,transparent 4.2px)";
+const screws=[['12px','12px'],['calc(100% - 12px)','12px'],['12px','calc(100% - 12px)'],['calc(100% - 12px)','calc(100% - 12px)']].map(([x,y])=>SCREW.replace('X',x).replace('Y',y)).join(',');
+const STAR="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.2 6.8L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.2z' fill='%23e3c78c'/%3E%3C/svg%3E\")";
+const CHEV="url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232a1d08' stroke-width='1.8'/%3E%3C/svg%3E\")";
+const GOLD='linear-gradient(#f6e4b4,#d2ad63 52%,#a97f3b)',COPPER='linear-gradient(#e7b188,#b8734a 55%,#7a4423)',GOLDTXT='#1b1407';
+const css=document.createElement('style');css.id='cl238Css';css.textContent=`
+/* ===== CL238 · pupitre horloger — tout sous body.cl238 ===== */
+body.cl238 #v5Desk.cl3 #cl2Panels{background-color:#0b1626!important;background-image:repeating-linear-gradient(90deg,#ffffff07 0 1px,transparent 1px 3px),radial-gradient(ellipse at 50% 0%,#1c3150 0%,#0b1626 65%)!important;background-size:auto,auto!important}
+body.cl238 #v5Desk.cl3 #cl2Head{background-color:#0a1322!important;background-image:repeating-linear-gradient(90deg,#ffffff06 0 1px,transparent 1px 3px)!important}
+body.cl238 #v5Desk.cl3 .cl3Pont,body.cl238 #v5Desk.cl3 #cl236Nav,body.cl238 #v5Desk.cl3 #cl85Fav,body.cl238 #v5Desk.cl3 #cl191Card{border:1px solid #d6b56a!important;border-radius:12px!important;background-image:${screws},repeating-linear-gradient(90deg,#ffffff05 0 1px,transparent 1px 4px),linear-gradient(170deg,#17294a,#0b172c)!important;background-color:#0f1d33!important;box-shadow:0 0 0 3px #0a1322,0 0 0 4px #7a6440,inset 0 1px 0 #ffffff1a,inset 0 -1px 0 #000000a0,0 8px 18px #0009!important;padding:18px 16px 14px!important;margin:0 0 18px!important}
+body.cl238 #v5Desk.cl3 #cl85Fav{padding:12px 16px!important;margin:8px 0 18px!important}
+body.cl238 #v5Desk.cl3 .cl3Pont>.cl2Grp,body.cl238 #v5Desk.cl3 #cl236Nav>.cl2Grp,body.cl238 #v5Desk.cl3 .cl2Grp{font:600 11px 'Cinzel',serif!important;letter-spacing:.2em!important;color:#ecd6a0!important;text-shadow:0 1px 0 #000,0 0 10px #c9a45c40;padding-left:17px!important;background:${STAR} no-repeat 0 50%/11px 11px!important}
+body.cl238 #v5Desk.cl3 #cl236Nav>.cl2Grp{border-bottom:1px solid #7a6440!important;padding-bottom:6px!important}
+/* en-tête : plaque gravée */
+body.cl238 #v5Desk.cl3 #cl2Title{background:linear-gradient(90deg,#0d1a2b,#17294a 50%,#0d1a2b)!important;border:1px solid #c9a45c!important;border-radius:10px!important;padding:8px 12px!important;margin:6px 0 8px!important;box-shadow:0 0 0 3px #0a1322,0 0 0 4px #7a6440,inset 0 1px 0 #ffffff1a!important;display:flex!important;align-items:baseline!important;gap:10px!important;flex-wrap:wrap!important}
+body.cl238 #v5Desk.cl3 #cl2Title strong{font:700 15px 'Cinzel',serif!important;letter-spacing:.16em!important;text-transform:uppercase!important;color:#ecd6a0!important;text-shadow:0 1px 0 #000,0 0 12px #c9a45c55!important}
+body.cl238 #v5Desk.cl3 #cl2Title span{margin-left:auto!important;font:500 10.5px 'Jost',sans-serif!important;color:#c9a45c!important;letter-spacing:.04em}
+/* boutons : plaques d'or à texte sombre (les boutons porteurs d'un sens gardent leur couleur) */
+body.cl238 #v5Desk.cl3 #cl2Panels button:not(.cl45-info):not(.cl137m):not(.cl237m):not(.cl237p):not(.on):not(.fait):not(#cl144Now):not(.cl2Face),body.cl238 #v5Desk.cl3 #cl2Head .v13-time-row button:not(#v13Now),body.cl238 #v5Desk.cl3 #cl2Head .v6-side,body.cl238 #v5Desk.cl3 #cl2Head #cl191Card button:not(.cl45-info):not(.on):not(.cl137m),body.cl238 #cl237Sheet .cl237F button{background:${GOLD}!important;color:${GOLDTXT}!important;border:1px solid #6d5427!important;box-shadow:inset 0 1px 0 #fff8,inset 0 -1px 0 #0006,0 2px 4px #000a!important;font-weight:600!important;text-shadow:0 1px 0 #ffffff55}
+body.cl238 #v5Desk.cl3 #cl2Panels button:not(.cl45-info) svg.cl174i,body.cl238 #v5Desk.cl3 #cl2Head #cl191Card button:not(.cl45-info):not(.on) svg.cl174i,body.cl238 #v5Desk.cl3 #cl2Head .v6-side svg{color:${GOLDTXT}!important;stroke:${GOLDTXT}}
+body.cl238 #v5Desk.cl3 #cl2Panels button.on:not(.cl137m){background:${COPPER}!important;color:${GOLDTXT}!important;border-color:#5a2f18!important;box-shadow:inset 0 1px 0 #fff6,inset 0 -1px 0 #0006,0 0 0 1px #ffb98a55,0 2px 4px #000a!important;font-weight:600!important}
+body.cl238 #v5Desk.cl3 #cl2Panels button:disabled{opacity:.45!important}
+body.cl238 #v5Desk.cl3 #cl2Panels button:not(.cl45-info):not(.on) small{color:#3a2a10!important}
+html body.cl238 #v5Desk.cl3 #cl2Rail button{color:#d2ad63!important}
+html body.cl238 #v5Desk.cl3 #cl2Rail button.on{color:#1b1407!important}
+/* pastilles « ? » : vis d'or */
+body.cl238 #v5Desk.cl3 #cl2Panels button.cl45-info,body.cl238 #v5Desk.cl3 #cl2Head button.cl45-info,body.cl238 #v5Desk.cl3 #cl2Head #cl3Cadran button.cl45-info,body.cl238 #v5Desk.cl3 #cl2Panels .cl2Panel button.cl45-info,html body.cl238 #v5Desk.cl3 button.cl45-info{background:radial-gradient(circle at 40% 35%,#f8ead0,#cfa95c 58%,#7a5d2c)!important;color:${GOLDTXT}!important;border:1px solid #5a4722!important;box-shadow:0 1px 2px #000a,inset 0 1px 0 #fff8!important;font-weight:700!important;opacity:1!important}
+/* menus : plaques d'or */
+body.cl238 #v5Desk.cl3 #cl2Head select,body.cl238 #v5Desk.cl3 #cl2Panels select{color:${GOLDTXT}!important;border:1px solid #6d5427!important;background-image:${CHEV},${GOLD}!important;box-shadow:inset 0 1px 0 #fff8,inset 0 -1px 0 #0006,0 2px 4px #000a!important;font-weight:600!important}
+body.cl238 #v5Desk.cl3 #cl2Panels select option{background:#f3e2b0;color:${GOLDTXT}}
+/* champs : verre sombre biseauté */
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=text],body.cl238 #v5Desk.cl3 #cl2Panels input[type=number],body.cl238 #v5Desk.cl3 #cl2Panels input[type=time],body.cl238 #v5Desk.cl3 #cl2Panels input[type=date],body.cl238 #v5Desk.cl3 #cl2Panels textarea{background:linear-gradient(#050a12,#101c2c)!important;border:1px solid #8a7448!important;box-shadow:inset 0 2px 4px #000d,0 1px 0 #ffffff12!important;color:#f3e2b0!important;border-radius:8px!important}
+/* afficheur date-heure et lectures */
+body.cl238 #v5Desk.cl3 #cl2Head .v6-editor{background:linear-gradient(#050a12,#0e1a2a)!important;border:1px solid #c9a45c!important;box-shadow:inset 0 2px 6px #000e,0 0 0 3px #0a1322,0 0 0 4px #6d5427!important;border-radius:8px!important}
+body.cl238 #v5Desk.cl3 #cl2Head .v6-digit{color:#f6e4b4!important;text-shadow:0 0 6px #e3c78c66}
+body.cl238 #v5Desk.cl3 #cl3Loc{color:#d8c38d!important}
+body.cl238 #v5Desk.cl3 .cl191g>div{background:linear-gradient(#050a12,#101c2c)!important;border:1px solid #8a7448!important;box-shadow:inset 0 2px 4px #000d!important;border-radius:8px!important}
+body.cl238 #v5Desk.cl3 .cl191g b{color:#f6e4b4!important}
+/* interrupteurs : glissière sombre, bouton d'or (arrêt) ou de cuivre pointillé (marche) */
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox],body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]{width:40px!important;height:21px!important;border-radius:11px!important;background:linear-gradient(#0a1220,#1a2a40)!important;box-shadow:inset 0 2px 4px #000d,0 0 0 1px #8a7448,0 1px 0 #ffffff14!important;border:0!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox]::before,body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]::before{top:2px!important;left:2px!important;width:17px!important;height:17px!important;border-radius:50%!important;background:radial-gradient(circle at 35% 30%,#fff4d2,#d9b56c 45%,#8a6a35 95%)!important;box-shadow:0 1px 2px #000c,inset 0 -1px 1px #0006!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox]:checked,body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]:checked{background:linear-gradient(#c98a5f,#8a5330)!important;box-shadow:inset 0 2px 4px #0009,0 0 0 1px #d2ad63,0 0 8px #c9a45c33!important}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=checkbox]:checked::before,body.cl238 #v5Desk.cl3 #cl3Loc input[type=checkbox]:checked::before{left:21px!important;background:repeating-radial-gradient(circle at 50% 50%,#0000 0 1.2px,#0004 1.2px 2.2px),radial-gradient(circle at 35% 30%,#ffd9c0,#d08a5e 45%,#7a4423 95%)!important}
+/* boutons radio : jewel */
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=radio],body.cl238 #v5Desk.cl3 #cl2Head input[type=radio]{appearance:none;-webkit-appearance:none;width:18px;height:18px;border-radius:50%;border:0;margin:0 6px 0 0;vertical-align:middle;background:radial-gradient(circle,#0a1220 0 4px,#56493a 4.5px 6px,#1a2a40 6.5px);box-shadow:0 0 0 1px #c9a45c,inset 0 1px 2px #000c;cursor:pointer}
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=radio]:checked,body.cl238 #v5Desk.cl3 #cl2Head input[type=radio]:checked{background:radial-gradient(circle,#ffe9b8 0 3.6px,#d2ad63 4px 6px,#1a2a40 6.5px);box-shadow:0 0 0 1px #e3c78c,0 0 8px #e3c78c88}
+/* réglettes : rail d'or gravé, aiguille Breguet conservée */
+body.cl238 #v5Desk.cl3 #cl2Panels input[type=range]::-webkit-slider-runnable-track{background:linear-gradient(90deg,#8d6a33,#f0d79a var(--p),#04080c var(--p))!important;box-shadow:inset 0 1px 2px #000,0 0 0 1px #5a4722,0 1px 0 #ffffff14!important}
+/* rail des onglets : plaque gravée, icônes d'or, onglet actif en plaque d'or */
+body.cl238 #v5Desk.cl3 #cl2Rail{background-color:#07101c!important;background-image:repeating-linear-gradient(115deg,#ffffff00 0 9px,#ffffff07 9px 12px,#ffffff00 12px 18px)!important;border-color:#7a6440!important}
+body.cl238 #v5Desk.cl3 #cl2Rail button{color:#c9a45c!important}
+body.cl238 #v5Desk.cl3 #cl2Rail button svg{stroke:#d2ad63!important;color:#d2ad63!important}
+body.cl238 #v5Desk.cl3 #cl2Rail button.on{background:${GOLD}!important;color:${GOLDTXT}!important;box-shadow:inset 0 1px 0 #fff8,inset 0 -1px 0 #0006,0 2px 4px #000a!important}
+body.cl238 #v5Desk.cl3 #cl2Rail button.on svg{stroke:${GOLDTXT}!important;color:${GOLDTXT}!important}
+/* feuille Disposition */
+body.cl238 #cl237Sheet .cl237S{border-color:#d6b56a;box-shadow:0 0 0 3px #0a1322,0 0 0 4px #7a6440,0 -8px 30px #000a;background-image:repeating-linear-gradient(90deg,#ffffff05 0 1px,transparent 1px 4px),linear-gradient(170deg,#17294a,#0b172c)}
+body.cl238 #cl237Sheet .cl237m,body.cl238 #cl237Sheet .cl237p{color:#d2ad63}
+/* la case du réglage */
+#cl238Lab{display:flex;align-items:center;gap:8px;margin:8px 0 2px}
+`;document.head.appendChild(css);
+const lire=()=>{try{const v=localStorage.getItem(KEY);return v===null?true:v==='1'}catch(e){return true}};
+const poser=on=>{document.body.classList.toggle('cl238',!!on);try{localStorage.setItem(KEY,on?'1':'0')}catch(e){}};
+poser(lire());
+function ui(){if($('cl238Box'))return true;const P=document.querySelector('#cl2Panels .cl2Panel[data-k=carte]');if(!P)return false;
+ const pont=[...P.querySelectorAll(':scope>.cl3Pont')].find(c=>/^Habillage/.test(((c.querySelector('.cl2Grp')||{}).textContent||'').trim()));if(!pont)return false;
+ const l=document.createElement('label');l.id='cl238Lab';l.innerHTML='<input type="checkbox" id="cl238Box"'+(lire()?' checked':'')+'><span>Pupitre horloger</span>';pont.appendChild(l);
+ $('cl238Box').addEventListener('change',e=>poser(e.target.checked));
+ const A=window.cl45Aide;if(A){if(!A.AIDE.find(e=>e.k==='cl238'))A.AIDE.push({k:'cl238',id:'cl238Box',t:'Pupitre horloger',x:'• coché (par défaut) — le pupitre prend l’habit d’une montre d’horloger : plaques de métal brossé bleu nuit, ponts à lunette d’or vissée, titres gravés à l’or, boutons et menus en plaque d’or, interrupteurs à bouton d’or ou de cuivre, réglettes à aiguille, afficheurs en verre biseauté (modèle d’après les images Google du 19 novembre 2026).\n• décoché — le pupitre « Nuit et or » tel qu’il était la veille.\n\nLes commandes, leurs textes et leurs tailles ne changent pas : seule la finition change. Mémorisé dans l’appareil.'});try{A.install()}catch(x){}}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui()&&n>4)clearInterval(t)}catch(e){console.warn('CL238',e)}if(n>120)clearInterval(t)},400);
+window.cl238={actif:()=>document.body.classList.contains('cl238'),poser};
+})();
+(()=>{'use strict';
+const TIT='CL238 · Le pupitre horloger';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL238')v.textContent='CL238'},300);
+})();
+}catch(e){console.error("cl238PupitreHorloger",e);}
 </script>
 </body></html>
