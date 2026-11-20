@@ -7923,7 +7923,7 @@ function installNow(){let n=0;for(const e0 of AIDE){const list=e0.all?targetsAll
  else if(a.tagName==='LABEL'&&a.querySelector('select')){a.appendChild(b);}/* CL248 : la pastille après le menu et son nom (Thierry, 20 novembre 2026, image 22) */
  else if(e.dynIn)a.appendChild(b);
  else if(a.tagName==='LABEL'||a.tagName==='SUMMARY')a.appendChild(b);                 // dans le libellé : un clic sur « ? » ne coche pas la case
- else if(a.classList&&a.classList.contains('note'))a.prepend(b);
+ else if(a.classList&&a.classList.contains('note'))a.appendChild(b);/* CL251 : la pastille d'une note en fin de texte (Thierry, 20 novembre 2026) */
  else a.after(b);n++;}}
  place();return n;}
 setInterval(place,300);window.addEventListener('scroll',place,true);window.addEventListener('resize',place);
@@ -12684,7 +12684,7 @@ function dessin(pos){if(!G)return;try{const anc=document.getElementById('chronoH
   const [cx,cy]=proj(cb.la,cb.lo);h+='<rect x="'+(cx-2.4).toFixed(1)+'" y="'+(cy-2.4).toFixed(1)+'" width="4.8" height="4.8" fill="#ff9d2e" stroke="#fff" stroke-width=".6" transform="rotate(45 '+cx.toFixed(1)+' '+cy.toFixed(1)+')"/><text x="'+(cx+5).toFixed(1)+'" y="'+(cy+3).toFixed(1)+'" font-size="16" font-family="Arial,sans-serif" font-weight="700" fill="#ffffff" style="paint-order:stroke;stroke:#06121f;stroke-width:3px">'+cb.nom+'</text>'}/* CL222 : 0,75 mm ; CL231 : comme « Polaris » */
  if(trace.length>1){let d='';trace.forEach((q,i)=>{const [x,y]=proj(q.la,q.lo);d+=(i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1)});h+='<path d="'+d+'" fill="none" stroke="#ffffff" stroke-width="1.3" stroke-dasharray="1.5 2" opacity=".95"/>'}
  const [x,y]=proj(pos.la,pos.lo);
- const an=Math.atan2(C-y,C-x)/rad;const a=an+90+(pos.cap!=null&&!isNaN(pos.cap)?-pos.cap:0)+180;
+ const an=Math.atan2(C-y,C-x)/rad;const a=an+90+(pos.cap!=null&&!isNaN(pos.cap)?pos.cap:0);/* CL251 : le nez dans le sens du vol — le nord est vers le centre, l'est à droite quand on le regarde : la formule d'avant retournait l'avion et comptait le cap à l'envers (vérifié sur le vol d'essai) */
  h+='<g transform="translate('+x.toFixed(1)+' '+y.toFixed(1)+')"><circle r="9.6" fill="#0b1521" fill-opacity=".55" stroke="#f0c96a" stroke-width=".9"/><g transform="rotate('+a.toFixed(1)+')"><path d="M0 -7 L1.6 -2 L7 1.2 L7 2.6 L1.6 1 L1.2 5 L3.2 6.4 L3.2 7.4 L0 6.6 L-3.2 7.4 L-3.2 6.4 L-1.2 5 L-1.6 1 L-7 2.6 L-7 1.2 L-1.6 -2 Z" fill="#ffffff" stroke="#1a2740" stroke-width=".8" style="filter:drop-shadow(0 0 2px #000)"/></g></g>';/* CL204 : pastille sombre cerclée d’or sous l’avion */
  G.innerHTML=h;
  try{const sp=document.getElementById('sunPhoto');if(sp){const sx=+sp.getAttribute('x')+(+sp.getAttribute('width'))/2,sy=+sp.getAttribute('y')+(+sp.getAttribute('height'))/2;const proche=Math.hypot(sx-x,sy-y)<24;const want=proche?'0.45':'';if(sp.style.opacity!==want)sp.style.opacity=want}}catch(e){}}
@@ -12950,7 +12950,7 @@ function build(){if(!G){const ov=document.querySelector('#watch svg.overlay'),ha
   const A=window.cl45Aide;if(A){const put=e=>{const i=A.AIDE.findIndex(x=>x.k===e.k);if(i>=0)A.AIDE[i]=e;else A.AIDE.push(e)};
    put({k:'cl191arr',id:'cl206fArr',t:'Ville d’arrivée',x:'La ville où l’avion se pose, parmi les 493 villes de la montre. Un appui ouvre le menu de la montre : tapez les premières lettres en haut (« dur » pour Durban, sans accent au besoin), la liste se filtre ; les continents en dessous la restreignent ; l’index A–Z à droite, touché ou glissé, saute à une lettre ; ▲▼ en bas font défiler (appui maintenu : défilement continu). Un appui sur une ville la choisit et ferme le menu. La route la plus courte y mène sur la carte ; la montre calcule la distance et le temps restant, l’heure d’arrivée et l’heure locale là-bas. Le choix est gardé d’une ouverture à l’autre.'});
    put({k:'cl200dep',id:'cl206fDep',t:'Ville de départ',x:'• automatique (par défaut) — la ville la plus proche du point de décollage.\n• une ville — si vous ouvrez la montre en plein vol, pour corriger, ou pour un vol d’essai. Elle fixe le début de la barre de progression (code de son aéroport) et l’heure « au départ ». Même menu que l’arrivée : lettres, continents, index A–Z, ▲▼.'});
-   put({k:'cl200vers',id:'cl206fVers',t:'Cap vers un lieu',x:'Une ligne pointillée orange part de l’avion vers le lieu choisi, par la route la plus courte ; la ligne « Cap vers » donne la distance, le relèvement (0° = nord), le côté et l’heure du cadran. La maison (ville de la montre), la ville d’arrivée, aucun, ou toute ville de la base (La Mecque pour qui la cherche). Même menu que l’arrivée.'});
+   put({k:'cl200vers',id:'cl206fVers',t:'Cap vers un lieu',x:'Une ligne pointillée orange part de l’avion vers le lieu choisi, par la route la plus courte ; la ligne « Cap vers » donne la distance, le relèvement (0° = nord), le côté et l’heure du cadran. La maison (ville de la montre), la ville d’arrivée, aucun, ou toute ville de la base. Même menu que l’arrivée.'});
    put({k:'cl201pano',id:'cl201PanoBox',t:'Vue hublot',x:'• cochée (par défaut) — trois panneaux sous le tableau de bord : hublot gauche, devant, hublot droit. Les villes à moins de 800 km y prennent place selon leur côté (de gauche à droite) et leur distance (les plus proches en bas, en plus gros), avec la distance en kilomètres. Ce que l’œil voit par le hublot, sans relief.\n• décochée — pas de vue hublot.'});
    put({k:'cl201haut',id:'cl201HautBox',t:'Carte cap en haut',x:'• décochée (par défaut) — la carte garde son orientation.\n• cochée — la carte de Gleason tourne pour que l’avion monte toujours vers le haut, comme sur un écran de navigation ; l’orientation d’avant est rendue quand on décoche ou qu’on quitte la face AIR.'});
    put({k:'cl202voix',id:'cl202VoixBox',t:'Voix du hublot',x:'• cochée (par défaut) — le vol est raconté au bon moment, en phrases courtes : décollage, croisière, ville qui passe par le travers (à moins de 80 km), coucher ou lever du Soleil à bord dix minutes avant, descente qui approche puis commence, approche, atterrissage, et un point de situation toutes les vingt minutes. Chaque phrase s’affiche sur la ligne « Hublot », est annoncée à VoiceOver, et dite à voix haute si « Réponses parlées » (onglet Voix) est cochée.\n• décochée — la ligne « Hublot » s’écrit encore, mais la montre se tait.\n\nLe récit est gardé avec le vol dans le carnet.'});
@@ -13701,7 +13701,9 @@ function poser(){if(G&&G.isConnected)return G;const ov=document.querySelector('#
  const t=document.createElementNS(NS,'text');t.setAttribute('x','233');t.setAttribute('y','355');t.setAttribute('text-anchor','middle');t.setAttribute('font-family','Cinzel,Georgia,serif');t.setAttribute('font-size','13');t.setAttribute('font-weight','700');t.setAttribute('letter-spacing','2.5');t.setAttribute('fill','#1d160a');t.textContent='REJEU';
  G.appendChild(r);G.appendChild(t);const anc=ov.querySelector('#cl191Air');if(anc&&anc.nextSibling)ov.insertBefore(G,anc.nextSibling);else ov.appendChild(G);return G}
 function maj(){const A=window.cl191;const g=poser();if(!g||!A||!A.etat)return;const e=A.etat();const txt=e.relecture?'REJEU':e.demo?'ESSAI':'';const on=!!txt&&document.body.classList.contains('clx-air');
- g.style.display=on?'':'none';if(on){const t=g.querySelector('text');if(t.textContent!==txt)t.textContent=txt}}
+ g.style.display=on?'':'none';if(on){const t=g.querySelector('text');if(t.textContent!==txt)t.textContent=txt;
+ let haut=false;try{const pg=document.querySelector('#cl191Air g[transform^="translate"]');const m=pg&&/translate\(([-\d.]+) ([-\d.]+)\)/.exec(pg.getAttribute('transform'));if(m){const px=+m[1],py=+m[2];haut=Math.abs(px-233)<72&&py>318&&py<382}}catch(e){}
+ const tr=haut?'translate(0,-234)':'';if((g.getAttribute('transform')||'')!==tr){if(tr)g.setAttribute('transform',tr);else g.removeAttribute('transform')}}}/* CL251 : le ruban REJEU / ESSAI monte en haut du cadran quand l'avion passe dessous (il cachait l'avion et son cap) */
 setInterval(()=>{try{maj()}catch(e){console.warn('CL219',e)}},500);
 window.cl219={etat:()=>{const g=document.getElementById('cl219Ruban');return {ruban:!!g&&g.style.display!=='none',texte:g?g.querySelector('text').textContent:null}}};
 })();
@@ -15120,9 +15122,249 @@ setInterval(()=>{try{tick()}catch(e){console.warn('CL250',e)}},1000);
 window.cl250={etat:()=>({nom:lire(),ecrit:!!(G&&G.childElementCount),rose:!!$('cl45RoseNom'),texte:G&&G.querySelector('text')?G.querySelector('text').textContent:(document.getElementById('cl45RoseNom')||{}).textContent||''})};
 })();
 (()=>{'use strict';
-const TIT='CL250 · Cadran : sextant en mer, pastille, jour et nuit, réserve, nom de la ville, fonds incorporés';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL250')v.textContent='CL250'},300);
 })();
 }catch(e){console.error("CL250",e);}
+/* ───────── CL251 ───────── */
+try{
+/* CL251 — La face AIR et le bandeau (Thierry, 20 novembre 2026, document « Carte blanche », images 16 à 22).
+   • L'avion de la carte pointe enfin dans le sens du vol (comme Flightradar) : la formule de CL191 le retournait de 180° et comptait
+     le cap à l'envers — vérifié sur le vol d'essai Johannesburg → Paris (nez à 234°, route à 225° sur l'écran).
+   • Fiche « Cap vers un lieu » : « (La Mecque pour qui la cherche) » retiré.
+   • Vue hublot (gauche, droite) : même cadre rectangulaire que le cockpit et l'arrière (image 17-18).
+   • Le bandeau (image 19-20) : titre sur une ligne (le sous-titre tenait sur deux) ; « Affichage couronne » et « Navigation
+     temporelle » dans un volet déroulant (#cl251Repli) dont la ligne de titre, toujours visible, donne la date, l'heure et la ville
+     (puis « arrêté » ou la vitesse) : un appui l'ouvre ou le replie. Replié par défaut sur le téléphone, ouvert sur l'ordinateur ;
+     mémorisé (cl251Repli). Replié, l'en-tête passe de 462 à ≈ 125 px sur l'iPhone : le cadran et les onglets remontent.
+   • Pastilles « ? » : celles des notes passent en fin de texte (règle générale cl45Aide) ; menus et cases les avaient déjà après
+     la commande (CL248).
+   • Rien n'est déplacé après le montage (le volet est posé une fois, quand « Navigation temporelle » est montée). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),KEY='cl251Repli';
+const CHEV='<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const css=document.createElement('style');css.id='cl251Css';css.textContent=`
+html body #v5Desk #cl2Title{padding:5px 10px!important;margin-bottom:6px!important;gap:10px;align-items:baseline!important;flex-wrap:nowrap!important}
+html body #v5Desk #cl2Title strong{white-space:nowrap;flex:0 0 auto}html body #v5Desk.cl3 #cl2Title strong{font-size:15px!important;letter-spacing:.08em!important}
+html body #v5Desk #cl2Title span{display:block!important;min-height:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1 1 0!important;min-width:0;text-align:right}
+#cl251Repli{margin:4px 0 6px}#cl251Repli>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid #39576a;border-radius:10px;background:#152734;color:#e9e1cf;font:500 13px/1.2 Jost,Arial,sans-serif;user-select:none}
+#cl251Repli>summary::-webkit-details-marker{display:none}#cl251Repli>summary .cl251Chev{display:inline-flex;color:currentColor;opacity:.85;transition:transform .25s}#cl251Repli[open]>summary .cl251Chev{transform:rotate(90deg)}
+#cl251Repli>summary #cl251Txt{font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}#cl251Repli>summary .cl251Lab{font:500 10.5px Cinzel,serif;letter-spacing:.14em;text-transform:uppercase;color:inherit;opacity:.85;white-space:nowrap}
+#cl251Repli[open]>summary #cl251Txt{display:none}@media (max-width:520px){#cl251Repli:not([open])>summary .cl251Lab{display:none}}
+#cl251Repli[open]>summary{border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}#cl251Repli[open]>#cl3Aff{margin-top:0!important;border-top:0!important}
+html body.cl238 #v5Desk.cl3 #cl251Repli>summary{background:linear-gradient(180deg,var(--pl1,#142640),var(--pl2,#0e1b2e))!important;border:1px solid var(--sc3,#5c6f8a)!important;color:var(--pltx,#e9e1cf)!important}
+html body.cl241papier #v5Desk #cl251Repli>summary{background:#efe6cf!important;border-color:#c9b486!important;color:#1b1407!important}html body.cl241papier #v5Desk #cl251Repli>summary .cl251Chev{color:#6a4a10}html body.cl241papier #v5Desk #cl251Repli>summary .cl251Lab{color:#6a4a10}
+#cl218Svg.hublot{border-radius:10px!important;box-shadow:none!important}/* image 17-18 : le hublot prend le cadre du cockpit */
+.cl2Panel .note>button.cl45-info{margin-left:6px;vertical-align:baseline}
+#cl2Panels label>button.cl45-info[data-cl251]{margin-left:8px!important;align-self:center}`;
+document.head.appendChild(css);
+const large=()=>matchMedia('(min-width:761px)').matches;
+const lire=()=>{try{const v=localStorage.getItem(KEY);if(v==='1')return true;if(v==='0')return false}catch(e){}return large()};
+function texte(){const d=$('cl251Txt');if(!d)return;const o=$('cl251Repli');let t='';
+ if(!(o&&o.open)){const dg=($('v6Digits')||{}).textContent||'';const loc=(($('cl3LocText')||{}).textContent||'').split('·')[0].trim();const play=$('v13Play'),sp=$('v13Speed');
+  const m=dg.replace(/\s+/g,' ').trim().replace(/:\d\d$/,'');/* sans les secondes : la ligne tient sur le téléphone */const arret=play&&!play.classList.contains('cl57-run');const v=sp&&sp.value&&sp.value!=='1'?sp.selectedOptions[0]?.textContent.trim():'';
+  t=[m,loc,arret?'arrêté':v].filter(Boolean).join(' · ')}
+ if(d.textContent!==t)d.textContent=t}
+function poser(){if($('cl251Repli'))return true;const aff=$('cl3Aff'),nav=$('cl236Nav'),head=$('cl2Head');if(!aff||!nav||!head||aff.parentElement!==head||nav.parentElement!==head)return false;
+ const d=document.createElement('details');d.id='cl251Repli';const s=document.createElement('summary');s.id='cl251Som';s.setAttribute('aria-label','Ouvrir ou replier la navigation temporelle');
+ s.innerHTML='<span class="cl251Chev">'+CHEV+'</span><span id="cl251Txt"></span><span class="cl251Lab">Navigation temporelle</span>';
+ d.appendChild(s);aff.before(d);d.appendChild(aff);d.appendChild(nav);d.open=lire();
+ d.addEventListener('toggle',()=>{try{localStorage.setItem(KEY,d.open?'1':'0')}catch(e){}texte()});
+ texte();
+ const A=window.cl45Aide;if(A&&!A.AIDE.some(e=>e.k==='cl251')){A.AIDE.push({k:'cl251',id:'cl251Som',t:'Volet de la navigation temporelle',x:'La ligne donne la date, l’heure et la ville de la montre (puis « arrêté » si le temps est arrêté, ou la vitesse si elle n’est pas ×1). Un appui ouvre le volet : l’affichage de la couronne (12 h · 24 h · Guichet) et la navigation temporelle complète (date et heure à régler, UTC, Maintenant, marche et vitesse) ; un second appui le replie.\n\nReplié par défaut sur le téléphone (le cadran et les onglets remontent), ouvert sur l’ordinateur ; ton choix est mémorisé dans l’appareil.\n\nOù le voir : en haut du pupitre, sous les boutons GLEASON · PRAGUE · 3D · AIR · NAVI.'});try{A.install()}catch(e){}}
+ return true}
+/* ---- pastilles « ? » après la commande et son nom : la CL49 rangeait la pastille dans la ligne du nom, avant le menu ou le curseur */
+function apres(){let n=0;document.querySelectorAll('#cl2Panels label span.cl49line>button.cl45-info:not([data-cl251])').forEach(b=>{const lab=b.closest('label');if(!lab||lab.classList.contains('vcol'))return;/* en colonne (nom au-dessus, commande pleine largeur), la pastille reste au bout du nom */const ctl=lab.querySelector('select,input[type=range],input[type=number],input[type=time],input[type=text]');if(!ctl||!(b.compareDocumentPosition(ctl)&Node.DOCUMENT_POSITION_FOLLOWING))return;b.dataset.cl251='1';lab.appendChild(b);n++});return n}
+let n=0;const t=setInterval(()=>{n++;try{apres();if(poser()&&n>20)clearInterval(t)}catch(e){console.warn('CL251',e)}if(n>400)clearInterval(t)},150);
+setTimeout(()=>{const A=window.cl45Aide;if(A&&A.install&&!A.install.cl251){const o=A.install;const w=function(){const r=o.apply(this,arguments);try{apres()}catch(e){}return r};w.cl251=true;A.install=w}},2500);
+document.addEventListener('click',ev=>{if(ev.target.closest&&ev.target.closest('[role=tab],summary'))setTimeout(apres,400)});
+setInterval(()=>{try{texte()}catch(e){}},1000);
+window.cl251={etat:()=>{const d=$('cl251Repli');return {volet:!!d,ouvert:!!(d&&d.open),texte:($('cl251Txt')||{}).textContent||'',hauteurTete:Math.round(($('cl2Head')||{getBoundingClientRect:()=>({height:0})}).getBoundingClientRect().height)}},ouvrir:v=>{const d=$('cl251Repli');if(d)d.open=v!==false}};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("CL251",e);}
+/* ───────── CL252 ───────── */
+try{
+/* CL252 — La vue satellite sous l'avion (Thierry, 20 novembre 2026, document « Carte blanche » : « peux-tu plutôt visualiser une vue
+   satellite comme le propose Google Maps »).
+   • Face AIR, carte « Vue satellite » sous « Hublot · cockpit » : les images satellite du monde (Esri World Imagery — Esri, Maxar,
+     Earthstar Geographics et la communauté SIG ; libres d'affichage avec cette mention, sans clé) sous l'avion, en mosaïque de neuf
+     tuiles centrée sur sa position, chargées à la demande quand l'appareil est en ligne (le fichier reste seul : ouverte hors du web,
+     la carte le dit et attend). Google Maps demande une clé et un contrat : non.
+   • Dessus : l'avion (au cap), la route à venir (pointillé or), les villes de la montre et les villages (GeoNames, CL246) à leur
+     place, en blanc cerné ; une flèche du nord et une échelle. Menu « Étendue » (25 · 100 · 400 km, soit les niveaux 11 · 9 · 7 des
+     tuiles) ; menu « Orientation » : nord en haut, ou cap en haut comme un navigateur (la mosaïque tourne, les noms restent droits).
+   • Case « Vue satellite (en ligne) » cochée par défaut ; choix mémorisés (cl252On, cl252Z, cl252Or). Les tuiles ne sont demandées que
+     face AIR ouverte, case cochée et avion placé ; une image qui ne vient pas le dit. Fiches « ? ».
+   • Rien n'est déplacé après le montage (la carte est posée une fois sous le hublot). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',rad=Math.PI/180;
+const KON='cl252On',KZ='cl252Z',KO='cl252Or',T=256,W=360,H=236;
+const TUILE=(z,x,y)=>'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/'+z+'/'+y+'/'+x;
+const lire=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}};const ecrire=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const on=()=>lire(KON,'1')==='1',zoom=()=>+lire(KZ,'9'),orient=()=>lire(KO,'nord');
+/* ---- Mercator des tuiles */
+const merc=(la,lo,z)=>{const n=Math.pow(2,z),f=Math.max(-85.05,Math.min(85.05,la))*rad;return [(lo+180)/360*n,(1-Math.log(Math.tan(f)+1/Math.cos(f))/Math.PI)/2*n]};
+const mpp=(la,z)=>156543.03*Math.cos(la*rad)/Math.pow(2,z);/* mètres par pixel */
+const inter=(a,b,f)=>{const p1=a.la*rad,l1=a.lo*rad,p2=b.la*rad,l2=b.lo*rad;const d=2*Math.asin(Math.sqrt(Math.sin((p2-p1)/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin((l2-l1)/2)**2));if(d<1e-9)return a;const A=Math.sin((1-f)*d)/Math.sin(d),B=Math.sin(f*d)/Math.sin(d);const x=A*Math.cos(p1)*Math.cos(l1)+B*Math.cos(p2)*Math.cos(l2),y=A*Math.cos(p1)*Math.sin(l1)+B*Math.cos(p2)*Math.sin(l2),zz=A*Math.sin(p1)+B*Math.sin(p2);return {la:Math.atan2(zz,Math.hypot(x,y))/rad,lo:Math.atan2(y,x)/rad}};
+const css=document.createElement('style');css.id='cl252Css';css.textContent=`
+#cl252Card{margin:8px 0 4px;padding:8px 0 2px;border-top:1px solid #ffffff14}
+#cl252Card .cl252b{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:0 0 6px}#cl252Card .cl252b label{display:inline-flex;align-items:center;gap:6px;font:400 12.5px Jost,Arial,sans-serif;color:#e9e1cf}
+#cl252Vue{position:relative;width:100%;aspect-ratio:${W} / ${H};overflow:hidden;border-radius:10px;background:#0b1117;border:1px solid #ffffff22}
+#cl252Rot{position:absolute;left:50%;top:50%;width:${3*T}px;height:${3*T}px;margin:${-1.5*T}px 0 0 ${-1.5*T}px;transform-origin:50% 50%;will-change:transform}
+#cl252Mos{position:absolute;left:0;top:0;width:${3*T}px;height:${3*T}px}#cl252Mos img{position:absolute;width:${T}px;height:${T}px;display:block;image-rendering:auto}
+#cl252Svg{position:absolute;left:0;top:0;width:${3*T}px;height:${3*T}px;pointer-events:none;overflow:visible}
+#cl252N{position:absolute;right:8px;top:8px;width:30px;height:30px;border-radius:50%;background:#0b1521cc;border:1px solid #e2c56e;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#cl252Ech{position:absolute;left:8px;bottom:8px;font:600 11px Jost,Arial,sans-serif;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000;pointer-events:none}#cl252Ech i{display:block;height:3px;background:#fff;box-shadow:0 0 3px #000;margin-top:2px}
+#cl252Attr{font:400 10.5px/1.4 Jost,Arial,sans-serif;color:#9fb0bf;margin:4px 0 0}#cl252Msg{font:400 12px/1.4 Jost,Arial,sans-serif;color:#cdbf9a;margin:4px 0 0;min-height:1.1em}
+body.cl241papier #v5Desk #cl252Card .cl252b label{color:#1b1407}body.cl241papier #v5Desk #cl252Msg{color:#6a5a3a}body.cl241papier #v5Desk #cl252Attr{color:#5c6670}`;
+document.head.appendChild(css);
+let imgs=[],cle='',erreurs=0,tuiles=0,dernier=null;const rate=new Map();/* adresse → instant de l'échec : une minute sans la redemander */
+function ui(){if($('cl252Card'))return true;const ref=$('cl218Card');if(!ref||!ref.isConnected)return false;
+ const c=document.createElement('div');c.id='cl252Card';
+ c.innerHTML='<div class="cl2Grp"><span>Vue satellite</span></div><div class="cl252b"><label><input type="checkbox" id="cl252On"> Vue satellite (en ligne)</label><label>Étendue <select id="cl252Z" aria-label="Étendue de la vue satellite"><option value="11">25 km</option><option value="9">100 km</option><option value="7">400 km</option></select></label><label>Orientation <select id="cl252Or" aria-label="Orientation de la vue satellite"><option value="nord">Nord en haut</option><option value="cap">Cap en haut</option></select></label></div>'+
+ '<div id="cl252Vue" role="img" aria-label="Vue satellite sous l’avion"><div id="cl252Rot"><div id="cl252Mos"></div><svg id="cl252Svg" viewBox="0 0 '+(3*T)+' '+(3*T)+'" font-family="Jost,Arial,sans-serif"></svg></div><div id="cl252N"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3l5 16-5-4-5 4z" fill="#e2c56e" stroke="#1d160a" stroke-width=".8"/><text x="12" y="23" font-size="7" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="700">N</text></svg></div><div id="cl252Ech"><span></span><i></i></div></div>'+
+ '<div id="cl252Msg" aria-live="polite"></div><div id="cl252Attr">Images satellite : Esri World Imagery — Esri, Maxar, Earthstar Geographics et la communauté des utilisateurs SIG.</div>';
+ ref.after(c);
+ const mos=$('cl252Mos');for(let i=0;i<9;i++){const im=document.createElement('img');im.alt='';im.decoding='async';im.loading='eager';im.style.left=((i%3)*T)+'px';im.style.top=(Math.floor(i/3)*T)+'px';im.addEventListener('error',()=>{erreurs++;im.style.visibility='hidden';if(im.dataset.src)rate.set(im.dataset.src,Date.now());message()});im.addEventListener('load',()=>{im.style.visibility='';tuiles++;message()});mos.appendChild(im);imgs.push(im)}
+ const b=$('cl252On');b.checked=on();b.addEventListener('change',()=>{ecrire(KON,b.checked?'1':'0');cle='';tick()});
+ const z=$('cl252Z');z.value=String(zoom());z.addEventListener('change',()=>{ecrire(KZ,z.value);cle='';tick()});
+ const o=$('cl252Or');o.value=orient();o.addEventListener('change',()=>{ecrire(KO,o.value);cle='';tick()});
+ const A=window.cl45Aide;if(A&&!A.AIDE.some(e=>e.k==='cl252')){
+  A.AIDE.push({k:'cl252',id:'cl252On',t:'Vue satellite',x:'• cochée (par défaut) — sous l’avion, les images satellite du monde (Esri World Imagery), en mosaïque centrée sur sa position, avec l’avion au cap, la route à venir en pointillé, les villes de la montre et les villages (GeoNames) à leur place, une flèche du nord et une échelle.\n• décochée — pas d’images.\n\nLes images viennent du web quand l’appareil est en ligne (elles ne sont pas dans le fichier de la montre : trop lourdes et toujours changeantes) ; hors du web, la vue le dit et attend. Google Maps demande une clé et un contrat : la montre se sert des images Esri, libres d’affichage avec leur mention.\n\nOù le voir : face AIR, sous « Hublot · cockpit ».'});
+  A.AIDE.push({k:'cl252z',id:'cl252Z',t:'Étendue',x:'Largeur de la vue : 25 km (détail d’une ville), 100 km (par défaut : une région, ce que l’on voit d’un avion de ligne) ou 400 km (un pays). Ce sont les niveaux 11, 9 et 7 des tuiles satellite.'});
+  A.AIDE.push({k:'cl252o',id:'cl252Or',t:'Orientation',x:'• Nord en haut (par défaut) — comme une carte ; l’avion tourne selon son cap.\n• Cap en haut — comme un navigateur : la mosaïque tourne pour que la route soit vers le haut, la flèche du nord suit, les noms restent droits.'});
+  try{A.install()}catch(e){}}
+ return true}
+function message(){const m=$('cl252Msg');if(!m)return;let t='';if(!on())t='';else if(!dernier)t='La vue attend l’avion (vol d’essai, relecture ou GPS).';else if(navigator.onLine===false)t='Avec l’appareil en ligne : les images satellite viennent du web.';else if(erreurs>=9)t='Images satellite indisponibles pour l’instant (réseau).';else if(tuiles===0&&erreurs>0)t='Chargement des images…';if(m.textContent!==t)m.textContent=t}
+function tick(){const v=$('cl252Vue');if(!v)return;const A=window.cl191;const air=document.body.classList.contains('clx-air');const pos=air&&A&&A.position?A.position():null;const actif=on()&&!!pos;
+ if(!actif){dernier=pos?dernier:null;if(v.style.display!=='none')v.style.display='none';cle='';message();return}
+ if(v.style.display)v.style.display='';dernier=pos;
+ const z=zoom(),cap=pos.cap!=null&&isFinite(pos.cap)?pos.cap:0,or=orient();
+ const k=[z,or,pos.la.toFixed(4),pos.lo.toFixed(4),Math.round(cap)].join('|');if(k===cle)return;cle=k;
+ const n=Math.pow(2,z),[xt,yt]=merc(pos.la,pos.lo,z),ix=Math.floor(xt),iy=Math.floor(yt);
+ /* tuiles */
+ let i=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=((ix+dx)%n+n)%n,y=iy+dy;const im=imgs[i++];const src=(y<0||y>=n)?'':TUILE(z,x,y);if(im.dataset.src!==src){const echec=rate.get(src);if(src&&echec&&Date.now()-echec<60000){im.dataset.src=src;im.removeAttribute('src');im.style.visibility='hidden';continue}im.dataset.src=src;if(src){im.style.visibility='hidden';im.src=src}else{im.removeAttribute('src');im.style.visibility='hidden'}}}
+ if(i===9){/* compteurs du jeu de tuiles en cours */erreurs=imgs.filter(im=>im.dataset.src&&rate.has(im.dataset.src)&&Date.now()-rate.get(im.dataset.src)<60000).length;tuiles=imgs.filter(im=>im.complete&&im.naturalWidth>0&&im.dataset.src&&im.src===im.dataset.src).length}
+ /* l'avion au centre de la fenêtre : la mosaïque se décale */
+ const px=(xt-(ix-1))*T,py=(yt-(iy-1))*T;const rot=$('cl252Rot');const r=or==='cap'?-cap:0;
+ rot.style.transform='translate('+(1.5*T-px).toFixed(1)+'px,'+(1.5*T-py).toFixed(1)+'px) rotate('+r.toFixed(1)+'deg)';rot.style.transformOrigin=px.toFixed(1)+'px '+py.toFixed(1)+'px';
+ const N=$('cl252N');if(N)N.style.transform='rotate('+r.toFixed(1)+'deg)';
+ /* échelle */
+ const m=mpp(pos.la,z);const paliers=[1,2,5,10,20,50,100,200,500];const vw=v.clientWidth||W;const cible=m*vw*0.28/1000;let km=paliers[0];for(const p of paliers)if(p<=cible)km=p;const ech=$('cl252Ech');if(ech){ech.querySelector('span').textContent=km+' km';ech.querySelector('i').style.width=Math.round(km*1000/m)+'px'}
+ /* dessus : route, villes, villages, avion */
+ const svg=$('cl252Svg');let h='';const toPx=(la,lo)=>{const [a,b]=merc(la,lo,z);return [(a-(ix-1))*T,(b-(iy-1))*T]};const F=v=>v.toFixed(1);
+ const vis=(x,y)=>Math.hypot(x-px,y-py)<1.1*T;/* dans le disque visible, quelle que soit la rotation */
+ try{const R=A.route&&A.route();if(R&&R.arr){const tot=R.dist||0;if(tot>0){let d='';const pas=Math.min(1,(m*T*1.2/1000)/tot);for(let f=0;f<=1.0001;f+=pas/16){const q=inter({la:pos.la,lo:pos.lo},{la:R.arr.la,lo:R.arr.lo},Math.min(1,f));const [x,y]=toPx(q.la,q.lo);d+=(d?'L':'M')+F(x)+' '+F(y);if(f>pas)break}h+='<path d="'+d+'" fill="none" stroke="#f0c96a" stroke-width="2.4" stroke-dasharray="7 5" opacity=".95"/>'}}}catch(e){}
+ const noms=[];const contre=or==='cap'?' transform="rotate('+F(cap)+' X Y)"':'';
+ const lab=(nom,la,lo,gras,pop)=>{const [x,y]=toPx(la,lo);if(!vis(x,y)||noms.some(q=>Math.abs(q[0]-x)<70&&Math.abs(q[1]-y)<16))return;noms.push([x,y]);const t=contre.replace('X',F(x)).replace('Y',F(y));h+='<g'+t+'><circle cx="'+F(x)+'" cy="'+F(y)+'" r="'+(gras?3.2:2.2)+'" fill="'+(gras?'#ffd36b':'#ffffff')+'" stroke="#06121f" stroke-width=".8"/><text x="'+F(x+6)+'" y="'+F(y+4)+'" font-size="'+(gras?12:10.5)+'" font-weight="'+(gras?700:500)+'" fill="#ffffff" style="paint-order:stroke;stroke:#06121f;stroke-width:3px">'+nom+'</text></g>'};
+ try{const rayon=m*T*1.3/1000;const V=(A.villes?A.villes():[]).map(v=>({...v,d:A.geo.dist(pos,v)})).filter(v=>v.d<=rayon).sort((a,b)=>a.d-b.d).slice(0,8);V.forEach(v=>lab(v.nom,v.la,v.lo,true));
+  if(window.cl246&&window.cl246.autour){const VI=window.cl246.autour(pos.la,pos.lo,Math.min(300,rayon)).slice(0,30).sort((a,b)=>b.pop-a.pop).slice(0,12);VI.forEach(v=>lab(v.nom,v.la,v.lo,false,v.pop))}}catch(e){}
+ h+='<g transform="translate('+F(px)+' '+F(py)+') rotate('+F(or==='cap'?0:cap)+')"><circle r="13" fill="#0b1521" fill-opacity=".5" stroke="#f0c96a" stroke-width="1.2"/><path d="M0 -9 L2.2 -3 L9.5 1.6 L9.5 3.4 L2.2 1.3 L1.6 6.8 L4.3 8.6 L4.3 10 L0 8.9 L-4.3 10 L-4.3 8.6 L-1.6 6.8 L-2.2 1.3 L-9.5 3.4 L-9.5 1.6 L-2.2 -3 Z" fill="#ffffff" stroke="#1a2740" stroke-width="1" style="filter:drop-shadow(0 0 2px #000)"/></g>';
+ svg.innerHTML=h;message()}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL252',e)}if(n>400)clearInterval(t)},200);
+setInterval(()=>{try{tick()}catch(e){console.warn('CL252',e)}},1000);
+window.cl252={etat:()=>({carte:!!$('cl252Card'),on:on(),z:zoom(),orient:orient(),tuiles:imgs.map(i=>i.dataset.src||''),erreurs,chargees:tuiles,msg:($('cl252Msg')||{}).textContent||'',labels:$('cl252Svg')?$('cl252Svg').querySelectorAll('text').length:0}),merc,tuile:TUILE,choisir:(o)=>{if(o.on!=null)ecrire(KON,o.on?'1':'0');if(o.z)ecrire(KZ,String(o.z));if(o.orient)ecrire(KO,o.orient);const b=$('cl252On');if(b)b.checked=on();const z=$('cl252Z');if(z)z.value=String(zoom());const s=$('cl252Or');if(s)s.value=orient();cle='';tick()}};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("CL252",e);}
+/* ───────── CL253 ───────── */
+try{
+/* CL253 — Le dialogue guidé, par oui et non (Thierry, 20 novembre 2026, document « Carte blanche » : « il faut travailler les
+   informations et les propositions vocales : décrire l'état, puis proposer « veux-tu d'autres informations ? », lever et coucher du
+   Soleil ? oui / non… à décliner sur Gleason, puis sur AIR »).
+   • Onglet Voix, carte « Dialogue guidé » : « Commencer » — la montre dit l'état (heure, date, Soleil), puis demande « Veux-tu
+     d'autres informations ? » ; à chaque oui, elle répond et propose le sujet suivant : lever et coucher du Soleil, la Lune (phase,
+     lever, coucher), le crépuscule et la nuit noire, la marée, l'heure de la ville domicile ; un non passe au sujet suivant, « stop »
+     ou « merci » arrête ; au bout des sujets elle se tait. Face AIR en vol : l'état du vol (phase, altitude, vitesse, cap), les
+     villes autour, le Soleil du vol, l'arrivée.
+   • Réponses : les boutons Oui · Non · Stop (dans la carte et dans un bandeau sous les onglets, visible depuis tout onglet tant qu'une
+     question attend), la voix (« oui », « d'accord », « non », « plus tard », « stop »… par le micro de la montre : la réponse passe
+     devant les commandes) ou le champ « Écrire une commande ». Case « Écouter la réponse au micro » (cochée quand l'iPhone sait
+     reconnaître la voix) : la montre écoute dix secondes après chaque question. Sans réponse en vingt-cinq secondes, elle se retire.
+   • Dite à voix haute (même si « Réponses parlées » est décochée : c'est un dialogue voulu) et écrite dans la carte. Fiche « ? ».
+   • Rien n'est déplacé après le montage (carte et bandeau posés une fois). */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),KA='cl253Auto';
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’'`]/g,' ').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+const OUI=/^(oui|ouais|d accord|dac|ok|okay|volontiers|vas y|allez|bien sur|s il te plait|je veux bien|continue|encore|oui merci)( .*)?$/,NON=/^(non|nan|pas ca|plus tard|pas maintenant|suivant|passe|non merci|sans facon)( .*)?$/,STOP=/^(stop|arrete|arrete toi|ca suffit|merci c est tout|c est tout|termine|fin|tais toi|silence|au revoir)( .*)?$/,DEBUT=/^(dialogue|guide moi|raconte|raconte moi|dis moi tout|commence le dialogue|parle moi)( .*)?$/;
+const inst=()=>+(window.v54GetGleasonInstant?window.v54GetGleasonInstant():new Date());
+const place=()=>{try{return window.cl45Place()}catch(e){return ['Paris',48.86,2.35,'Europe/Paris']}};
+const hh=(ms,tz)=>{try{return new Date(ms).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:tz}).replace(':',' h ')}catch(e){return '—'}};
+const lignes=()=>{try{return String(window.cl136Decrire()).split('\n')}catch(e){return []}};
+/* ---- les sujets : Gleason */
+function etatG(){const L=lignes();return L.slice(0,3).join(' ')||'Je ne sais pas encore décrire le cadran.'}
+function soleil(){const ms=inst(),[nom,la,lo,tz]=place();const A=window.cl36Almanach(ms,la,lo,tz);if(!A.sun.rise&&!A.sun.set){const h=window.cl82Info?window.cl82Info(ms):null;return h&&h.alt>0?'À '+nom+', jour polaire : le Soleil ne se couche pas aujourd’hui.':'À '+nom+', nuit polaire : le Soleil ne se lève pas aujourd’hui.'}
+ let t='À '+nom+', le Soleil '+(A.sun.rise>ms?'se lèvera à '+hh(A.sun.rise,tz):'s’est levé à '+hh(A.sun.rise,tz))+' et '+(A.sun.set>ms?'se couchera à '+hh(A.sun.set,tz):'s’est couché à '+hh(A.sun.set,tz))+'.';
+ if(A.noon)t+=' Midi vrai à '+hh(A.noon,tz)+', hauteur '+Math.round(A.noonAlt)+' degrés.';if(A.sun.set<=ms){const B=window.cl36Almanach(ms+864e5,la,lo,tz);if(B.sun.rise)t+=' Demain, lever à '+hh(B.sun.rise,tz)+'.'}return t}
+function lune(){const ms=inst(),[nom,la,lo,tz]=place();const L=lignes().find(x=>/^La Lune/.test(x))||'';const A=window.cl36Almanach(ms,la,lo,tz);let t=L;
+ if(A.moon){const r=A.moon.rise,s=A.moon.set;const ev=[];if(r)ev.push([r,(r>ms?'elle se lèvera à ':'elle s’est levée à ')+hh(r,tz)]);if(s)ev.push([s,(s>ms?'elle se couchera à ':'elle s’est couchée à ')+hh(s,tz)]);ev.sort((a,b)=>a[0]-b[0]);const p=ev.map(x=>x[1]);if(p.length)t+=' Aujourd’hui à '+nom+', '+p.join(' et ')+'.';else t+=' Elle ne se lève ni ne se couche aujourd’hui à '+nom+'.'}return t||'La Lune : je n’ai pas sa phase.'}
+function crep(){const ms=inst(),[nom,la,lo,tz]=place();const A=window.cl36Almanach(ms,la,lo,tz);const p=[];
+ if(A.civ&&A.civ.set)p.push('le crépuscule civil se termine à '+hh(A.civ.set,tz)+' (on allume les lampes)');if(A.nau&&A.nau.set)p.push('l’horizon de mer s’efface à '+hh(A.nau.set,tz));if(A.ast&&A.ast.set)p.push('la nuit noire commence à '+hh(A.ast.set,tz));
+ const B=window.cl36Almanach(ms+864e5,la,lo,tz);if(B.ast&&B.ast.rise)p.push('demain, l’aube astronomique à '+hh(B.ast.rise,tz));if(B.civ&&B.civ.rise)p.push('le jour civil à '+hh(B.civ.rise,tz));
+ return p.length?'À '+nom+', '+p.join(', ')+'.':'À '+nom+', pas de nuit noire en cette saison.'}
+function maree(){const L=lignes().find(x=>/^Marée/.test(x));return L||'La marée n’est pas calculée pour l’instant : coche « Indicateur de marée » dans Soleil et Lune.'}
+function domicile(){const s=$('cl66Dom');if(!s)return 'Pas de ville domicile.';const tz=s.value,nom=s.selectedOptions[0]?.textContent.trim()||tz;const ms=inst();let t='Dans ta ville domicile, '+nom+', il est '+hh(ms,tz)+'.';const j=$('cl115Txt');if(j&&j.textContent)t+=' '+j.textContent.replace(/\s*:\s*/,' : ')+'.';return t}
+/* ---- les sujets : AIR */
+const air=()=>document.body.classList.contains('clx-air')&&window.cl191&&window.cl191.position&&window.cl191.position();
+function etatA(){const A=window.cl191,pos=A.position();const e=A.etat(),R=A.route();const kmh=pos.v||0;let t='Avion '+(e.vol?'en vol':'placé')+(R&&R.arr?' vers '+R.arr.nom:'')+' : altitude '+Math.round(pos.alt||0).toLocaleString('fr-FR')+' mètres, vitesse '+Math.round(kmh)+' kilomètres par heure'+(pos.cap!=null?', cap '+Math.round(pos.cap)+' degrés':'')+'.';
+ try{const p=window.cl201.textePilote(pos,R&&R.arr,kmh,inst());if(p)t+=' '+p+'.'}catch(x){}return t}
+function villes(){const A=window.cl191,pos=A.position();const L=window.cl200.proches(pos.la,pos.lo,4);if(!L.length)return 'Aucune ville connue autour.';const cote=window.cl200.cote;const parts=L.map(x=>{let c='';try{c=pos.cap!=null&&cote?' '+(cote(A.geo.cap(pos,x.v)-pos.cap).txt||''):''}catch(e){}return x.v.nom+' à '+Math.round(x.d)+' kilomètres'+c});
+ let v='';try{if(window.cl246&&window.cl246.autour){const V=window.cl246.autour(pos.la,pos.lo,60).slice(0,3);if(V.length)v=' Villages à moins de 60 kilomètres : '+V.map(x=>x.nom+' à '+Math.round(x.d)+' kilomètres').join(', ')+'.'}}catch(e){}
+ return 'Autour de l’avion : '+parts.join(', ')+'.'+v}
+function soleilA(){const A=window.cl191,pos=A.position(),R=A.route();try{const t=window.cl201.texteSoleil(pos,R&&R.arr,pos.v||0,inst(),pos.cap);return t&&t!=='—'?t+'.':'Je ne vois pas le Soleil du vol.'}catch(e){return 'Je ne vois pas le Soleil du vol.'}}
+function arrivee(){const A=window.cl191,R=A.route(),e=A.etat();if(!R||!R.arr)return 'Pas de ville d’arrivée choisie.';let t='Il reste '+Math.round(R.dist).toLocaleString('fr-FR')+' kilomètres jusqu’à '+R.arr.nom+', cap '+Math.round(R.cap)+' degrés.';if(e.eta)t+=' Arrivée prévue vers '+hh(e.eta,R.arr.tz||undefined)+', heure de '+R.arr.nom+'.';return t}
+const SUJETS_G=[{q:'Le lever et le coucher du Soleil ?',f:soleil},{q:'La Lune : sa phase, son lever et son coucher ?',f:lune},{q:'Le crépuscule et la nuit noire ?',f:crep},{q:'La marée au port de référence ?',f:maree},{q:'L’heure dans ta ville domicile ?',f:domicile}];
+const SUJETS_A=[{q:'Les villes autour de l’avion ?',f:villes},{q:'Le Soleil du vol ?',f:soleilA},{q:'L’arrivée ?',f:arrivee}];
+/* ---- moteur */
+let etat=null,timer=null,rec=null;
+function dire(t){const z=$('cl253Txt');if(z){const d=document.createElement('div');d.className='cl253m';d.textContent=t;z.prepend(d);while(z.children.length>12)z.lastChild.remove()}try{window.cl136Dire&&window.cl136Dire(t,true)}catch(e){}
+ try{const L=$('cl137Log');if(L){if(L.dataset.v!=='1'){L.innerHTML='';L.dataset.v='1'}L.insertAdjacentHTML('afterbegin','<div class="q">Dialogue</div><div class="r">'+t.replace(/</g,'&lt;')+'</div>')}}catch(e){}}
+function bandeau(on,q){const B=$('cl253Ban');if(!B)return;B.classList.toggle('v',!!on);const t=B.querySelector('.q');if(t&&q!=null&&t.textContent!==q)t.textContent=q}
+function question(q){etat.q=q;dire(q);bandeau(true,q);clearTimeout(timer);timer=setTimeout(()=>{if(etat){dire('Je reste à ta disposition.');fin(true)}},25000);ecouter()}
+function fin(silence){clearTimeout(timer);bandeau(false);if(rec){try{rec.stop()}catch(e){}rec=null}etat=null;if(!silence)dire('À ton service.')}
+function suivant(){if(!etat)return;const S=etat.sujets;if(etat.i>=S.length){dire('C’est tout ce que je sais dire pour l’instant. À ton service.');fin(true);return}question(S[etat.i].q)}
+function commencer(){if(etat)fin(true);const enVol=!!air();etat={mode:enVol?'air':'gleason',sujets:enVol?SUJETS_A:SUJETS_G,i:0,q:''};let t;try{t=enVol?etatA():etatG()}catch(e){t='Je ne sais pas décrire l’état.'}dire(t);question('Veux-tu d’autres informations ?');etat.intro=true;return true}
+function repondre(oui){if(!etat)return null;clearTimeout(timer);if(rec){try{rec.stop()}catch(e){}rec=null}
+ if(etat.intro){etat.intro=false;if(!oui){fin(false);return 'Bien.'}suivant();return 'Oui.'}
+ const s=etat.sujets[etat.i];etat.i++;if(oui&&s){let r;try{r=s.f()}catch(e){r='Je n’arrive pas à le dire pour l’instant.'}dire(r)}
+ /* la question suivante vient juste après la réponse */
+ setTimeout(suivant,oui?200:0);return oui?'Oui.':'Suivant.'}
+function stop(){if(!etat)return null;fin(false);return 'Dialogue terminé.'}
+/* ---- écoute au micro, dix secondes, une réponse */
+function ecouter(){if(!SR||!etat)return;const a=$('cl253Auto');if(a&&!a.checked)return;try{if(rec){rec.stop();rec=null}rec=new SR();rec.lang='fr-FR';rec.interimResults=false;rec.maxAlternatives=3;
+ rec.onresult=ev=>{const alts=[...ev.results[0]].map(x=>norm(x.transcript));const n=alts.find(x=>OUI.test(x)||NON.test(x)||STOP.test(x))||alts[0]||'';const B=$('cl253Ecoute');if(B)B.textContent='Entendu : « '+n+' »';
+  if(STOP.test(n))stop();else if(OUI.test(n))repondre(true);else if(NON.test(n))repondre(false);else{const L=$('cl253Ecoute');if(L)L.textContent='Entendu « '+n+' » : réponds par oui ou non (boutons, ou au micro).'}};
+ rec.onerror=()=>{rec=null};rec.onend=()=>{rec=null};rec.start();const B=$('cl253Ecoute');if(B)B.textContent='J’écoute ta réponse…';setTimeout(()=>{if(rec){try{rec.stop()}catch(e){}}},10000)}catch(e){rec=null}}
+/* ---- la voix et le clavier passent par la commande vocale (CL137) : oui / non / stop répondent au dialogue avant tout le reste */
+setTimeout(()=>{const o=window.cl140Reponse;window.cl140Reponse=n=>{if(etat){if(STOP.test(n))return stop();if(OUI.test(n))return repondre(true);if(NON.test(n))return repondre(false)}else if(DEBUT.test(n)){commencer();return 'Dialogue guidé : je t’écoute.'}return o?o(n):null}},1500);
+/* ---- carte (onglet Voix) et bandeau */
+const css=document.createElement('style');css.id='cl253Css';css.textContent=`
+#cl253Card .bt{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}#cl253Card .bt button{min-height:34px}#cl253Oui,#cl253Ban .oui{background:linear-gradient(#f4dea6,#c39a55)!important;color:#1d160a!important;font-weight:700}
+#cl253Txt{font:13px/1.45 Jost,Arial,sans-serif;color:#f3ead2;background:#0d1620;border:1px solid #6d5a33;border-radius:10px;padding:8px 10px;min-height:2.6em;max-height:200px;overflow:auto}#cl253Txt .cl253m{margin:0 0 6px;padding-left:8px;border-left:2px solid #c9a25a}#cl253Txt .cl253m:first-child{color:#f6dc95}
+#cl253Ecoute{font:12px/1.4 Jost,Arial,sans-serif;color:#cdbf9a;min-height:1.2em;margin:4px 0}#cl253Card .n{font:12px/1.4 Jost,Arial,sans-serif;color:#b9ab86;margin-top:4px}
+#cl253Ban{display:none;align-items:center;gap:8px;margin:4px 0 6px;padding:7px 10px;border:1px solid #c9a25a;border-radius:10px;background:#152734;font:500 13px/1.3 Jost,Arial,sans-serif;color:#f3ead2}#cl253Ban.v{display:flex}#cl253Ban .q{flex:1;min-width:0}#cl253Ban button{min-height:30px;padding:0 12px}
+body.cl241papier #v5Desk #cl253Txt{background:#efe6cf;color:#1b1407;border-color:#c9b486}body.cl241papier #v5Desk #cl253Txt .cl253m:first-child{color:#6a4a10}body.cl241papier #v5Desk #cl253Ban{background:#efe6cf;color:#1b1407}body.cl241papier #v5Desk #cl253Ecoute,body.cl241papier #v5Desk #cl253Card .n{color:#6a5a3a}`;
+document.head.appendChild(css);
+function ui(){if($('cl253Card'))return true;const V=document.querySelector('.cl2Panel[data-k="voix"]');const ref=V&&V.querySelector('.cl3Pont');if(!V||!ref)return false;
+ const c=document.createElement('div');c.className='cl3Pont';c.id='cl253Card';
+ c.innerHTML='<div class="cl2Grp">Dialogue guidé</div><div class="bt"><button type="button" id="cl253Go">Commencer</button><button type="button" id="cl253Oui">Oui</button><button type="button" id="cl253Non" class="sec">Non</button><button type="button" id="cl253Stop" class="sec">Stop</button></div><div id="cl253Ecoute"></div><div id="cl253Txt">La montre décrit l’état, puis propose les sujets un à un : réponds par oui ou non — ici, dans le bandeau sous les onglets, ou à la voix.</div>'+(SR?'<label><input type="checkbox" id="cl253Auto"> Écouter la réponse au micro après chaque question</label>':'<div class="n">Ce navigateur ne reconnaît pas la voix : réponds par les boutons ou le champ « Écrire une commande ».</div>');
+ ref.after(c);
+ $('cl253Go').addEventListener('click',commencer);$('cl253Oui').addEventListener('click',()=>repondre(true));$('cl253Non').addEventListener('click',()=>repondre(false));$('cl253Stop').addEventListener('click',stop);
+ const a=$('cl253Auto');if(a){let v=true;try{const s=localStorage.getItem(KA);if(s!==null)v=s==='1'}catch(e){}a.checked=v;a.addEventListener('change',()=>{try{localStorage.setItem(KA,a.checked?'1':'0')}catch(e){}})}
+ const panels=$('cl2Panels');if(panels&&!$('cl253Ban')){const B=document.createElement('div');B.id='cl253Ban';B.setAttribute('role','status');B.innerHTML='<span class="q"></span><button type="button" class="oui">Oui</button><button type="button" class="non">Non</button><button type="button" class="stop" aria-label="Arrêter le dialogue">Stop</button>';panels.parentElement.insertBefore(B,panels);
+  B.querySelector('.oui').addEventListener('click',()=>repondre(true));B.querySelector('.non').addEventListener('click',()=>repondre(false));B.querySelector('.stop').addEventListener('click',stop)}
+ const A=window.cl45Aide;if(A&&!A.AIDE.some(e=>e.k==='cl253')){A.AIDE.push({k:'cl253',id:'cl253Go',t:'Dialogue guidé',x:'« Commencer » — la montre dit l’état (heure, date, Soleil), puis demande « Veux-tu d’autres informations ? ». À chaque oui, elle répond et propose le sujet suivant : lever et coucher du Soleil, la Lune (phase, lever, coucher), le crépuscule et la nuit noire, la marée, l’heure de ta ville domicile. Un non passe au sujet suivant ; « stop » ou « merci » arrête. En vol, face AIR : l’état du vol, les villes autour, le Soleil du vol, l’arrivée.\n\nRéponds par les boutons Oui · Non · Stop (ici ou dans le bandeau sous les onglets, visible depuis tout onglet tant qu’une question attend), à la voix (« oui », « d’accord », « non », « plus tard », « stop »…) ou dans le champ « Écrire une commande ». Dire « dialogue » ou « raconte » au micro le commence aussi. Sans réponse en vingt-cinq secondes, la montre se retire.\n\nLa montre parle même si « Réponses parlées » est décochée : c’est un dialogue que tu as demandé.\n\nOù le voir : onglet Voix, carte « Dialogue guidé », et le bandeau sous les onglets.'});
+  if(SR)A.AIDE.push({k:'cl253a',id:'cl253Auto',t:'Écouter la réponse au micro',x:'• cochée (par défaut quand l’iPhone sait reconnaître la voix) — après chaque question, la montre écoute dix secondes : dis « oui », « non » ou « stop ». Au premier essai, l’iPhone demande l’autorisation du micro (souvent le web est nécessaire à la reconnaissance).\n• décochée — tu réponds par les boutons.'});try{A.install()}catch(e){}}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL253',e)}if(n>400)clearInterval(t)},200);
+window.cl253={commencer,repondre,stop,etat:()=>etat?{mode:etat.mode,i:etat.i,q:etat.q,intro:!!etat.intro}:null,sujets:{gleason:SUJETS_G.map(s=>s.q),air:SUJETS_A.map(s=>s.q)},textes:{soleil,lune,crep,maree,domicile,etatG}};
+})();
+(()=>{'use strict';
+const TIT='CL253 · Dialogue guidé par oui et non';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL253')v.textContent='CL253'},300);
+})();
+}catch(e){console.error("CL253",e);}
 </script>
 </body></html>
