@@ -15604,7 +15604,7 @@ function ui(){if($('cl254Vue'))return true;const card=$('cl68Card'),grp=card&&ca
  const inf=document.createElement('div');inf.id='cl254Info';inf.className='cl68n';grp.after(l,inf);
  const v=LS.get(KEY,'astro');$('cl254Vue').value=v;$('cl254Vue').addEventListener('change',()=>appliquer(vue(),true));
  construire();appliquer(v,false);tourner();
- const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl254vue')){A.AIDE.push({k:'cl254vue',id:'cl254Vue',t:'Vue de l’orloj',x:'Menu :\n• Cadran astronomique (par défaut) — le grand cadran seul, comme jusqu’ici.\n• Façade entière — l’horloge telle que la place de la Vieille-Ville la voit : en haut le coq doré dans sa niche (1882) ; les deux fenêtres des apôtres, volets bleus étoilés fermés ; le cadran astronomique, qui continue de tourner, entouré de ses quatre statues : à gauche la Vanité qui se mire et l’Avare à la bourse, à droite la Mort — squelette qui tient le sablier et la corde de sa cloche — et le Turc au luth ; en bas le calendrier peint par Josef Mánes (1866) entre le Philosophe, l’Archange Michel, l’Astronome et le Chroniqueur.\n• Calendrier de Mánes — la plaque du calendrier en grand : 365 crans (366 les années bissextiles), chiffres tous les cinq jours, les douze mois en tchèque (LEDEN, ÚNOR, BŘEZEN…), les médaillons des travaux des mois, les signes du zodiaque alignés sur les dates du Soleil, l’écu de la Vieille-Ville au centre. La plaque tourne d’un cran par jour : le jour de Prague se place sous l’aiguille fixe du haut. La ligne sous le menu donne la date en tchèque et le rang du jour. En vue Façade, la plaque est une miniature : ses chiffres et ses noms de mois, trop petits pour être lus, ne paraissent qu’en vue Calendrier, à la taille lisible.\n\nLe passage d’une vue à l’autre est un mouvement de caméra ; le choix est mémorisé. Les statues et les médaillons sont des dessins originaux, inspirés de l’horloge réelle. Le défilé des apôtres, la cloche de la Mort et le chant du coq, à chaque heure : version suivante.\n\nOù le voir : la face PRAGUE.'});[300,2500].forEach(d=>setTimeout(()=>{try{A.install()}catch(e){}},d))}
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl254vue')){A.AIDE.push({k:'cl254vue',id:'cl254Vue',t:'Vue de l’orloj',x:'Menu :\n• Cadran astronomique (par défaut) — le grand cadran seul, comme jusqu’ici.\n• Façade entière — l’horloge telle que la place de la Vieille-Ville la voit : en haut le coq doré dans sa niche (1882) ; les deux fenêtres des apôtres, volets bleus étoilés fermés ; le cadran astronomique, qui continue de tourner, entouré de ses quatre statues : à gauche la Vanité qui se mire et l’Avare à la bourse, à droite la Mort — squelette qui tient le sablier et la corde de sa cloche — et le Turc au luth ; en bas le calendrier peint par Josef Mánes (1866) entre le Philosophe, l’Archange Michel, l’Astronome et le Chroniqueur.\n• Calendrier de Mánes — la plaque du calendrier en grand : 365 crans (366 les années bissextiles), chiffres tous les cinq jours, les douze mois en tchèque (LEDEN, ÚNOR, BŘEZEN…), les médaillons des travaux des mois, les signes du zodiaque alignés sur les dates du Soleil, l’écu de la Vieille-Ville au centre. La plaque tourne d’un cran par jour : le jour de Prague se place sous l’aiguille fixe du haut. La ligne sous le menu donne la date en tchèque et le rang du jour. En vue Façade, la plaque est une miniature : ses chiffres et ses noms de mois, trop petits pour être lus, ne paraissent qu’en vue Calendrier, à la taille lisible.\n\nLe passage d’une vue à l’autre est un mouvement de caméra ; le choix est mémorisé. Les statues et les médaillons sont des dessins originaux, inspirés de l’horloge réelle. Le défilé des apôtres, la cloche de la Mort et le chant du coq, à chaque heure : voir « Défilé des apôtres à chaque heure », plus bas dans la carte.\n\nOù le voir : la face PRAGUE.'});[300,2500].forEach(d=>setTimeout(()=>{try{A.install()}catch(e){}},d))}
  return true}
 let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL254',e)}if(n>400)clearInterval(t)},200);
 setInterval(()=>{try{if($('cl254Vue'))tourner()}catch(e){console.warn('CL254',e)}},1000);
@@ -16070,9 +16070,20 @@ const css=document.createElement('style');css.id='cl260Css';css.textContent='#cl
 window.cl260={phrase,champ:()=>champ.map(t=>t.n),direChamp,visee:()=>({...vise})};
 })();
 (()=>{'use strict';
-const TIT='CL260 · La voix du hublot et les étoiles de nuit';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL260')v.textContent='CL260'},300);
 })();
 }catch(e){console.error("cl260VoixHublotEtoiles",e);}
+/* ───────── cl261Relecture ───────── */
+try{
+/* CL261 — Relecture de fin de journée (20 novembre 2026) : la fiche « Vue de l'orloj » annonçait encore le défilé des apôtres
+   « à la version suivante » ; il est là depuis la CL255 — la fiche renvoie au bloc « Défilé des apôtres à chaque heure ».
+   Audit de mise en page (audit260.js, iPhone, 31 onglets des faces GLEASON, PRAGUE et AIR) : aucun débordement, aucun menu
+   désaligné, aucune pastille avant sa commande. Relecture des dix-huit fiches du jour : rien d'autre à corriger.
+   Retouche p261 (1 point). Tests : tCL254 et tCL258 rejoués (fiche), pas d'autre changement. */
+(()=>{'use strict';window.cl261={relecture:'20 novembre 2026'}})();
+(()=>{'use strict';
+const TIT='CL261 · Relecture de fin de journée';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL261')v.textContent='CL261'},300);
+})();
+}catch(e){console.error("cl261Relecture",e);}
 </script>
 </body></html>
