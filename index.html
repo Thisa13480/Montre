@@ -15322,9 +15322,10 @@ let etat=null,timer=null,rec=null;
 function dire(t){const z=$('cl253Txt');if(z){const d=document.createElement('div');d.className='cl253m';d.textContent=t;z.prepend(d);while(z.children.length>12)z.lastChild.remove()}try{window.cl136Dire&&window.cl136Dire(t,true)}catch(e){}
  try{const L=$('cl137Log');if(L){if(L.dataset.v!=='1'){L.innerHTML='';L.dataset.v='1'}L.insertAdjacentHTML('afterbegin','<div class="q">Dialogue</div><div class="r">'+t.replace(/</g,'&lt;')+'</div>')}}catch(e){}}
 function bandeau(on,q){const B=$('cl253Ban');if(!B)return;B.classList.toggle('v',!!on);const t=B.querySelector('.q');if(t&&q!=null&&t.textContent!==q)t.textContent=q}
-function question(q){etat.q=q;dire(q);bandeau(true,q);clearTimeout(timer);timer=setTimeout(()=>{if(etat){dire('Je reste à ta disposition.');fin(true)}},25000);ecouter()}
+function question(q){etat.q=q;dire(q);bandeau(true,q);clearTimeout(timer);timer=setTimeout(()=>{if(etat){dire('Je reste à ta disposition.');fin(true)}},etat.mode==='tour'?60000:25000)/* CL262 : une minute pendant la visite */;ecouter()}
 function fin(silence){clearTimeout(timer);bandeau(false);if(rec){try{rec.stop()}catch(e){}rec=null}etat=null;if(!silence)dire('À ton service.')}
 function suivant(){if(!etat)return;const S=etat.sujets;if(etat.i>=S.length){dire('C’est tout ce que je sais dire pour l’instant. À ton service.');fin(true);return}question(S[etat.i].q)}
+function programme(S,intro,mode){if(etat)fin(true);etat={mode:mode||'programme',sujets:S,i:0,q:''};dire(intro.dit);question(intro.q);etat.intro=true;return true}/* CL262 : un programme extérieur (le tour du propriétaire) conduit par le même oui / non */
 function commencer(){if(etat)fin(true);const enVol=!!air();etat={mode:enVol?'air':'gleason',sujets:enVol?SUJETS_A:SUJETS_G,i:0,q:''};let t;try{t=enVol?etatA():etatG()}catch(e){t='Je ne sais pas décrire l’état.'}dire(t);question('Veux-tu d’autres informations ?');etat.intro=true;return true}
 function repondre(oui){if(!etat)return null;clearTimeout(timer);if(rec){try{rec.stop()}catch(e){}rec=null}
  if(etat.intro){etat.intro=false;if(!oui){fin(false);return 'Bien.'}suivant();return 'Oui.'}
@@ -15359,7 +15360,7 @@ function ui(){if($('cl253Card'))return true;const V=document.querySelector('.cl2
   if(SR)A.AIDE.push({k:'cl253a',id:'cl253Auto',t:'Écouter la réponse au micro',x:'• cochée (par défaut quand l’iPhone sait reconnaître la voix) — après chaque question, la montre écoute dix secondes : dis « oui », « non » ou « stop ». Au premier essai, l’iPhone demande l’autorisation du micro (souvent le web est nécessaire à la reconnaissance).\n• décochée — tu réponds par les boutons.'});try{A.install()}catch(e){}}
  return true}
 let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL253',e)}if(n>400)clearInterval(t)},200);
-window.cl253={commencer,repondre,stop,etat:()=>etat?{mode:etat.mode,i:etat.i,q:etat.q,intro:!!etat.intro}:null,sujets:{gleason:SUJETS_G.map(s=>s.q),air:SUJETS_A.map(s=>s.q)},textes:{soleil,lune,crep,maree,domicile,etatG}};
+window.cl253={commencer,repondre,stop,programme,etat:()=>etat?{mode:etat.mode,i:etat.i,q:etat.q,intro:!!etat.intro}:null,sujets:{gleason:SUJETS_G.map(s=>s.q),air:SUJETS_A.map(s=>s.q)},textes:{soleil,lune,crep,maree,domicile,etatG}};
 })();
 (()=>{'use strict';
 })();
@@ -16081,9 +16082,197 @@ try{
    Retouche p261 (1 point). Tests : tCL254 et tCL258 rejoués (fiche), pas d'autre changement. */
 (()=>{'use strict';window.cl261={relecture:'20 novembre 2026'}})();
 (()=>{'use strict';
-const TIT='CL261 · Relecture de fin de journée';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL261')v.textContent='CL261'},300);
 })();
 }catch(e){console.error("cl261Relecture",e);}
+/* ───────── cl262TourProprietaire ───────── */
+try{
+/* CL262 — Le tour du propriétaire (suite de la carte blanche : « ce qui reste à inventer pour rendre ce garde-temps une œuvre d'art
+   exceptionnelle et surtout unique »). Une montre de deux cent soixante complications a besoin d'un guide : la montre fait visiter.
+   • Livret, carte « Le tour du propriétaire » (après le Sommaire) : « Commencer la visite ». La montre se présente, puis propose
+     quatorze stations, une à une, par oui et non (le moteur du dialogue guidé CL253 : boutons Oui · Non · Stop de la carte et du
+     bandeau, la voix — « oui », « non », « stop » —, le champ écrit) : la face GLEASON, Heure et lieu, Soleil et Lune, le Ciel, le
+     Calendrier, le Chronographe, les Sonneries, la Voix, la face PRAGUE, la face 3D, la face AIR, la face NAVI, le Livret, l'aide.
+     À chaque oui, la montre y va — face, onglet, remontée au cadran ou à la carte, halo d'or sur ce qu'elle montre — et dit en trois
+     phrases ce qu'on y trouve ; un non passe à la station suivante ; « stop » arrête ; sans réponse en une minute, elle se
+     retire. À la fin : « Voilà le tour du propriétaire : à ton service. »
+   • Au micro : « visite », « fais-moi visiter », « tour du propriétaire », « découvrir la montre » commencent la visite.
+   • « La montre propose » (CL139) offre la visite une fois à qui ne l'a jamais faite (« Première visite ? Je peux te faire le tour
+     du propriétaire… ») ; « Plus tard » ne la repropose pas de la journée ; une visite commencée n'est plus proposée.
+   • Retouche p262 : la CL253 reçoit un programme extérieur (cl253.programme). Fiche « ? ». Quiétude : carte posée au montage. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const css=document.createElement('style');css.id='cl262Css';css.textContent='.cl262Halo{box-shadow:0 0 0 3px #e4c066,0 0 22px #e4c066aa!important;transition:box-shadow .4s ease}#cl262Card .n{font:12.5px/1.45 Jost,Arial,sans-serif;color:#cdbf9a;margin-top:6px}';document.head.appendChild(css);
+const FACES={G:'v5G',P:'v5P','3D':'cl2Face3D',AIR:'cl2FaceAIR',NAVI:'cl2FaceNAVI'};
+const face=k=>{const b=$(FACES[k]);if(b&&b.getAttribute('aria-pressed')!=='true')b.click()};
+const onglet=k=>{const b=document.querySelector('#cl2Rail button[data-k="'+k+'"]');if(b)b.click()};
+let haloT=0,haloE=null;function halo(e){if(haloE)haloE.classList.remove('cl262Halo');haloE=e;if(!e)return;e.classList.add('cl262Halo');clearTimeout(haloT);haloT=setTimeout(()=>{e.classList.remove('cl262Halo');if(haloE===e)haloE=null},6000)}
+function montrer(ou){setTimeout(()=>{try{if(ou==='cadran'){window.scrollTo({top:0,behavior:'smooth'});halo($('watch'))}else{const P=document.querySelector('.cl2Panel.on');const c=P&&(P.querySelector(ou||'.cl3Pont')||P);if(c){const y=c.getBoundingClientRect().top+window.scrollY-72;window.scrollTo({top:Math.max(0,y),behavior:'smooth'});halo(c)}}}catch(e){}},450)}
+const STATIONS=[
+ {q:'La face GLEASON, le cadran de la Terre plane ?',go:()=>{face('G');onglet('carte');montrer('cadran')},t:'La face GLEASON est le cœur de la montre : la carte de la Terre plane d’Alexander Gleason, 1892, le pôle au centre, l’équateur à mi-rayon. L’aiguille des heures fait un tour par jour sur les vingt-quatre heures ; le Soleil et la Lune sont posés sur la carte à leur vraie place, et le voile de la nuit tourne avec eux. L’onglet Cadran, sous « Habillage », choisit le fond de carte — la Gleason restaurée, la Terre bleue, les émaux inventés —, les aiguilles et l’interface.'},
+ {q:'L’heure et le lieu ?',go:()=>{face('G');onglet('temps');montrer()},t:'Dans Heure et lieu, tu règles la ville et le fuseau de la montre, un second fuseau, ta ville domicile — Paris, qui garde l’heure de la maison en voyage. Le volet du haut, date · heure · ville, ouvre la navigation temporelle : remonter ou avancer le temps, à toute vitesse, et « Maintenant » pour revenir.'},
+ {q:'Le Soleil et la Lune ?',go:()=>{face('G');onglet('astres');montrer()},t:'L’onglet Soleil et Lune : l’almanach du jour — lever, midi vrai, coucher, crépuscules —, la phase de la Lune avec sa vraie photographie et ses prochaines phases, le sextant qui donne la hauteur du Soleil, l’indicateur de marée, la déclinaison, la durée de la nuit.'},
+ {q:'Le ciel ?',go:()=>{face('G');onglet('ciel');montrer()},t:'L’onglet Ciel pose les étoiles, les constellations et les planètes sur le cadran, en vision d’en haut ou en vue native, celle de l’observateur. « Viser le ciel » reconnaît l’astre que l’iPhone désigne ; les étoiles filantes et les éclipses à venir y sont aussi.'},
+ {q:'Le calendrier ?',go:()=>{face('G');onglet('calendrier');montrer()},t:'L’onglet Calendrier : les calendriers du monde — chinois, républicain, termes solaires, comput de Pâques —, la grande date, le quantième rétrograde, les équinoxes et les solstices, les phases de la Lune à venir, avec « Y aller » pour chaque repère.'},
+ {q:'Le chronographe ?',go:()=>{face('G');onglet('outils');montrer()},t:'Le Chronographe : chronomètre à rattrapante, minuteur avec sonnerie, compte à rebours de régate, compteur de trente minutes ; « Masquer » pour un cadran épuré pendant le chronométrage.'},
+ {q:'Les sonneries ?',go:()=>{face('G');onglet('sonneries');montrer()},t:'Les Sonneries : petite et grande sonnerie au passage des heures et des quarts, carillon Westminster, réveil progressif, silence de nuit, sonnerie solaire au lever, au midi vrai et au coucher, et le cadran sonore qui dit l’heure en sons.'},
+ {q:'La voix ?',go:()=>{face('G');onglet('voix');montrer()},t:'L’onglet Voix : la commande vocale — « montre, coche les éclipses » —, le cadran décrit à voix haute, le dialogue guidé par oui et non, et « La montre propose », qui suggère la bonne complication au bon moment.'},
+ {q:'La face PRAGUE, l’horloge astronomique ?',go:()=>{face('P');setTimeout(()=>onglet('prague'),250);montrer('cadran')},t:'La face PRAGUE : l’horloge astronomique de la Vieille-Ville, calculée pour l’instant affiché — heures de Bohême, zodiaque, Soleil et Lune sur la roue. Le menu « Vue de l’orloj » montre la façade entière, avec ses statues et le calendrier de Mánes ; à chaque heure juste, de 9 h à 23 h, les douze apôtres défilent, le coq chante et l’horloge sonne — « Jouer le spectacle maintenant » pour ne pas attendre.'},
+ {q:'La face 3D ?',go:()=>{face('3D');montrer('cadran')},t:'La face 3D : le modèle de la Terre plane en relief, à faire tourner du doigt, avec le dôme du ciel et les astres nommés.'},
+ {q:'La face AIR, la montre en vol ?',go:()=>{face('AIR');montrer('cadran')},t:'La face AIR est la montre en vol : la position de l’avion sur la carte par le GPS de l’iPhone, altitude, vitesse, cap, les villes et les villages survolés, le hublot et le cockpit, la vue satellite, le relief, l’arrivée prévue — et le hublot augmenté, qui nomme par la caméra ce que tu vois. « Vol d’essai » pour l’essayer au sol.'},
+ {q:'La face NAVI, la montre du pilote ?',go:()=>{face('NAVI');montrer('cadran')},t:'La face NAVI : la montre du pilote — la règle à calcul circulaire de la Navitimer, le cadran du pilote et son mode rouge, le vent, le plané, les calculs du vol.'},
+ {q:'Le livret et tes réglages ?',go:()=>{face('G');onglet('livret');montrer('#cl141Card')},t:'Le Livret : tes réglages — copie, retour aux natifs, « Faire de mes réglages actuels mes natifs » —, le sommaire des onglets, le carnet de bord des voyages ; et l’Atelier pour l’entretien de la montre.'},
+ {q:'L’aide, partout ?',go:()=>{face('G');onglet('livret');montrer('#cl262Card')},t:'Partout, la pastille « ? » ouvre la fiche de la commande ; au micro, « c’est quoi… » ou « aide sur… » la dit. Les favoris du haut gardent tes commandes préférées. Voilà le tour du propriétaire : à ton service.'}];
+const SUJETS=STATIONS.map(s=>({q:s.q,f:()=>{try{s.go()}catch(e){}return s.t}}));
+function commencer(){if(!window.cl253||!window.cl253.programme)return false;LS.set('cl262Fait','1');const n=STATIONS.length;
+ return window.cl253.programme(SUJETS,{dit:'Je suis ta montre : cinq faces, treize onglets et plus de deux cents complications. Je te propose le tour du propriétaire en '+n+' stations : à chaque oui, j’y vais et je te dis ce qu’on y trouve ; un non passe à la suivante, « stop » arrête.',q:'On commence la visite ?'},'tour')}
+function ui(){if($('cl262Card'))return true;const V=document.querySelector('.cl2Panel[data-k="livret"]');const ref=$('cl78Liv')||$('cl141Card');if(!V||!ref||!window.cl253)return false;
+ const c=document.createElement('div');c.className='cl3Pont';c.id='cl262Card';c.innerHTML='<div class="cl2Grp">Le tour du propriétaire</div><div><button type="button" id="cl262Go">Commencer la visite</button></div><div class="n">La montre fait visiter ses cinq faces et ses onglets, station par station, par oui et non : à chaque oui, elle y va et dit ce qu’on y trouve. Au micro : « visite ».</div>';
+ ref.after(c);$('cl262Go').addEventListener('click',()=>{commencer()});
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl262go')){A.AIDE.push({k:'cl262go',id:'cl262Go',t:'Le tour du propriétaire',x:'La montre se présente, puis propose quatorze stations, une à une : la face GLEASON, Heure et lieu, Soleil et Lune, le Ciel, le Calendrier, le Chronographe, les Sonneries, la Voix, la face PRAGUE, la face 3D, la face AIR, la face NAVI, le Livret, l’aide. Réponds par les boutons Oui · Non · Stop (dans l’onglet Voix ou dans le bandeau sous les onglets), à la voix (« oui », « non », « stop ») ou dans le champ « Écrire une commande » : à chaque oui, la montre y va — face, onglet, cadran ou carte, avec un halo d’or sur ce qu’elle montre — et dit en trois phrases ce qu’on y trouve ; un non passe à la station suivante ; sans réponse en une minute, elle se retire.\n\nAu micro, « visite », « fais-moi visiter » ou « tour du propriétaire » commencent aussi la visite. « La montre propose » l’offre une fois à qui ne l’a jamais faite.'});[300,2500].forEach(d=>setTimeout(()=>{try{A.install()}catch(e){}},d))}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL262',e)}if(n>400)clearInterval(t)},250);
+// au micro
+const DEBUT=/^(visite|visite guidee|la visite|fais moi visiter|fais le tour|tour du proprietaire|le tour du proprietaire|decouvrir la montre|presente toi|presentation de la montre)( .*)?$/;
+setTimeout(()=>{const o=window.cl140Reponse;window.cl140Reponse=n=>{if(DEBUT.test(n)&&!(window.cl253&&window.cl253.etat())){commencer();return 'Le tour du propriétaire : je t’écoute.'}return o?o(n):null}},2600);
+// proposée une fois par « La montre propose »
+let m=0;const tp=setInterval(()=>{m++;if(window.cl139Ajouter){window.cl139Ajouter({id:'tour',test(){if(LS.get('cl262Fait','0')==='1'||!window.cl253||window.cl253.etat())return null;return {t:'Première visite ? Je peux te faire le <b>tour du propriétaire</b> : les cinq faces et les grandes complications, en cinq minutes.',ok:()=>commencer(),dit:'Suivons le guide.'}}});clearInterval(tp)}else if(m>200)clearInterval(tp)},200);
+window.cl262={commencer,stations:STATIONS.map(s=>s.q),liste:()=>STATIONS,fait:()=>LS.get('cl262Fait','0')==='1'};/* CL264 : les stations servent aussi au mode vitrine */
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("cl262TourProprietaire",e);}
+/* ───────── cl263FondDeBoite ───────── */
+try{
+/* CL263 — Le fond de boîte gravé (suite de la carte blanche : une pièce unique se signe au dos).
+   • Livret, carte « Fond de boîte » : « Retourner la montre » — la montre se retourne (le fond vient recouvrir le cadran, un demi-tour
+     en une demi-seconde) et montre son fond de boîte : carrosserie d'acier brossé à huit vis, gravure en couronne « MONTRE GLEASON ·
+     PRAGUE » et « TERRE PLANE · PIÈCE UNIQUE », une glace saphir sur le mouvement — platine à côtes de Genève, rubis en chatons d'or,
+     barillet, rouages qui tournent (une dent à la seconde pour la grande roue), balancier à spiral qui bat 2,5 fois par seconde sous
+     son pont à vis bleuie —, et, sous la glace, la gravure du propriétaire : son nom, une seconde ligne (ville, dédicace…), le
+     mouvement (« MOUVEMENT CL263 · MMXXVI »), le nombre de complications (le nombre de commandes qui ont une fiche « ? »).
+     Un appui sur le fond, ou « Côté cadran », remet la montre à l'endroit.
+   • Nom et seconde ligne se règlent dans la carte (mémorisés : cl263Nom, cl263Ligne) ; la gravure se met à jour aussitôt.
+   • Tout est dessiné (SVG, dégradés, animations CSS) : rien ne tourne quand le fond est caché. Lisibilité : nom 2,1 mm, couronne
+     1,8 mm, lignes 1,1 mm et plus sur un cadran de 50 mm. Fiche « ? ». Quiétude : carte posée au montage ; le fond est un calque du cadran. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const ROM=n=>{const T=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];let s='';for(const [v,r] of T)while(n>=v){s+=r;n-=v}return s};
+function dent(cx,cy,r,n,prof){let d='';for(let i=0;i<n;i++){const a0=i/n*2*Math.PI,a1=(i+.35)/n*2*Math.PI,a2=(i+.5)/n*2*Math.PI,a3=(i+.85)/n*2*Math.PI;const P=(rr,a)=>(cx+rr*Math.cos(a)).toFixed(2)+','+(cy+rr*Math.sin(a)).toFixed(2);d+=(i?'L':'M')+P(r,a0)+' L'+P(r+prof,a1)+' L'+P(r+prof,a2)+' L'+P(r,a3)}return d+'Z'}
+function roue(id,cx,cy,r,n,col,rayons){let s='<g id="'+id+'" class="cl263Roue" style="transform-origin:'+cx+'px '+cy+'px"><path d="'+dent(cx,cy,r,n,r*0.12)+'" fill="'+col+'" stroke="#5a4310" stroke-width=".6"/><circle cx="'+cx+'" cy="'+cy+'" r="'+(r*0.78).toFixed(1)+'" fill="#14161c" fill-opacity=".92"/>';
+ for(let i=0;i<rayons;i++){const a=i/rayons*2*Math.PI;s+='<path d="M'+(cx+r*0.2*Math.cos(a)).toFixed(1)+','+(cy+r*0.2*Math.sin(a)).toFixed(1)+' L'+(cx+r*0.8*Math.cos(a)).toFixed(1)+','+(cy+r*0.8*Math.sin(a)).toFixed(1)+'" stroke="'+col+'" stroke-width="'+(r*0.16).toFixed(1)+'" stroke-linecap="round"/>'}
+ return s+'<circle cx="'+cx+'" cy="'+cy+'" r="'+(r*0.2).toFixed(1)+'" fill="'+col+'" stroke="#5a4310" stroke-width=".6"/><circle cx="'+cx+'" cy="'+cy+'" r="'+(r*0.08).toFixed(1)+'" fill="#b3121c"/></g>'}
+function spiral(cx,cy,r0,r1,tours){let d='';const N=tours*40;for(let i=0;i<=N;i++){const t=i/N,a=t*tours*2*Math.PI,r=r0+(r1-r0)*t;d+=(i?'L':'M')+(cx+r*Math.cos(a)).toFixed(2)+','+(cy+r*Math.sin(a)).toFixed(2)}return d}
+let F=null;
+function construire(){if(F)return F;const w=$('watch');if(!w)return null;F=document.createElement('div');F.id='cl263Fond';F.setAttribute('role','img');F.setAttribute('aria-label','Fond de boîte de la montre');
+ const C=310;let s='<svg viewBox="0 0 620 620" xmlns="'+NS+'"><defs>'+
+  '<radialGradient id="cl263Acier" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#eef1f4"/><stop offset=".55" stop-color="#b9c0c8"/><stop offset="1" stop-color="#6f7881"/></radialGradient>'+
+  '<linearGradient id="cl263Or" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2c4"/><stop offset=".5" stop-color="#d7ab52"/><stop offset="1" stop-color="#8a6420"/></linearGradient>'+
+  '<radialGradient id="cl263Saphir" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#9fd0ff" stop-opacity=".28"/><stop offset=".6" stop-color="#1f3a66" stop-opacity=".10"/><stop offset="1" stop-color="#061020" stop-opacity=".35"/></radialGradient>'+
+  '<linearGradient id="cl263Platine" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2c074"/><stop offset=".5" stop-color="#c39a48"/><stop offset="1" stop-color="#8f6a22"/></linearGradient>'+
+  '<pattern id="cl263Cotes" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><rect width="16" height="16" fill="#c39a48"/><rect width="8" height="16" fill="#ffffff" fill-opacity=".13"/><rect x="7" width="1.2" height="16" fill="#5a4310" fill-opacity=".25"/></pattern>'+
+  '<clipPath id="cl263Verre"><circle cx="'+C+'" cy="'+C+'" r="150"/></clipPath>'+
+  '<path id="cl263ArcH" d="M '+(C-258)+' '+C+' A 258 258 0 0 1 '+(C+258)+' '+C+'"/><path id="cl263ArcB" d="M '+(C-258)+' '+C+' A 258 258 0 0 0 '+(C+258)+' '+C+'"/>'+
+  '</defs>';
+ // carrure d'acier brossé
+ s+='<circle cx="'+C+'" cy="'+C+'" r="310" fill="url(#cl263Acier)"/><g stroke="#ffffff" stroke-opacity=".16" stroke-width=".7">';for(let r=160;r<308;r+=3.1)s+='<circle cx="'+C+'" cy="'+C+'" r="'+r.toFixed(1)+'" fill="none"/>';s+='</g>';
+ // huit vis
+ for(let i=0;i<8;i++){const a=(22.5+45*i)*Math.PI/180,x=C+287*Math.cos(a),y=C+287*Math.sin(a);s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="9" fill="#c7ccd2" stroke="#4a515a" stroke-width="1"/><path d="M'+(x-6).toFixed(1)+','+y.toFixed(1)+' L'+(x+6).toFixed(1)+','+y.toFixed(1)+'" stroke="#3a4048" stroke-width="2" transform="rotate('+(i*37)+' '+x.toFixed(1)+' '+y.toFixed(1)+')"/>'}
+ // gravure en couronne
+ const grav=(id,t,sz)=>'<text font-family="Cinzel,Georgia,serif" font-weight="700" font-size="'+sz+'" letter-spacing="3" fill="#ffffff" fill-opacity=".55"><textPath href="#'+id+'" startOffset="50%" text-anchor="middle" dy="1.2">'+t+'</textPath></text><text font-family="Cinzel,Georgia,serif" font-weight="700" font-size="'+sz+'" letter-spacing="3" fill="#2a2f36"><textPath href="#'+id+'" startOffset="50%" text-anchor="middle">'+t+'</textPath></text>';
+ s+=grav('cl263ArcH','MONTRE GLEASON · PRAGUE',20)+grav('cl263ArcB','TERRE PLANE · PIÈCE UNIQUE',20);
+ // le mouvement sous la glace
+ s+='<g clip-path="url(#cl263Verre)"><circle cx="'+C+'" cy="'+C+'" r="150" fill="url(#cl263Cotes)"/>';
+ s+='<circle cx="'+C+'" cy="'+C+'" r="150" fill="none" stroke="#3a2a0a" stroke-opacity=".35" stroke-width="18"/>';
+ // barillet (ressort)
+ s+='<g><circle cx="'+(C-62)+'" cy="'+(C-58)+'" r="44" fill="#1a1c22"/><path d="'+spiral(C-62,C-58,6,40,4)+'" fill="none" stroke="#9aa3ae" stroke-width="1.6"/><circle cx="'+(C-62)+'" cy="'+(C-58)+'" r="44" fill="none" stroke="url(#cl263Or)" stroke-width="3"/></g>';
+ // rouages
+ s+=roue('cl263R1',C+58,C-54,46,60,'url(#cl263Or)',5)+roue('cl263R2',C+4,C+18,28,36,'#d8dde3',4)+roue('cl263R3',C-52,C+56,20,24,'url(#cl263Or)',3);
+ // balancier et spiral, pont
+ s+='<g id="cl263Bal" style="transform-origin:'+(C+56)+'px '+(C+66)+'px"><circle cx="'+(C+56)+'" cy="'+(C+66)+'" r="40" fill="none" stroke="url(#cl263Or)" stroke-width="6"/><path d="M'+(C+16)+','+(C+66)+' L'+(C+96)+','+(C+66)+' M'+(C+56)+','+(C+26)+' L'+(C+56)+','+(C+106)+'" stroke="url(#cl263Or)" stroke-width="4"/><path d="'+spiral(C+56,C+66,4,28,5)+'" fill="none" stroke="#3c5a9a" stroke-width="1.1"/><circle cx="'+(C+56)+'" cy="'+(C+66)+'" r="5" fill="#b3121c" stroke="url(#cl263Or)" stroke-width="1.5"/></g>';
+ s+='<path d="M'+(C+2)+','+(C+118)+' C'+(C+28)+','+(C+94)+' '+(C+84)+','+(C+94)+' '+(C+112)+','+(C+120)+' L'+(C+104)+','+(C+136)+' C'+(C+80)+','+(C+112)+' '+(C+34)+','+(C+112)+' '+(C+12)+','+(C+134)+' Z" fill="url(#cl263Platine)" stroke="#5a4310" stroke-width=".8"/><circle cx="'+(C+104)+'" cy="'+(C+126)+'" r="5" fill="#2850a8" stroke="#13295a" stroke-width="1"/><path d="M'+(C+100)+','+(C+126)+' L'+(C+108)+','+(C+126)+'" stroke="#0b1736" stroke-width="1.4"/>';
+ // rubis
+ for(const [x,y] of [[C-62,C-58],[C+58,C-54],[C+4,C+18],[C-52,C+56],[C-104,C+10],[C+100,C-110]])s+='<circle cx="'+x+'" cy="'+y+'" r="6.5" fill="url(#cl263Or)"/><circle cx="'+x+'" cy="'+y+'" r="3.6" fill="#c4121f"/><circle cx="'+(x-1.2)+'" cy="'+(y-1.2)+'" r="1" fill="#ff9aa0" opacity=".8"/>';
+ // reflet de la glace
+ s+='<circle cx="'+C+'" cy="'+C+'" r="150" fill="url(#cl263Saphir)"/><path d="M'+(C-110)+','+(C-70)+' A 140 140 0 0 1 '+(C-40)+','+(C-136)+'" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width="7" stroke-linecap="round"/></g>';
+ s+='<circle cx="'+C+'" cy="'+C+'" r="152" fill="none" stroke="url(#cl263Or)" stroke-width="5"/><circle cx="'+C+'" cy="'+C+'" r="157" fill="none" stroke="#4a515a" stroke-width="1.2"/>';
+ // gravure du propriétaire
+ const gl=(id,y,sz,ls)=>'<text id="'+id+'s" x="'+C+'" y="'+(y+1.3)+'" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="'+sz+'" letter-spacing="'+ls+'" fill="#ffffff" fill-opacity=".5"></text><text id="'+id+'" x="'+C+'" y="'+y+'" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="'+sz+'" letter-spacing="'+ls+'" fill="#2a2f36"></text>';
+ s+=gl('cl263Nom1',C+178,26,4)+gl('cl263Nom2',C+199,15,2.5)+gl('cl263Nom3',C+216,12,1.5)+gl('cl263Nom4',C-172,13,2)+gl('cl263Nom5',C-190,12,2);
+ s+='</svg>';
+ F.innerHTML=s;w.appendChild(F);
+ const css=document.createElement('style');css.id='cl263Css';css.textContent='#cl263Fond{position:absolute;inset:0;z-index:6000;border-radius:50%;overflow:hidden;transform:scaleX(0);transition:transform .55s cubic-bezier(.4,0,.2,1);pointer-events:none;background:#0a0e14}#cl263Fond.v{transform:scaleX(1);pointer-events:auto;cursor:pointer}#cl263Fond svg{display:block;width:100%;height:100%}'+
+  '#cl263Fond.v .cl263Roue{animation:cl263tour 60s linear infinite}#cl263Fond.v #cl263R2{animation-duration:20s;animation-direction:reverse}#cl263Fond.v #cl263R3{animation-duration:8s}#cl263Fond.v #cl263Bal{animation:cl263bat .4s ease-in-out infinite alternate}'+
+  '@keyframes cl263tour{to{transform:rotate(360deg)}}@keyframes cl263bat{from{transform:rotate(-40deg)}to{transform:rotate(40deg)}}'+
+  '#cl263Card input[type=text]{background:#0d1620;color:#f0e2c0;border:1px solid #a88b55;border-radius:6px;padding:4px 8px;font:13px Jost,Arial,sans-serif;width:100%;max-width:260px;box-sizing:border-box}#cl263Card label.cl263l{display:block;font:13px Jost,Arial,sans-serif;color:#efe2c2;margin:6px 0}#cl263Card .n{font:12.5px/1.45 Jost,Arial,sans-serif;color:#cdbf9a;margin-top:6px}';
+ document.head.appendChild(css);
+ F.addEventListener('click',()=>retourner(false));graver();return F}
+function graver(){if(!F)return;const nom=LS.get('cl263Nom','Thierry'),l2=LS.get('cl263Ligne','Johannesburg · Paris');const ver=($('cl78Ver')&&$('cl78Ver').textContent.trim())||'CL263';let n=0;try{n=window.cl45Aide.AIDE.length}catch(e){}
+ const put=(id,t)=>{const a=$(id),b=$(id+'s');if(a)a.textContent=t;if(b)b.textContent=t};
+ put('cl263Nom1',nom.toUpperCase());put('cl263Nom2',l2.toUpperCase());put('cl263Nom3','MOUVEMENT '+ver+' · MMXXVI');put('cl263Nom4',n?n+' COMPLICATIONS':'');put('cl263Nom5','FABRIQUÉE AVEC CLAUDE')}
+let ouvert=false;
+function retourner(on){construire();ouvert=on==null?!ouvert:!!on;if(ouvert)graver();F.classList.toggle('v',ouvert);const b=$('cl263Go');if(b)b.textContent=ouvert?'Côté cadran':'Retourner la montre';if(ouvert)try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}return ouvert}
+function ui(){if($('cl263Card'))return true;const ref=$('cl262Card')||$('cl78Liv');if(!ref)return false;
+ const c=document.createElement('div');c.className='cl3Pont';c.id='cl263Card';
+ c.innerHTML='<div class="cl2Grp">Fond de boîte</div><div><button type="button" id="cl263Go">Retourner la montre</button></div>'+
+  '<label class="cl263l">Nom gravé <input type="text" id="cl263Nom" maxlength="24" value="'+esc(LS.get('cl263Nom','Thierry'))+'"></label>'+
+  '<label class="cl263l">Seconde ligne <input type="text" id="cl263Ligne" maxlength="36" value="'+esc(LS.get('cl263Ligne','Johannesburg · Paris'))+'"></label>'+
+  '<div class="n">La montre se retourne et montre son fond : acier brossé, gravure « Montre Gleason · Prague — Terre plane, pièce unique », glace saphir sur le mouvement qui bat, et ta gravure. Un appui sur le fond la remet à l’endroit.</div>';
+ ref.after(c);$('cl263Go').addEventListener('click',()=>retourner());
+ $('cl263Nom').addEventListener('input',e=>{LS.set('cl263Nom',e.target.value.trim()||'Thierry');graver()});$('cl263Ligne').addEventListener('input',e=>{LS.set('cl263Ligne',e.target.value.trim());graver()});
+ construire();
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl263go')){A.AIDE.push(
+  {k:'cl263go',id:'cl263Go',t:'Retourner la montre',x:'La montre fait un demi-tour : son fond de boîte recouvre le cadran — carrure d’acier brossé à huit vis, gravure en couronne « MONTRE GLEASON · PRAGUE » et « TERRE PLANE · PIÈCE UNIQUE », glace saphir sur le mouvement : platine à côtes de Genève, rubis en chatons d’or, barillet, rouages qui tournent (un tour par minute pour la grande roue), balancier à spiral qui bat sous son pont à vis bleuie — et, sous la glace, ta gravure : ton nom, ta seconde ligne, le mouvement (la version CL) et le nombre de complications (les commandes qui ont une fiche « ? »).\n\nUn appui sur le fond, ou « Côté cadran », remet la montre à l’endroit. Le mouvement ne tourne que fond visible.'},
+  {k:'cl263nom',id:'cl263Nom',t:'Nom gravé',x:'Le nom gravé en grand sous la glace du fond de boîte (24 caractères au plus ; « Thierry » au départ). Mémorisé dans l’appareil ; la gravure se met à jour aussitôt.'},
+  {k:'cl263ligne',id:'cl263Ligne',t:'Seconde ligne',x:'La seconde ligne de la gravure, sous le nom : une ville, une date, une dédicace (36 caractères au plus ; « Johannesburg · Paris » au départ). Vide : rien n’est gravé à cette ligne. Mémorisée dans l’appareil.'});[300,2500].forEach(d=>setTimeout(()=>{try{A.install()}catch(e){}},d))}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL263',e)}if(n>400)clearInterval(t)},250);
+window.cl263={retourner,graver,etat:()=>({ouvert,nom:LS.get('cl263Nom','Thierry'),ligne:LS.get('cl263Ligne','Johannesburg · Paris'),textes:['cl263Nom1','cl263Nom2','cl263Nom3','cl263Nom4','cl263Nom5'].map(id=>($(id)||{}).textContent||'')})};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("cl263FondDeBoite",e);}
+/* ───────── cl264ModeVitrine ───────── */
+try{
+/* CL264 — Le mode vitrine (suite : montrer la montre à qui ne la connaît pas, sans rien toucher).
+   • Livret, carte « Le tour du propriétaire », bouton « Mode vitrine » : la montre déroule d'elle-même les quatorze stations de la
+     visite (CL262) — face ou onglet, halo d'or, et une bande en bas de l'écran avec le titre et le texte de la station — puis
+     recommence, jusqu'à ce qu'on la touche (un appui n'importe où arrête la vitrine ; « Suivant » sur la bande passe à la station
+     suivante). Chaque station dure le temps de la lire (neuf secondes plus une par vingt caractères) ; à la station PRAGUE, la
+     montre joue le défilé des apôtres et attend qu'il finisse. Dite à voix haute si « Réponses parlées » (onglet Voix) est cochée.
+   • Pendant la vitrine, l'écran reste sur le cadran (pas de défilement vers les cartes) et le cadran est remis à l'endroit.
+   • Retouche p264 : la CL262 expose ses stations. Fiche « ? ». Quiétude : bouton posé au montage, bande hors du pupitre. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const css=document.createElement('style');css.id='cl264Css';css.textContent='#cl264Bande{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:90000;display:none;background:#0d1a2ae8;border:1px solid #e4c066;border-radius:14px;padding:10px 14px 9px;color:#f3ead2;font:15px/1.35 Jost,Arial,sans-serif;box-shadow:0 6px 24px #000a;backdrop-filter:blur(6px)}#cl264Bande.v{display:block}#cl264Bande .t{font:700 17px Cinzel,Georgia,serif;color:#ffd66b;letter-spacing:.04em;margin-bottom:4px}#cl264Bande .x{max-height:30vh;overflow:auto}#cl264Bande .b{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:8px;font-size:13px;color:#cdbf9a}#cl264Bande button{min-height:36px;padding:0 14px;border-radius:18px;border:1px solid #e4c066;background:#152734;color:#f3ead2;font:700 14px Jost,Arial,sans-serif}#cl264Bande .n{flex:1}';document.head.appendChild(css);
+let S=null,bande=null;
+function construire(){if(bande)return bande;bande=document.createElement('div');bande.id='cl264Bande';bande.setAttribute('role','status');bande.innerHTML='<div class="t"></div><div class="x"></div><div class="b"><span class="n"></span><button type="button" id="cl264Suiv">Suivant</button><button type="button" id="cl264Stop">Arrêter la vitrine</button></div>';document.body.appendChild(bande);
+ bande.addEventListener('pointerdown',e=>e.stopPropagation(),true);$('cl264Suiv').addEventListener('click',()=>{if(S)station(S.i+1)});$('cl264Stop').addEventListener('click',()=>arreter());return bande}
+function station(i){if(!S)return;const L=window.cl262.liste();if(!L||!L.length)return arreter();if(i>=L.length){i=0;S.tours++}S.i=i;const st=L[i];
+ try{window.cl263&&window.cl263.etat().ouvert&&window.cl263.retourner(false)}catch(e){}
+ try{st.go()}catch(e){}
+ setTimeout(()=>{try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){}},500);
+ const B=construire();B.querySelector('.t').textContent=st.q.replace(/\s*\?$/,'');B.querySelector('.x').textContent=st.t;B.querySelector('.n').textContent='Station '+(i+1)+' sur '+L.length+' · un appui sur la montre arrête la vitrine';B.classList.add('v');
+ try{window.cl136Dire&&window.cl136Dire(st.t,false)}catch(e){}
+ let d=9000+st.t.length*50;
+ if(/PRAGUE/.test(st.q)&&window.cl255){setTimeout(()=>{try{if(!window.cl255.etat())window.cl255.jouer(null)}catch(e){}},1400);const h=(()=>{try{return window.cl255.wall(window.cl68Parts.inst()).h}catch(e){return 12}})();d=Math.max(d,1400+window.cl255.fin(h)*1000+2500)}
+ clearTimeout(S.t);S.t=setTimeout(()=>station(i+1),d)}
+function commencer(){if(S)return true;if(!window.cl262||!window.cl262.liste)return false;S={i:-1,t:0,tours:0,depuis:Date.now()};
+ document.addEventListener('pointerdown',stopAuTouche,true);const b=$('cl264Go');if(b)b.textContent='Arrêter la vitrine';station(0);return true}
+function stopAuTouche(e){if(e.target&&e.target.closest&&e.target.closest('#cl264Bande'))return;arreter()}
+function arreter(){if(!S)return false;clearTimeout(S.t);S=null;document.removeEventListener('pointerdown',stopAuTouche,true);if(bande)bande.classList.remove('v');const b=$('cl264Go');if(b)b.textContent='Mode vitrine';try{if(window.cl255&&window.cl255.etat())window.cl255.arreter()}catch(e){}return true}
+function ui(){if($('cl264Go'))return true;const c=$('cl262Card'),go=$('cl262Go');if(!c||!go)return false;const b=document.createElement('button');b.type='button';b.id='cl264Go';b.textContent='Mode vitrine';b.style.marginLeft='8px';go.after(b);b.addEventListener('click',()=>{S?arreter():commencer()});
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl264go')){A.AIDE.push({k:'cl264go',id:'cl264Go',t:'Mode vitrine',x:'La montre se montre d’elle-même, pour qui ne la connaît pas : elle déroule les quatorze stations du tour du propriétaire — la face ou l’onglet s’ouvre, un halo d’or entoure ce qu’elle montre, une bande en bas de l’écran donne le titre et le texte —, puis recommence. Chaque station dure le temps de la lire ; à la station PRAGUE, elle joue le défilé des apôtres et attend qu’il finisse. Dite à voix haute si « Réponses parlées » (onglet Voix) est cochée.\n\nUn appui n’importe où sur la montre arrête la vitrine ; « Suivant » passe à la station suivante ; « Arrêter la vitrine » aussi.'});[300,2500].forEach(d=>setTimeout(()=>{try{A.install()}catch(e){}},d))}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL264',e)}if(n>400)clearInterval(t)},250);
+window.cl264={commencer,arreter,station:i=>S?station(i):false,etat:()=>S?{i:S.i,tours:S.tours,depuis:S.depuis}:null};
+})();
+(()=>{'use strict';
+const TIT='CL264 · Le mode vitrine';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL264')v.textContent='CL264'},300);
+})();
+}catch(e){console.error("cl264ModeVitrine",e);}
 </script>
 </body></html>
