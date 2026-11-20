@@ -16026,6 +16026,7 @@ function dessiner(force){if(!actif||!V||!R)return;const pos=dou();const ms=inst(
  // la direction du regard (centre) : azimut, hauteur, lieu le plus proche
  const Zc=[-R[0][2],-R[1][2],-R[2][2]];const azc=((Math.atan2(Zc[0],Zc[1])/rad)+360)%360,altc=Math.asin(Math.max(-1,Math.min(1,Zc[2])))/rad;
  let prox=null,dmin=6;for(const t of T){const sp=Math.acos(Math.max(-1,Math.min(1,Math.sin(altc*rad)*Math.sin(t.h*rad)+Math.cos(altc*rad)*Math.cos(t.h*rad)*Math.cos((azc-t.az)*rad))))/rad;if(sp<dmin){dmin=sp;prox=t}}
+ if(!prox&&window.cl272Vise&&pos){try{const k=window.cl272Vise(azc,altc,pos,ms);if(k)prox={n:k,k:'constellation',az:azc,h:altc,d:null,P:{x:W/2,y:H/2}}}catch(e){}}/* CL272 : la constellation visée, à défaut d'un astre nommé */
  if(V.classList.contains('simule')){const ciel=$('cl259Ciel');if(ciel){const Ph=projeter(azc,0);let y=Ph?Math.max(-30,Math.min(130,Ph.y/H*100)):50;const S=T.find(t=>t.k==='soleil');const sunAlt=S?S.h:(cacheT.L.find(t=>t.k==='soleil')||{h:10}).h;const nuit=sunAlt<-6;
   ciel.style.background='linear-gradient('+(nuit?'#02060f 0%,#0a1428 ':'#0b1b33 0%,#1d3f6b ')+Math.max(0,y-3)+'%,'+(nuit?'#15223a ':'#2b5a8a ')+y+'%,'+(nuit?'#0d130f ':'#3a4a3a ')+(y+1)+'%,'+(nuit?'#05080a':'#1e2a1c')+' 100%)'}}
  /* CL260 : la voix du hublot — le lieu visé est dit quand il change (case cochée) ; « Dire ce que je vois » énumère le champ */
@@ -16064,7 +16065,7 @@ const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(
 const nf=n=>Math.round(n).toLocaleString('fr-FR').replace(/ | /g,' ');
 const dire=t=>{try{if(window.cl136Dire)window.cl136Dire(t,true)}catch(e){}return t};
 const nom=t=>t.k==='soleil'?'le Soleil':t.k==='lune'?'la Lune':t.k==='arrivee'?t.n.replace(/^→ /,'')+', la ville d’arrivée':t.k==='etoile'&&t.c?t.n+' ('+t.c+')':t.n;
-const phrase=(t,pos)=>{let s=nom(t);s=s.charAt(0).toUpperCase()+s.slice(1);if(t.d!=null)s+=', à '+nf(t.d)+' km';if(pos&&pos.cap!=null&&window.cl200&&window.cl200.cote&&t.k!=='soleil'&&t.k!=='lune'&&t.k!=='etoile'&&t.k!=='planete'){try{s+=', '+window.cl200.cote(t.az-pos.cap).txt}catch(e){}}return s+'.'};
+const phrase=(t,pos)=>{let s=nom(t);s=s.charAt(0).toUpperCase()+s.slice(1);if(t.d!=null)s+=', à '+nf(t.d)+' km';if(pos&&pos.cap!=null&&window.cl200&&window.cl200.cote&&t.k!=='soleil'&&t.k!=='lune'&&t.k!=='etoile'&&t.k!=='planete'&&t.k!=='constellation'){try{s+=', '+window.cl200.cote(t.az-pos.cap).txt}catch(e){}}return s+'.'};
 let vise={n:null,t0:0,dit:null},champ=[];
 window.derniereVisee=function(prox,pos,T){champ=(T||[]).filter(t=>t.P).sort((a,b)=>a.P.x-b.P.x);const n=prox?prox.n:null,now=performance.now();
  if(n!==vise.n){vise={n,t0:now,dit:vise.dit}}else if(n&&vise.dit!==n&&now-vise.t0>1500&&$('cl259Voix')&&$('cl259Voix').checked){vise.dit=n;dire(phrase(prox,pos))}};
@@ -16701,9 +16702,121 @@ let k=0;const t2=setInterval(()=>{k++;try{if(fiche())clearInterval(t2)}catch(e){
 window.cl269={nom,fete,libelle,prenoms,jourDe,proprietaire,jours:()=>SF.reduce((a,M)=>a+M.length,0),tester:()=>{try{return PROP.test()}catch(e){return {erreur:String(e)}}}};
 })();
 (()=>{'use strict';
-const TIT='CL269 · La fête du jour';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL269')v.textContent='CL269'},300);
 })();
 }catch(e){console.error("CL269",e);}
+/* ───────── CL270 ───────── */
+try{
+/* CL270 — Dans le noir : la montre dans une pièce éteinte. Habillage › « Dans le noir » : l’écran devient noir, la carte et le pupitre
+   disparaissent, seuls luisent les aiguilles et les vingt-quatre index de la matière lumineuse (cadran de 24 heures, 24 en haut) (vert pâle, halo), et cette lueur s’éteint
+   lentement, comme la vraie luminescence (quarante secondes) ; un appui n’importe où « recharge » la lumière ; « Lumière » (bouton en
+   bas, ou Échap) rallume la pièce. La face GLEASON est prise si une autre est affichée. Un voile de capture empêche tout geste sur
+   le cadran pendant le noir ; rien ne bouge au retour. Fiche « ? ». window.cl270 = {noir, etat}. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
+let actif=false,phase='a';
+const CSS='body.cl270noir{background:#000!important}#cl270Fond{position:fixed;inset:0;background:#000;z-index:8000;display:none}body.cl270noir #cl270Fond{display:block}'+
+ 'body.cl270noir #watch{position:relative;z-index:8001;background:#000!important;box-shadow:none!important}body.cl270noir #watch *{visibility:hidden!important}'+
+ 'body.cl270noir #watch #hands,body.cl270noir #watch #hands *,body.cl270noir #watch #cl270Lume,body.cl270noir #watch #cl270Lume *{visibility:visible!important}'+
+ 'body.cl270noir #watch #secondReading,body.cl270noir #watch #secondReading *{visibility:hidden!important}'+
+ 'body.cl270noir #hourHand path,body.cl270noir #minuteHand path{fill:#c9f7cf!important;stroke:#7fe7a6!important;filter:drop-shadow(0 0 5px #8dffb3)!important}'+
+ 'body.cl270noir #secondHand line{stroke:#c9f7cf!important;filter:drop-shadow(0 0 4px #8dffb3)}body.cl270noir #secondHand circle,body.cl270noir #hands>circle{fill:#c9f7cf!important;stroke:#7fe7a6!important}'+
+ '#cl270Lume{display:none}body.cl270noir #cl270Lume{display:block}body.cl270noir #hands,body.cl270noir #cl270Lume{animation:cl270fade 40s ease-out forwards}body.cl270noir[data-cl270="b"] #hands,body.cl270noir[data-cl270="b"] #cl270Lume{animation-name:cl270fade2}'+
+ '@keyframes cl270fade{0%{opacity:1}100%{opacity:.16}}@keyframes cl270fade2{0%{opacity:1}100%{opacity:.16}}'+
+ '#cl270Tap{position:fixed;inset:0;z-index:8002;display:none;background:transparent}body.cl270noir #cl270Tap{display:block}'+
+ '#cl270Sortir{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom,18px));transform:translateX(-50%);z-index:8003;display:none;min-height:44px;padding:0 20px;border-radius:22px;border:1px solid #e4c066;background:#0b1118;color:#f3ead2;font:700 15px Jost,Arial,sans-serif;cursor:pointer}body.cl270noir #cl270Sortir{display:block}'+
+ '#cl270Aide{position:fixed;left:16px;right:16px;bottom:calc(max(18px,env(safe-area-inset-bottom,18px)) + 56px);z-index:8003;text-align:center;color:#7f8f83;font:14px/1.4 Jost,Arial,sans-serif;display:none;pointer-events:none}body.cl270noir #cl270Aide{display:block}';
+function feuille(){if($('cl270Css'))return;const st=document.createElement('style');st.id='cl270Css';st.textContent=CSS;document.head.appendChild(st)}
+// les douze index lumineux, dans le calque des aiguilles (premier enfant : sous elles)
+function index(){if($('cl270Lume'))return true;const ov=document.querySelector('#watch svg.overlay');if(!ov)return false;const g=document.createElementNS(NS,'g');g.id='cl270Lume';g.setAttribute('pointer-events','none');
+ // cadran de 24 heures : 24 en haut, 6 à droite, 12 en bas, 18 à gauche — vingt-quatre index, les quatre quarts en bâtons, le 24 en pavé
+ let s='';for(let h=0;h<24;h++){const a=h/24*2*Math.PI,x=233+206*Math.sin(a),y=233-206*Math.cos(a),G='fill="#c9f7cf" style="filter:drop-shadow(0 0 5px #8dffb3)"';
+  if(h===0)s+='<rect x="'+(x-8).toFixed(1)+'" y="'+(y-5).toFixed(1)+'" width="16" height="10" rx="2.5" '+G+'/>';
+  else if(h%6===0)s+='<rect x="'+(x-3.2).toFixed(1)+'" y="'+(y-7).toFixed(1)+'" width="6.4" height="14" rx="2" transform="rotate('+(h*15)+' '+x.toFixed(1)+' '+y.toFixed(1)+')" '+G+'/>';
+  else if(h%3===0)s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="4.4" '+G+'/>';
+  else s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.9" '+G+'/>'}
+ g.innerHTML=s;ov.insertBefore(g,ov.firstChild);return true}
+function voiles(){if($('cl270Fond'))return;const f=document.createElement('div');f.id='cl270Fond';const t=document.createElement('div');t.id='cl270Tap';const b=document.createElement('button');b.id='cl270Sortir';b.type='button';b.textContent='Lumière';
+ const a=document.createElement('div');a.id='cl270Aide';a.textContent='Dans le noir — un appui recharge la lueur · « Lumière » pour rallumer';
+ document.body.append(f,t,b,a);t.addEventListener('pointerdown',e=>{e.preventDefault();recharger()},{passive:false});b.addEventListener('click',()=>noir(false));
+ document.addEventListener('keydown',e=>{if(actif&&e.key==='Escape')noir(false)})}
+function recharger(){phase=phase==='a'?'b':'a';document.body.dataset.cl270=phase}
+function noir(on){feuille();voiles();index();actif=on==null?!actif:!!on;
+ if(actif){try{if(document.body.classList.contains('prague-active')||document.body.classList.contains('clx-air')||document.body.classList.contains('clx-navi')||document.body.classList.contains('clx-3d')){const g=$('v5G');if(g)g.click()}}catch(e){}
+  try{window.scrollTo({top:0,behavior:'auto'})}catch(e){}phase='a';document.body.dataset.cl270=phase;document.body.classList.add('cl270noir');
+  try{if(window.cl136Dire)window.cl136Dire('Dans le noir : les aiguilles et les index luisent, puis s’éteignent doucement. Un appui recharge la lueur ; « Lumière » rallume.',false)}catch(e){}}
+ else{document.body.classList.remove('cl270noir');delete document.body.dataset.cl270}
+ const b=$('cl270Go');if(b)b.setAttribute('aria-pressed',actif?'true':'false');return actif}
+function ui(){if($('cl270Go'))return true;const P=document.querySelector('#cl2Panels .cl2Panel[data-k=carte]');if(!P)return false;
+ const pont=[...P.querySelectorAll(':scope>.cl3Pont')].find(c=>/^Habillage/.test(((c.querySelector('.cl2Grp')||{}).textContent||'').trim()));if(!pont)return false;
+ const d=document.createElement('div');d.id='cl270Row';d.style.cssText='margin:6px 0 4px';d.innerHTML='<button type="button" id="cl270Go" aria-pressed="false">Dans le noir</button>';
+ const ref=$('cl245Lab')||$('cl239Lab');if(ref)ref.after(d);else pont.appendChild(d);/* après le menu « Onglets » (CL245), lui-même après « Interface » */$('cl270Go').addEventListener('click',()=>noir(true));
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl270go'))A.AIDE.push({k:'cl270go',id:'cl270Go',t:'Dans le noir',x:'La montre dans une pièce éteinte : l’écran devient noir, la carte et le pupitre disparaissent, seuls luisent les aiguilles et les vingt-quatre index de la matière lumineuse (cadran de 24 heures, 24 en haut) (vert pâle, halo), et cette lueur s’éteint lentement, en quarante secondes, comme la vraie luminescence. Un appui n’importe où « recharge » la lumière ; le bouton « Lumière » en bas de l’écran (ou la touche Échap) rallume la pièce et rend la montre telle qu’elle était. La face GLEASON est prise si une autre est affichée.'});
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{feuille();if(ui()&&index())clearInterval(t)}catch(e){console.warn('CL270',e)}if(n>400)clearInterval(t)},250);
+window.cl270={noir,recharger,etat:()=>({actif,phase})};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("CL270",e);}
+/* ───────── CL271 ───────── */
+try{
+/* CL271 — Les heures de marche : la montre compte le temps qu’elle a réellement battu — les secondes où sa page est visible, additionnées
+   d’une session à l’autre (mémoire cl271Marche) — et le grave sur le fond de boîte, sous « 6 RUBIS » : « A BATTU 128 H » (ou « A BATTU
+   40 MIN » la première heure), mis à jour à chaque retournement et chaque minute fond visible. Comme le compteur horaire d’un moteur :
+   une pièce unique porte son vécu. Aucune commande nouvelle ; fiche « Retourner la montre » complétée. window.cl271 = {secondes, texte,
+   ajouter}. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',K='cl271Marche';
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let sec=Math.max(0,parseInt(LS.get(K,'0'),10)||0),dernier=Date.now();
+function ajouter(s){sec+=Math.max(0,s|0);LS.set(K,String(sec));poser();return sec}
+// toutes les dix secondes, si la page est visible : dix secondes de marche de plus (les sauts d'horloge — veille, onglet caché — ne comptent pas)
+setInterval(()=>{const t=Date.now();const d=t-dernier;dernier=t;if(document.visibilityState!=='visible')return;if(d>15000)return;ajouter(Math.round(d/1000))},10000);
+function texte(){const h=Math.floor(sec/3600);if(h<1)return 'A BATTU '+Math.max(1,Math.floor(sec/60))+' MIN';return 'A BATTU '+h.toLocaleString('fr-FR').replace(/ | /g,' ')+' H'}
+let grave=false;
+function graver(){if(grave)return true;const F=$('cl263Fond');const svg=F&&F.querySelector('svg');if(!svg)return false;const C=310;
+ const g=document.createElementNS(NS,'g');g.id='cl271Marche';const tx=(id,y)=>'<text id="'+id+'" x="'+(C+222)+'" y="'+y+'" text-anchor="middle" font-family="Cinzel,Georgia,serif" font-weight="700" font-size="12" letter-spacing="2" fill="#ffffff" fill-opacity=".5"></text>';
+ g.innerHTML=tx('cl271Ts',C+53.1)+tx('cl271T',C+52).replace('fill="#ffffff" fill-opacity=".5"','fill="#2a2f36"');svg.appendChild(g);grave=true;poser();return true}
+function poser(){const a=$('cl271T'),b=$('cl271Ts');if(!a)return;const t=texte();if(a.textContent!==t){a.textContent=t;if(b)b.textContent=t}}
+function fiche(){const A=window.cl45Aide;if(!A)return false;const g=A.AIDE.find(x=>x.k==='cl263go');if(!g)return false;if(!/heures de marche|A BATTU/.test(g.x))g.x+='\n\nSous « 6 RUBIS », les heures de marche (CL271) : « A BATTU 128 H » — le temps que la montre a réellement battu, page visible, additionné d’une session à l’autre sur cet appareil, comme le compteur horaire d’un moteur.';return true}
+let n=0;const t=setInterval(()=>{n++;try{graver();if(fiche()&&grave)clearInterval(t)}catch(e){console.warn('CL271',e)}if(n>400)clearInterval(t)},250);
+setInterval(()=>{try{poser()}catch(e){}},60000);
+window.cl271={secondes:()=>sec,texte,ajouter};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("CL271",e);}
+/* ───────── CL272 ───────── */
+try{
+/* CL272 — Le réticule nomme la constellation : la nuit, quand le hublot augmenté ne vise aucun astre nommé à moins de 6° mais qu’une
+   étoile du catalogue est à moins de 5° du centre, la figure est nommée en tête (« vue SE 143° +25° · la Croix du Sud ») et dite par
+   la voix si « La voix nomme ce que je vise » est cochée (« La Croix du Sud. »). Article selon le nom (la Croix du Sud, le Centaure,
+   les Gémeaux, l’Aigle, Orion). window.cl272Vise(az, alt, pos, ms) (positions des 382 étoiles mises en cache deux secondes).
+   Retouches p272 : repli du réticule dans dessiner() de la CL259 ; la voix (CL260) n’ajoute pas de côté à une constellation. */
+(()=>{'use strict';
+const rad=Math.PI/180;
+const ART={'Croix du Sud':'la Croix du Sud','Centaure':'le Centaure','Scorpion':'le Scorpion','Sagittaire':'le Sagittaire','Carène':'la Carène','Voiles':'les Voiles','Poupe':'la Poupe','Grue':'la Grue','Triangle austral':'le Triangle austral','Paon':'le Paon','Phénix':'le Phénix','Hydre mâle':'l’Hydre mâle','Mouche':'la Mouche','Loup':'le Loup','Autel':'l’Autel','Colombe':'la Colombe','Lièvre':'le Lièvre','Petit Chien':'le Petit Chien','Gémeaux':'les Gémeaux','Taureau':'le Taureau','Cocher':'le Cocher','Lion':'le Lion','Vierge':'la Vierge','Balance':'la Balance','Serpent':'le Serpent','Couronne boréale':'la Couronne boréale','Cygne':'le Cygne','Aigle':'l’Aigle','Dauphin':'le Dauphin','Triangle':'le Triangle','Bélier':'le Bélier','Baleine':'la Baleine','Capricorne':'le Capricorne','Verseau':'le Verseau','Corbeau':'le Corbeau','Hydre':'l’Hydre','Chiens de chasse':'les Chiens de chasse','Grande Ourse':'la Grande Ourse','Petite Ourse':'la Petite Ourse','Dragon':'le Dragon','Grand Chien':'le Grand Chien','Bouvier':'le Bouvier','Lyre':'la Lyre'};
+function equ(ra,dec,pos,ms){const gm=window.cl22Gmst?window.cl22Gmst(ms):0;const H=(gm+pos.lo-ra)*rad,p=pos.la*rad,d=dec*rad;
+ const alt=Math.asin(Math.max(-1,Math.min(1,Math.sin(p)*Math.sin(d)+Math.cos(p)*Math.cos(d)*Math.cos(H))))/rad;const az=((Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(p)-Math.tan(d)*Math.cos(p))/rad)+180+360)%360;return {az,alt}}
+let cache={k:'',H:null,nuit:false};
+function positions(pos,ms){const k=[Math.round(ms/2000),pos.la.toFixed(3),pos.lo.toFixed(3)].join('|');if(cache.k===k)return cache;const C=window.cl23Stars;const H=[];let nuit=false;
+ try{const c=window.cl23Body('sun',new Date(ms));nuit=!!c&&isFinite(c.ra)&&equ(c.ra,c.dec,pos,ms).alt<-3}catch(e){}
+ if(C&&nuit)for(const [key,v] of Object.entries(C.stars)){const q=equ(v[0]*15,v[1],pos,ms);if(q.alt>-1)H.push([q.az,q.alt,v[3]])}
+ cache={k,H,nuit};return cache}
+const sep=(a1,h1,a2,h2)=>Math.acos(Math.max(-1,Math.min(1,Math.sin(h1*rad)*Math.sin(h2*rad)+Math.cos(h1*rad)*Math.cos(h2*rad)*Math.cos((a1-a2)*rad))))/rad;
+let derniere=null;
+function vise(az,alt,pos,ms){derniere=null;if(!pos||!isFinite(az)||!isFinite(alt))return null;const {H,nuit}=positions(pos,ms);if(!nuit||!H.length)return null;
+ let best=null,dmin=5;for(const [a,h,ab] of H){const d=sep(az,alt,a,h);if(d<dmin){dmin=d;best=ab}}if(!best)return null;
+ const C=window.cl23Stars;const l=C&&C.labels.find(x=>x[0]===best);if(!l)return null;derniere=ART[l[1]]||l[1];return derniere}
+window.cl272Vise=vise;
+function fiche(){const A=window.cl45Aide;if(!A)return false;const e=A.AIDE.find(x=>x.k==='cl259go');if(!e)return false;if(!/nommée en tête/.test(e.x))e.x+='\n\nLa nuit, quand le réticule ne vise aucun astre nommé mais une étoile du catalogue à moins de 5°, la constellation est nommée en tête (« la Croix du Sud ») et dite par la voix si « La voix nomme ce que je vise » est cochée (CL272).';return true}
+let n=0;const t=setInterval(()=>{n++;try{if(fiche())clearInterval(t)}catch(e){}if(n>400)clearInterval(t)},250);
+window.cl272={vise,derniere:()=>derniere,article:n=>ART[n]||n};
+})();
+(()=>{'use strict';
+const TIT='CL272 · Le réticule nomme la constellation';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL272')v.textContent='CL272'},300);
+})();
+}catch(e){console.error("CL272",e);}
 </script>
 </body></html>
