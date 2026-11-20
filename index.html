@@ -15362,9 +15362,435 @@ let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){conso
 window.cl253={commencer,repondre,stop,etat:()=>etat?{mode:etat.mode,i:etat.i,q:etat.q,intro:!!etat.intro}:null,sujets:{gleason:SUJETS_G.map(s=>s.q),air:SUJETS_A.map(s=>s.q)},textes:{soleil,lune,crep,maree,domicile,etatG}};
 })();
 (()=>{'use strict';
-const TIT='CL253 · Dialogue guidé par oui et non';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL253')v.textContent='CL253'},300);
 })();
 }catch(e){console.error("CL253",e);}
+/* ───────── cl254FacadeOrloj ───────── */
+try{
+/* CL254 — La façade de l’orloj, telle que la vraie horloge se présente à la population (Thierry, 20 novembre 2026, document
+   « Carte blanche » : « achève le travail de Prague tel que la vraie horloge le présente à la population »).
+   Jusqu’ici la face PRAGUE ne montrait que le cadran astronomique. Sur la place de la Vieille-Ville, les gens voient toute la façade :
+   le coq doré dans sa niche (1882), les deux fenêtres des apôtres, le cadran astronomique entouré de ses quatre statues (la Vanité
+   au miroir, l’Avare à la bourse, la Mort — squelette à la cloche et au sablier —, le Turc au luth), puis le calendrier peint par
+   Josef Mánes (1866) : les douze mois en médaillons, les signes du zodiaque, les armes de la Vieille-Ville au centre, l’aiguille fixe
+   en haut qui marque le jour, et ses quatre statues (le Philosophe, l’Archange Michel, l’Astronome, le Chroniqueur).
+   • Menu « Vue de l’orloj » (carte « Cadran de Prague ») : Cadran astronomique (comme avant, par défaut), Façade entière
+     (le cadran astronomique rapetissé prend sa place dans la façade, qui est dessinée autour : pierre, pinacles, fenêtres fermées,
+     coq, huit statues, calendrier), Calendrier de Mánes (la plaque du calendrier en grand, lisible). Le passage d’une vue à l’autre
+     est un mouvement de caméra (zoom), mémorisé.
+   • Le calendrier tourne d’un cran par jour, comme la plaque réelle : le jour courant (date de Prague) se place sous l’aiguille fixe ;
+     365 ou 366 crans, chiffres tous les cinq jours, noms des mois en tchèque (LEDEN … PROSINEC), médaillons des travaux des mois
+     (dessins originaux : l’âtre, le bûcheron, le labour, la plantation, les fleurs, la fenaison, la moisson, le battage, les semailles,
+     les vendanges, le fagot, le cochon), signes du zodiaque à la plume (CL75) alignés sur les dates du Soleil, écu de la Vieille-Ville.
+     La ligne sous le menu donne la date en tchèque (pátek 20. listopadu 2026) et le rang du jour.
+   • Les statues sont des dessins originaux (vecteurs), chacune avec son attribut, posées sur des consoles de pierre ; les fenêtres
+     ont leurs volets bleus étoilés, fermés : le défilé des apôtres à chaque heure vient à la version suivante (CL255), avec la
+     cloche de la Mort et le chant du coq. Lisibilité : en vue Calendrier, chiffres des jours ≥ 0,75 mm, noms des mois ≥ 1 mm.
+   • Fiche « ? » du menu. Quiétude : la façade est un calque du cadran ; le pupitre n’est touché qu’au montage. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',R=Math.PI/180,f=n=>(+n).toFixed(2);
+const KEY='cl254Vue';
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+// ---------- géométrie de la façade (repère du cadran de Prague : −310 … 310)
+const DIAL={cy:-36,r:124},CAL={cy:204,r:96},KCAL=280/96,WIN={y:-209,dx:78,w:58,h:74},COQ={y:-270};
+const SCALE=DIAL.r/305,TY=DIAL.cy/620*100;
+const GOLD='#e4c066',GOLD2='#b8913d',GOLD3='#fff0bf',SKIN='#e9cba4',BONE='#efe9d6',INK='#1b1a17';
+const MOIS=['LEDEN','ÚNOR','BŘEZEN','DUBEN','KVĚTEN','ČERVEN','ČERVENEC','SRPEN','ZÁŘÍ','ŘÍJEN','LISTOPAD','PROSINEC'];
+const MOISG=['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
+const JOURS=['neděle','pondělí','úterý','středa','čtvrtek','pátek','sobota'];
+const MOISF=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const JOURSF=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+function inst(){try{return window.cl68Parts.inst()}catch(e){return Date.now()}}
+// ---------- la date de Prague
+function datePrague(ms){const o={};for(const x of new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Prague',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short'}).formatToParts(new Date(ms)))o[x.type]=x.value;
+ const y=+o.year,m=+o.month,d=+o.day;const doy=Math.round((Date.UTC(y,m-1,d)-Date.UTC(y,0,1))/864e5)+1;const N=(y%4===0&&y%100!==0)||y%400===0?366:365;
+ const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
+ return {y,m,d,doy,N,wd,theta:-(doy-.5)/N*360,cz:JOURS[wd]+' '+d+'. '+MOISG[m-1]+' '+y,fr:JOURSF[wd]+' '+(d===1?'1er':d)+' '+MOISF[m-1]+' '+y}}
+const DOY=(y,m,d)=>Math.round((Date.UTC(y,m-1,d)-Date.UTC(y,0,1))/864e5)+1;
+// ---------- pièces : statues
+function arm(col,sx,sy,ex,ey,hx,hy,skin,w){return '<path d="M'+sx+','+sy+' Q'+ex+','+ey+' '+hx+','+hy+'" fill="none" stroke="'+col+'" stroke-width="'+(w||4.6)+'" stroke-linecap="round"/><circle cx="'+hx+'" cy="'+hy+'" r="2.3" fill="'+skin+'"/>'}
+function tete(o){const skin=o.skin||SKIN,hair=o.hair||'#4a3118';let s='<g class="tete">';
+ if(o.halo)s+='<circle cy="9" r="9" fill="none" stroke="'+GOLD+'" stroke-width="1.3" opacity=".95"/><circle cy="9" r="7.6" fill="'+GOLD3+'" opacity=".35"/>';
+ if(o.hat==='hood')s+='<path d="M-7.5,10 Q-7.5,-1 0,-1 Q7.5,-1 7.5,10 L9,21 L-9,21 Z" fill="'+(o.mantle||o.robe)+'" stroke="'+INK+'" stroke-width=".35" stroke-opacity=".5"/>';
+ s+='<rect x="-2.2" y="13" width="4.4" height="4.5" fill="'+skin+'"/><circle cy="9" r="6.5" fill="'+skin+'" stroke="#7a5536" stroke-width=".4"/>';
+ if(o.hat!=='hood'&&o.hat!=='turban'&&!o.bald)s+='<path d="M-6.4,8 A6.4,6.4 0 0 1 6.4,8 Q5,5.6 0,5.3 Q-5,5.6 -6.4,8 Z" fill="'+hair+'"/>';
+ if(o.hair==='long'||o.long)s+='<path d="M-6.4,8 Q-8.5,14 -6.5,19 L-4,16 Z M6.4,8 Q8.5,14 6.5,19 L4,16 Z" fill="'+hair+'"/>';
+ if(o.beard)s+='<path d="M-5.5,11 Q-4,19 0,20 Q4,19 5.5,11 Q0,14.5 -5.5,11 Z" fill="'+(o.beard===true?hair:o.beard)+'"/>';
+ s+='<circle cx="-2.2" cy="8.6" r=".65" fill="#241a10"/><circle cx="2.2" cy="8.6" r=".65" fill="#241a10"/><path d="M-1.5,12.1 Q0,13.2 1.5,12.1" fill="none" stroke="#8a4b3a" stroke-width=".5"/>';
+ if(o.hat==='turban')s+='<ellipse cy="4.4" rx="7.6" ry="4.2" fill="#f3eee2" stroke="#8d7f66" stroke-width=".5"/><path d="M-7,5.2 Q0,8.6 7,5.2" fill="none" stroke="#b7342a" stroke-width="1"/><circle cy="1.2" r="1.1" fill="'+GOLD+'"/>';
+ if(o.hat==='cap')s+='<path d="M-5.8,6.2 A5.8,5.8 0 0 1 5.8,6.2 Z" fill="'+(o.cap||'#2a2622')+'"/>';
+ if(o.hat==='biretta')s+='<path d="M-6.5,6.5 L-5,1 L5,1 L6.5,6.5 Z" fill="'+(o.cap||'#2a2622')+'"/><circle cy="1" r="1" fill="'+(o.cap||'#2a2622')+'"/>';
+ if(o.hat==='pointed')s+='<path d="M-6.5,6.8 L0,-6 L6.5,6.8 Z" fill="'+(o.cap||'#2f3550')+'"/><path d="M-7,7 L7,7" stroke="'+GOLD+'" stroke-width=".8"/>';
+ return s+'</g>'}
+function robe(o){const c=o.robe,d=o.dark||'#00000055';let s='<path d="M-9,17 C-10,30 -14.5,50 -14.5,68 L14.5,68 C14.5,50 10,30 9,17 Z" fill="'+c+'" stroke="'+INK+'" stroke-width=".35" stroke-opacity=".55"/>';
+ s+='<path d="M-4,22 C-5,40 -7,55 -7,67 M4,24 C5,40 6.5,55 6.5,67" fill="none" stroke="'+d+'" stroke-width=".7"/>';
+ if(o.mantle)s+='<path d="M-9,17 C-17,27 -18,46 -13,58 L-7,58 C-10,45 -9,30 -5,19 Z M9,17 C17,27 18,46 13,58 L7,58 C10,45 9,30 5,19 Z" fill="'+o.mantle+'" stroke="'+INK+'" stroke-width=".3" stroke-opacity=".5"/>';
+ if(o.belt)s+='<path d="M-8,36 Q0,38.5 8,36" fill="none" stroke="'+o.belt+'" stroke-width="1.6"/>';
+ return s}
+const SOCLE='<path d="M-19,70 L19,70 L15.5,78 L-15.5,78 Z" fill="url(#cl254Soc)" stroke="#2b251f" stroke-width=".4"/><path d="M-19,70 L19,70" stroke="#a09280" stroke-width=".8"/>';
+function statue(o){let s='<g id="cl254F_'+o.k+'" class="cl254F" data-nom="'+o.nom+'" transform="translate('+f(o.x)+','+f(o.y)+')">'+SOCLE;
+ if(o.k==='mort')return s+squelette()+'</g>';
+ if(o.wings)s+='<path d="M-9,21 C-30,9 -36,36 -17,58 C-11,42 -9,30 -9,21 Z M9,21 C30,9 36,36 17,58 C11,42 9,30 9,21 Z" fill="#f4ecd6" stroke="'+GOLD2+'" stroke-width=".6"/><path d="M-14,26 C-24,30 -26,42 -17,52 M14,26 C24,30 26,42 17,52" fill="none" stroke="'+GOLD2+'" stroke-width=".5"/>';
+ s+=robe(o);
+ const A=o.k,skin=o.skin||SKIN,col=o.sleeve||o.robe;
+ if(A==='vanite'){s+='<ellipse cx="-14.5" cy="15" rx="4.6" ry="6.2" fill="#dfe8ee" stroke="'+GOLD+'" stroke-width="1.1"/><path d="M-14.5,21.2 L-13.5,26" stroke="'+GOLD+'" stroke-width="1.4"/><path d="M-16.5,11 Q-14.5,10 -13,12.5" fill="none" stroke="#fff" stroke-width=".7" opacity=".8"/>';
+  s+=arm(col,-8,20,-15,30,-13.2,25.5,skin)+arm(col,8,20,14,34,9.5,42,skin)}
+ if(A==='avare'){s+='<path d="M-11,29 L-17.5,63" stroke="#5a3b1a" stroke-width="1.6" stroke-linecap="round"/>';
+  s+=arm(col,-8,20,-13,26,-11.5,31,skin);
+  s+='<path d="M12,39 Q6,42 6.5,48 Q7,54 12.5,54 Q18,54 18.5,48 Q19,42 13,39 Z" fill="#8a6a34" stroke="#4a3514" stroke-width=".5"/><path d="M10.5,39 L14.5,39" stroke="#d8b26a" stroke-width="1.2"/><circle cx="10.5" cy="48.5" r="1" fill="'+GOLD3+'"/><circle cx="14.8" cy="50" r="1" fill="'+GOLD3+'"/>';
+  s+=arm(col,8,20,15,30,12.5,40,skin)}
+ if(A==='turc'){s+='<g transform="rotate(-28 4 42)"><ellipse cx="4" cy="42" rx="6" ry="8.5" fill="#b9823d" stroke="#5a3b1a" stroke-width=".6"/><circle cx="4" cy="42" r="2" fill="#3a260f"/><path d="M4,33.5 L4,20" stroke="#4a2f14" stroke-width="2.2"/><path d="M1.5,36 L6.5,48 M3,35 L8,47" stroke="#f3e2b0" stroke-width=".35"/></g>';
+  s+=arm(col,-8,20,-10,24,-4.5,23,skin)+arm(col,8,20,16,36,9.5,45,skin)}
+ if(A==='philo'){s+='<path d="M-11.5,37 L-19,21" stroke="#f4efe3" stroke-width="1.4"/><path d="M-19,21 L-15,27 L-13,22 Z" fill="#f4efe3"/><path d="M-19,21 Q-21,25 -17,29" fill="none" stroke="#c7bfa8" stroke-width=".6"/>';
+  s+='<rect x="8" y="36" width="11" height="7" rx="1.2" fill="#f3ead6" stroke="#8a7a5a" stroke-width=".5"/><path d="M9.5,38.5 L17.5,38.5 M9.5,40.5 L17.5,40.5" stroke="#8a7a5a" stroke-width=".4"/>';
+  s+=arm(col,-8,20,-13,30,-11,37.5,skin)+arm(col,8,20,14,32,12,41,skin)}
+ if(A==='ange'){s+='<path d="M-12,15 L-12,-9" stroke="#dfe4ea" stroke-width="1.6"/><path d="M-12,-9 L-12,-13" stroke="#dfe4ea" stroke-width=".9"/><path d="M-16,14.5 L-8,14.5" stroke="'+GOLD+'" stroke-width="1.4"/><circle cx="-12" cy="18.5" r="1.3" fill="'+GOLD+'"/>';
+  s+=arm(col,-8,20,-14,22,-12,16.5,skin);
+  s+='<circle cx="13.5" cy="43" r="7.2" fill="#b52d2d" stroke="'+GOLD+'" stroke-width="1.2"/><path d="M13.5,37.5 L13.5,48.5 M8,43 L19,43" stroke="'+GOLD+'" stroke-width="1.2"/>';
+  s+=arm(col,8,20,14,30,12,37,skin)}
+ if(A==='astro'){s+='<path d="M4.5,10 L25,-1" stroke="#2c2a33" stroke-width="3.6" stroke-linecap="round"/><path d="M4.5,10 L25,-1" stroke="'+GOLD+'" stroke-width="1.4" stroke-dasharray="1.2 5"/><circle cx="25.5" cy="-1.3" r="2.1" fill="#2c2a33" stroke="'+GOLD+'" stroke-width=".6"/>';
+  s+=arm(col,-8,20,0,12,12.5,6,skin)+arm(col,8,20,16,10,19.5,2.5,skin)}
+ if(A==='chron'){s+='<path d="M-10,33 L0,35.5 L0,49 L-10,46.5 Z M10,33 L0,35.5 L0,49 L10,46.5 Z" fill="#f3ead6" stroke="#8a7a5a" stroke-width=".5"/><path d="M-7.5,37.5 L-2.5,38.7 M-7.5,40.5 L-2.5,41.7 M-7.5,43.5 L-2.5,44.7 M2.5,38.7 L7.5,37.5 M2.5,41.7 L7.5,40.5 M2.5,44.7 L7.5,43.5" stroke="#6b5a3a" stroke-width=".45"/>';
+  s+=arm(col,-8,20,-13,32,-10.5,41,skin)+arm(col,8,20,13,32,10.5,41,skin)}
+ return s+tete(o)+'</g>'}
+function squelette(){const b=BONE,d='#2a2622';let s='<g class="corps">';
+ // bassin, jambes, colonne, côtes
+ s+='<path d="M-6,66 L-4,45 M6,66 L4,45" stroke="'+b+'" stroke-width="2.4" stroke-linecap="round"/><path d="M-8,68 L-2,68 M2,68 L8,68" stroke="'+b+'" stroke-width="2" stroke-linecap="round"/>';
+ s+='<path d="M-6.5,42 Q0,49 6.5,42 L5,38 L-5,38 Z" fill="'+b+'"/><path d="M0,18 L0,42" stroke="'+b+'" stroke-width="2.2"/>';
+ for(let i=0;i<4;i++){const y=22+i*4.2,w=8.5-i*.9;s+='<path d="M0,'+y+' Q-'+w+','+(y+1.5)+' -'+(w-1)+','+(y+4.2)+' M0,'+y+' Q'+w+','+(y+1.5)+' '+(w-1)+','+(y+4.2)+'" fill="none" stroke="'+b+'" stroke-width="1.4" stroke-linecap="round"/>'}
+ s+='<path d="M-8,20 L8,20" stroke="'+b+'" stroke-width="1.8" stroke-linecap="round"/>';
+ // bras gauche (à gauche pour qui regarde) : le sablier levé vers le cadran
+ s+='<g class="brasG"><path d="M-8,20 L-15,30 L-16,27" fill="none" stroke="'+b+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
+  '<g id="cl254Sablier" transform="translate(-16,22)"><path d="M-4,-7 L4,-7 M-4,7 L4,7" stroke="'+GOLD2+'" stroke-width="1.3"/><path d="M-3.4,-6.4 L3.4,-6.4 L0,0 Z M-3.4,6.4 L3.4,6.4 L0,0 Z" fill="#f6f1e3" fill-opacity=".85" stroke="'+GOLD2+'" stroke-width=".5"/><path d="M-2.2,-6 L2.2,-6 L0,-1.8 Z" fill="#e3c27a"/><path d="M-1.6,6 L1.6,6 L0,3.4 Z" fill="#e3c27a"/><path d="M-4,-7 L-4,7 M4,-7 L4,7" stroke="'+GOLD2+'" stroke-width=".6"/></g></g>';
+ // bras droit (à droite) : tire la corde de la cloche
+ s+='<g class="brasD"><path d="M8,20 L15,14 L17,8" fill="none" stroke="'+b+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="7.5" r="1.6" fill="'+b+'"/></g>';
+ s+='<path id="cl254Corde" d="M17,7 L22,-14" stroke="#c9b48a" stroke-width=".9"/>';
+ // crâne
+ s+='<g class="tete"><circle cy="9" r="6.6" fill="'+b+'" stroke="#9a9280" stroke-width=".4"/><path d="M-4.8,14 L4.8,14 L4,17.5 L-4,17.5 Z" fill="'+b+'"/><ellipse cx="-2.5" cy="8.6" rx="1.7" ry="2" fill="'+d+'"/><ellipse cx="2.5" cy="8.6" rx="1.7" ry="2" fill="'+d+'"/><path d="M-.9,12.6 L.9,12.6 L0,10.8 Z" fill="'+d+'"/><path d="M-3.5,15.2 L3.5,15.2 M-2.4,14.2 L-2.4,16.8 M-.8,14.2 L-.8,16.8 M.8,14.2 L.8,16.8 M2.4,14.2 L2.4,16.8" stroke="'+d+'" stroke-width=".4"/></g>';
+ return s+'</g>'}
+function cloche(){ // petite cloche de la Mort, au bout de sa corde
+ return '<g id="cl254Cloche"><path d="M-7,-18 L7,-18" stroke="#5a4b35" stroke-width="2"/><g class="corps"><path d="M0,-17 L0,-14" stroke="'+GOLD2+'" stroke-width="1.6"/><path d="M-1.8,-14 L1.8,-14 L5.5,-3 Q6.5,0 7.5,.5 L-7.5,.5 Q-6.5,0 -5.5,-3 Z" fill="url(#cl254Or)" stroke="#6b4e14" stroke-width=".6"/><path d="M-7.5,.5 L7.5,.5" stroke="#6b4e14" stroke-width="1"/><circle cx="0" cy="2.4" r="1.6" fill="#5a4b35"/></g></g>'}
+function coq(){ // le coq doré dans sa niche
+ return '<g id="cl254Coq" transform="translate(0,'+COQ.y+')"><path d="M-20,20 L-20,-4 A20,20 0 0 1 20,-4 L20,20 Z" fill="#0d1320" stroke="url(#cl254Or)" stroke-width="2.4"/><path d="M-24,20 L24,20 L22,24 L-22,24 Z" fill="url(#cl254Soc)" stroke="#2b251f" stroke-width=".4"/>'+
+ '<g class="oiseau" transform="translate(1,7)">'+
+ '<path d="M6,1 C9,-8 12,-14 11,-20 C12,-12 10,-6 8,-2 C12,-9 16,-14 17,-17 C16,-10 12,-4 9,0 C13,-5 17,-7 19,-8 C16,-3 12,1 9,3 Z" fill="url(#cl254Or)" stroke="#7a5a12" stroke-width=".4"/>'+
+ '<ellipse cx="0" cy="4" rx="9" ry="5.6" fill="url(#cl254Or)" stroke="#7a5a12" stroke-width=".5"/>'+
+ '<g id="cl254Aile"><path d="M-2,1.5 C2,-.5 7,.5 8.5,3.5 C4.5,6 .5,6.5 -3,5 Z" fill="#c99a3a" stroke="#7a5a12" stroke-width=".4"/><path d="M-1,3 L6,3.4 M-1.5,4.3 L5,5" stroke="#7a5a12" stroke-width=".3"/></g>'+
+ '<path d="M-7,2.5 C-10,-1 -11.5,-6 -10.5,-10.5" fill="none" stroke="url(#cl254Or)" stroke-width="3.6" stroke-linecap="round"/>'+
+ '<circle cx="-11" cy="-12.2" r="3.6" fill="url(#cl254Or)" stroke="#7a5a12" stroke-width=".4"/>'+
+ '<path d="M-14.4,-12.6 L-19,-11.2 L-14.4,-10 Z" fill="#b8891f" stroke="#7a5a12" stroke-width=".3"/>'+
+ '<path d="M-13.4,-15.4 L-12.6,-18.6 L-11.2,-15.9 L-10,-18.8 L-8.8,-15.6 L-7.8,-17.4 L-7.6,-14.6" fill="#c0392b" stroke="#c0392b" stroke-width=".6" stroke-linejoin="round"/>'+
+ '<path d="M-13.2,-9.2 Q-13.6,-6.6 -11.6,-6.9 Q-11,-8.4 -12,-9.4 Z" fill="#c0392b"/>'+
+ '<circle cx="-11.9" cy="-13" r=".6" fill="#2a1d12"/>'+
+ '<path d="M-2.5,9.2 L-3,13 M3,9.2 L3.5,13 M-5,13 L-1,13 M1.5,13 L5.5,13" stroke="#8a6a1a" stroke-width="1" stroke-linecap="round"/></g></g>'}
+function fenetre(side){const x=side*WIN.dx,y=WIN.y,w=WIN.w/2,h=WIN.h/2,id=side<0?'L':'R';
+ const ouverture='M'+(-w)+','+h+' L'+(-w)+','+(-h+w)+' A'+w+','+w+' 0 0 1 '+w+','+(-h+w)+' L'+w+','+h+' Z';
+ let s='<g id="cl254Win'+id+'" class="cl254Win" transform="translate('+f(x)+','+f(y)+')"><defs><clipPath id="cl254Clip'+id+'"><path d="'+ouverture+'"/></clipPath></defs>';
+ s+='<path d="'+ouverture+'" fill="#0a111c"/><g id="cl254Ap'+id+'" clip-path="url(#cl254Clip'+id+')"></g>';
+ const volet=(sg)=>{let v='<g class="volet '+(sg<0?'g':'d')+'" clip-path="url(#cl254Clip'+id+')"><rect x="'+(sg<0?-w:0)+'" y="'+(-h)+'" width="'+w+'" height="'+(2*h)+'" fill="url(#cl254Bleu)" stroke="'+GOLD2+'" stroke-width=".6"/>';
+  for(let i=0;i<4;i++){const cx=sg*w/2,cy=-h+10+i*((2*h-20)/3);v+='<path d="M'+f(cx)+','+f(cy-2.6)+' L'+f(cx+.9)+','+f(cy-.9)+' L'+f(cx+2.6)+','+f(cy)+' L'+f(cx+.9)+','+f(cy+.9)+' L'+f(cx)+','+f(cy+2.6)+' L'+f(cx-.9)+','+f(cy+.9)+' L'+f(cx-2.6)+','+f(cy)+' L'+f(cx-.9)+','+f(cy-.9)+' Z" fill="'+GOLD+'"/>'}
+  return v+'</g>'};
+ s+=volet(-1)+volet(1);
+ s+='<path d="'+ouverture+'" fill="none" stroke="url(#cl254Or)" stroke-width="2.6"/><path d="M'+(-w-5)+','+(h)+' L'+(w+5)+','+h+' L'+(w+3)+','+(h+5)+' L'+(-w-3)+','+(h+5)+' Z" fill="url(#cl254Soc)" stroke="#2b251f" stroke-width=".4"/>';
+ return s+'</g>'}
+function ogive(){ // l’arc gothique qui coiffe les fenêtres et la niche du coq
+ const d='M-118,-172 Q-118,-280 -30,-292 Q-8,-296 0,-304 Q8,-296 30,-292 Q118,-280 118,-172';
+ return '<path d="'+d+'" fill="none" stroke="url(#cl254Pin)" stroke-width="7" stroke-linejoin="round"/><path d="'+d+'" fill="none" stroke="#2b251f" stroke-width=".6" stroke-opacity=".7"/><path d="'+d+'" fill="none" stroke="'+GOLD2+'" stroke-width=".9" transform="translate(0,-4.5)" stroke-opacity=".85"/>'+
+  '<path d="M-60,-278 L-60,-266 M-30,-291 L-30,-279 M30,-291 L30,-279 M60,-278 L60,-266 M-90,-252 L-90,-240 M90,-252 L90,-240" stroke="'+GOLD2+'" stroke-width="1.2" stroke-linecap="round"/>'+
+  '<path d="M0,-304 L0,-310" stroke="url(#cl254Or)" stroke-width="2.4"/>'}
+function pinacle(x){return '<g transform="translate('+x+',0)"><path d="M-6,-150 L-6,-215 L0,-242 L6,-215 L6,-150 Z" fill="url(#cl254Pin)" stroke="#2b251f" stroke-width=".5"/><path d="M-6,-215 L6,-215 M-6,-190 L6,-190 M-6,-170 L6,-170" stroke="#3a332c" stroke-width=".6"/><path d="M-6,-200 L-9,-204 L-6,-208 M6,-200 L9,-204 L6,-208 M-4,-226 L-7,-229 L-5,-232 M4,-226 L7,-229 L5,-232" fill="none" stroke="#8a7a66" stroke-width=".8"/><circle cy="-244" r="2.2" fill="url(#cl254Or)"/></g>'}
+// ---------- le calendrier de Mánes
+const PICT=[ // travaux des mois, boîte 20 × 20 (dessins originaux)
+ '<path d="M-4,6 C-6.5,1 -2.5,-1.5 -1,-6.5 C2,-3 5.2,-1 4.2,4 C6,2 5.2,0 6.2,-1.2 C8.5,4 5.5,8 .5,8 C-2.8,8 -5.2,8 -4,6 Z" fill="#f0c860" stroke="#7a5a12" stroke-width=".4"/><path d="M-7,9.4 L7,9.4" stroke="#8a6a3a" stroke-width="1.6" stroke-linecap="round"/>',
+ '<rect x="-8.5" y="3.5" width="17" height="5" rx="2.5" fill="none" stroke="#f0c860" stroke-width="1.2"/><path d="M-4,8.5 L6.5,-7.5" stroke="#f0c860" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5,-7.5 L1.8,-5.3 L4,-.5 L9.5,-3.8 Z" fill="#f0c860"/>',
+ '<path d="M-9,7 L9,7" stroke="#f0c860" stroke-width="1" stroke-linecap="round"/><path d="M-8,7 C-5,0 -1,-4 7,-8 M-2,1 L3,5 L-3,7 Z" fill="#f0c860" stroke="#f0c860" stroke-width="1.3" stroke-linejoin="round"/>',
+ '<path d="M0,9 L0,-3" stroke="#f0c860" stroke-width="1.3" stroke-linecap="round"/><ellipse cx="-3.5" cy="-1" rx="3.3" ry="1.7" transform="rotate(-30 -3.5 -1)" fill="#f0c860"/><ellipse cx="3.5" cy="-3.5" rx="3.3" ry="1.7" transform="rotate(30 3.5 -3.5)" fill="#f0c860"/><ellipse cx="-2.8" cy="-6" rx="2.8" ry="1.5" transform="rotate(-35 -2.8 -6)" fill="#f0c860"/><path d="M-6,9 L6,9" stroke="#f0c860" stroke-width="1"/>',
+ '<path d="M-8.5,8 Q-2,1 8.5,-7" fill="none" stroke="#f0c860" stroke-width="1.2"/><circle cx="-4" cy="3.5" r="2.4" fill="#f0c860"/><circle cx="1.5" cy="-1.2" r="2.4" fill="#f0c860"/><circle cx="6.5" cy="-5.6" r="2.1" fill="#f0c860"/><ellipse cx="-1" cy="6" rx="2.6" ry="1.2" transform="rotate(-20 -1 6)" fill="#c9a048"/>',
+ '<path d="M-7.5,9 L4,-8.5" stroke="#f0c860" stroke-width="1.5" stroke-linecap="round"/><path d="M4,-8.5 Q12.5,-6.5 8.5,2.5 Q9.5,-5 3.6,-6.4 Z" fill="#f0c860"/><path d="M-3,2 L-5.5,-.5" stroke="#f0c860" stroke-width="1.3" stroke-linecap="round"/>',
+ '<path d="M0,9 L-6,-5 M0,9 L-2,-7 M0,9 L2,-7 M0,9 L6,-5" fill="none" stroke="#f0c860" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="-6" cy="-6.5" rx="1.4" ry="2.6" transform="rotate(25 -6 -6.5)" fill="#f0c860"/><ellipse cx="-2" cy="-8.5" rx="1.4" ry="2.6" transform="rotate(8 -2 -8.5)" fill="#f0c860"/><ellipse cx="2" cy="-8.5" rx="1.4" ry="2.6" transform="rotate(-8 2 -8.5)" fill="#f0c860"/><ellipse cx="6" cy="-6.5" rx="1.4" ry="2.6" transform="rotate(-25 6 -6.5)" fill="#f0c860"/><path d="M-3.5,4 L3.5,4" stroke="#c9a048" stroke-width="1.4"/>',
+ '<path d="M-8.5,8.5 L-.5,-2.5" stroke="#f0c860" stroke-width="1.5" stroke-linecap="round"/><path d="M1,-4.5 L8.5,-9" stroke="#f0c860" stroke-width="2.2" stroke-linecap="round"/><path d="M-.5,-2.5 Q0,-4.5 1,-4.5" fill="none" stroke="#c9a048" stroke-width=".8"/><circle cx="4" cy="6" r=".9" fill="#f0c860"/><circle cx="7" cy="4" r=".9" fill="#f0c860"/><circle cx="6" cy="8" r=".9" fill="#f0c860"/>',
+ '<path d="M-8,9 L-8,1 Q-8,-2 -4,-2 Q0,-2 0,1 L0,9 Z" fill="none" stroke="#f0c860" stroke-width="1.2" stroke-linejoin="round"/><path d="M-6,-2 L-6,-4 L-2,-4 L-2,-2" fill="none" stroke="#f0c860" stroke-width=".9"/><circle cx="3" cy="-6" r=".9" fill="#f0c860"/><circle cx="6" cy="-3" r=".9" fill="#f0c860"/><circle cx="8" cy="1" r=".9" fill="#f0c860"/><circle cx="7" cy="5" r=".9" fill="#f0c860"/><circle cx="4" cy="2" r=".9" fill="#f0c860"/>',
+ '<path d="M0,-8 L0,-4" stroke="#8a6a3a" stroke-width="1.2"/><path d="M0,-6 Q6,-10 8,-4 Q3,-5 0,-6 Z" fill="#c9a048"/><circle cx="-3" cy="-1.5" r="1.9" fill="#f0c860"/><circle cx="1" cy="-1.5" r="1.9" fill="#f0c860"/><circle cx="5" cy="-1.5" r="1.9" fill="#f0c860"/><circle cx="-1" cy="2" r="1.9" fill="#f0c860"/><circle cx="3" cy="2" r="1.9" fill="#f0c860"/><circle cx="1" cy="5.5" r="1.9" fill="#f0c860"/><circle cx="-3" cy="5" r="1.6" fill="#f0c860"/><circle cx="5" cy="5" r="1.6" fill="#f0c860"/>',
+ '<path d="M-8,6 L8,-6 M-8,3 L8,-9 M-8,9 L8,-3 M-7,-1 L7,1" fill="none" stroke="#f0c860" stroke-width="1.2" stroke-linecap="round"/><ellipse cx="0" cy="0" rx="1.6" ry="4" transform="rotate(50)" fill="none" stroke="#c9a048" stroke-width="1.1"/>',
+ '<ellipse cx="1" cy="1" rx="7.5" ry="4.8" fill="#f0c860"/><circle cx="-7" cy="-.5" r="3.2" fill="#f0c860"/><ellipse cx="-9.6" cy=".3" rx="1.5" ry="1.1" fill="#c9a048"/><path d="M-7.5,-3.2 L-6,-5.6 L-4.8,-3" fill="#f0c860"/><path d="M-3,5.5 L-3,8.5 M0,5.8 L0,8.5 M4,5.8 L4,8.5 M6.5,5 L6.5,8.5" stroke="#f0c860" stroke-width="1.2" stroke-linecap="round"/><path d="M8.5,0 Q11,-3 9,-4.5" fill="none" stroke="#f0c860" stroke-width=".9"/><circle cx="-7.8" cy="-1" r=".5" fill="#2a1d12"/>'];
+const ECU='<g id="cl254Ecu"><path d="M-13,-15 L13,-15 L13,4 Q13,14 0,19 Q-13,14 -13,4 Z" fill="#b3121c" stroke="'+GOLD+'" stroke-width="1"/>'+
+ '<path d="M-11,9 L-11,-1 L-8.5,-1 L-8.5,-3.5 L-6,-3.5 L-6,-1 L-3.5,-1 L-3.5,-3.5 L-1,-3.5 L-1,-1 L1,-1 L1,-3.5 L3.5,-3.5 L3.5,-1 L6,-1 L6,-3.5 L8.5,-3.5 L8.5,-1 L11,-1 L11,9 Z" fill="#f4f1ea"/>'+
+ '<path d="M-2.6,9 L-2.6,3 A2.6,2.6 0 0 1 2.6,3 L2.6,9 Z" fill="#3a1b1b"/>'+
+ '<path d="M-9.5,-1 L-9.5,-7 L-10.5,-7 L-10.5,-8.5 L-9,-8.5 L-9,-7.5 L-8,-7.5 L-8,-8.5 L-6.5,-8.5 L-6.5,-7 L-7.5,-7 L-7.5,-1 Z M7.5,-1 L7.5,-7 L6.5,-7 L6.5,-8.5 L8,-8.5 L8,-7.5 L9,-7.5 L9,-8.5 L10.5,-8.5 L10.5,-7 L9.5,-7 L9.5,-1 Z" fill="#f4f1ea"/>'+
+ '<path d="M-2,-1 L-2,-10 L-3,-10 L-3,-12 L-1.5,-12 L-1.5,-11 L-.5,-11 L-.5,-12 L.5,-12 L.5,-11 L1.5,-11 L1.5,-12 L3,-12 L3,-10 L2,-10 L2,-1 Z" fill="#f4f1ea"/>'+
+ '<path d="M-9,-7.5 L-9,-4 M9,-7.5 L9,-4 M0,-10.5 L0,-5" stroke="#b3121c" stroke-width=".7"/></g>';
+function calendrier(y){ // la plaque, dans son repère (centre 0,0)
+ const N=(y%4===0&&y%100!==0)||y%400===0?366:365;const a=d=>(d-.5)/N*360;const P=(r,ang)=>[r*Math.sin(ang*R),-r*Math.cos(ang*R)];
+ const ML=[31,(N===366?29:28),31,30,31,30,31,31,30,31,30,31];let deb=[1];for(let i=0;i<11;i++)deb.push(deb[i]+ML[i]);
+ let s='<g id="cl254Plaque">';
+ s+='<circle r="95.5" fill="#15284a"/><circle r="84" fill="none" stroke="'+GOLD+'" stroke-width=".7"/><circle r="72" fill="#0f1f3d" stroke="'+GOLD+'" stroke-width=".7"/><circle r="48" fill="#1b2f57" stroke="'+GOLD+'" stroke-width=".7"/><circle r="28" fill="#26407a" stroke="'+GOLD+'" stroke-width=".7"/>';
+ // jours
+ let t='';for(let d=1;d<=N;d++){const ang=d/N*360,m=deb.findIndex((x,i)=>d>=x&&(i===11||d<deb[i+1]));const dm=d-deb[m]+1;const [x1,y1]=P(95.5,ang),long=dm%5===0;const [x2,y2]=P(long?88:91.5,ang);
+  t+='<line x1="'+f(x1)+'" y1="'+f(y1)+'" x2="'+f(x2)+'" y2="'+f(y2)+'"/>';
+  if(dm%5===0&&dm<=30){const am=a(d),[tx,ty]=P(86.5,am);s+='<text x="'+f(tx)+'" y="'+f(ty)+'" transform="rotate('+f(am)+' '+f(tx)+' '+f(ty)+')" font-size="4.4" font-family="Cinzel,Georgia,serif" font-weight="700" text-anchor="middle" dominant-baseline="central" fill="'+GOLD3+'">'+dm+'</text>'}}
+ s+='<g stroke="'+GOLD+'" stroke-width=".35" opacity=".9">'+t+'</g>';
+ // mois : séparations, noms, médaillons
+ for(let m=0;m<12;m++){const a0=(deb[m]-1)/N*360,am=(deb[m]-1+ML[m]/2)/N*360;const [x1,y1]=P(95.5,a0),[x2,y2]=P(48,a0);
+  s+='<line x1="'+f(x1)+'" y1="'+f(y1)+'" x2="'+f(x2)+'" y2="'+f(y2)+'" stroke="'+GOLD+'" stroke-width=".8"/>';
+  const [tx,ty]=P(78,am);s+='<text x="'+f(tx)+'" y="'+f(ty)+'" transform="rotate('+f(am)+' '+f(tx)+' '+f(ty)+')" font-size="5.2" font-family="Cinzel,Georgia,serif" font-weight="700" letter-spacing=".4" text-anchor="middle" dominant-baseline="central" fill="'+GOLD+'">'+MOIS[m]+'</text>';
+  const [mx,my]=P(60,am);s+='<g class="cl254Med" transform="translate('+f(mx)+','+f(my)+') rotate('+f(am)+')"><circle r="11" fill="#223a66" stroke="'+GOLD+'" stroke-width=".9"/><circle r="9.6" fill="none" stroke="'+GOLD2+'" stroke-width=".3"/><g transform="scale(.82)">'+PICT[m]+'</g></g>'}
+ // zodiaque : le Bélier commence le 21 mars (dates du Soleil)
+ const G=window.CL75G;const d0=DOY(y,3,21);
+ for(let i=0;i<12;i++){const dd=d0+30.44*i;const ang=(dd-.5)/N*360,ab=(d0-.5+30.44*i-15.22)/N*360;const [x1,y1]=P(48,ab),[x2,y2]=P(28,ab);
+  s+='<line x1="'+f(x1)+'" y1="'+f(y1)+'" x2="'+f(x2)+'" y2="'+f(y2)+'" stroke="'+GOLD+'" stroke-width=".5" opacity=".8"/>';
+  const [zx,zy]=P(38,ang);if(G&&G.sig)s+='<g class="cl254Sig">'+G.draw(G.sig[i],zx,zy,13,ang,GOLD,100)+'</g>';
+  else s+='<text x="'+f(zx)+'" y="'+f(zy)+'" transform="rotate('+f(ang)+' '+f(zx)+' '+f(zy)+')" font-size="12" text-anchor="middle" dominant-baseline="central" fill="'+GOLD+'">'+'♈♉♊♋♌♍♎♏♐♑♒♓'[i]+'</text>'}
+ s+=ECU+'</g>';
+ // cadre fixe et aiguille
+ s+='<circle r="99" fill="none" stroke="url(#cl254Cadre)" stroke-width="7"/><circle r="95.8" fill="none" stroke="'+GOLD+'" stroke-width="1.1"/><circle r="102.4" fill="none" stroke="'+GOLD2+'" stroke-width=".9"/>';
+ s+='<g id="cl254Aig"><path d="M-5,-104 L5,-104 L0,-84 Z" fill="url(#cl254Or)" stroke="#6b4e14" stroke-width=".6"/><circle cy="-104" r="3.2" fill="url(#cl254Or)" stroke="#6b4e14" stroke-width=".6"/></g>';
+ return {svg:s,N}}
+// ---------- la façade
+const FIG=[
+ {k:'vanite',nom:'la Vanité',x:-214,y:-75,robe:'#c2553a',mantle:'#e2b457',belt:GOLD2,hair:'#5a3a1a',long:true},
+ {k:'avare',nom:'l’Avare',x:-168,y:-75,robe:'#4a4a3f',hat:'hood',mantle:'#2f2a24',beard:'#bdb6a6',hair:'#8a8378'},
+ {k:'mort',nom:'la Mort',x:168,y:-75},
+ {k:'turc',nom:'le Turc',x:214,y:-75,robe:'#2f7a4a',belt:'#b7342a',hat:'turban',beard:'#2a1d12',hair:'#2a1d12'},
+ {k:'philo',nom:'le Philosophe',x:-188,y:145,robe:'#3b4a7a',hat:'cap',cap:'#1d1b1a',beard:'#c9c2b4',hair:'#9a9388'},
+ {k:'ange',nom:'l’Archange Michel',x:-142,y:145,robe:'#f4efe3',mantle:'#4d78c8',halo:true,wings:true,hair:'#d9a646',belt:GOLD2},
+ {k:'astro',nom:'l’Astronome',x:142,y:145,robe:'#6b2f5a',hat:'pointed',cap:'#2f3550',beard:'#3a2a1a',hair:'#3a2a1a'},
+ {k:'chron',nom:'le Chroniqueur',x:188,y:145,robe:'#7a4a2a',hat:'hood',mantle:'#4a2e1a',beard:'#d8d2c4',hair:'#b0a898'}];
+let SVG=null,plaqueAn=null,calY=null;
+function defs(){return '<defs>'+
+ '<linearGradient id="cl254Pierre" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6c6258"/><stop offset=".5" stop-color="#564d44"/><stop offset="1" stop-color="#3e362f"/></linearGradient>'+
+ '<linearGradient id="cl254Soc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8f8273"/><stop offset="1" stop-color="#4b423a"/></linearGradient>'+
+ '<linearGradient id="cl254Pin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a423a"/><stop offset=".5" stop-color="#8a7c6c"/><stop offset="1" stop-color="#4a423a"/></linearGradient>'+
+ '<linearGradient id="cl254Or" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2c4"/><stop offset=".5" stop-color="#d7ab52"/><stop offset="1" stop-color="#8a6420"/></linearGradient>'+
+ '<linearGradient id="cl254Bleu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f58a6"/><stop offset="1" stop-color="#1a3468"/></linearGradient>'+
+ '<linearGradient id="cl254Cadre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9b8d7c"/><stop offset=".5" stop-color="#5e5349"/><stop offset="1" stop-color="#8b7e6e"/></linearGradient>'+
+ '<clipPath id="cl254Rond"><circle r="310"/></clipPath></defs>'}
+function pierre(){let s='<rect x="-310" y="-310" width="620" height="620" fill="url(#cl254Pierre)"/><g stroke="#2e2822" stroke-opacity=".45" stroke-width=".8">';
+ for(let y=-310;y<=310;y+=24){s+='<line x1="-310" y1="'+y+'" x2="310" y2="'+y+'"/>';const off=((y/24)%2+2)%2?30:0;for(let x=-300+off;x<310;x+=60)s+='<line x1="'+x+'" y1="'+y+'" x2="'+x+'" y2="'+(y+24)+'"/>'}
+ return s+'</g>'}
+function construire(){const w=$('watch');if(!w||SVG)return;const svg=document.createElementNS(NS,'svg');svg.id='cl254Svg';svg.setAttribute('viewBox','-310 -310 620 620');
+ const y=datePrague(inst()).y;calY=y;const cal=calendrier(y);
+ let s=defs()+'<g clip-path="url(#cl254Rond)">'+pierre();
+ s+='<g id="cl254Fac">';
+ // cadre du cadran astronomique (le cadran lui-même est le calque CL68, rapetissé par-dessus)
+ s+='<circle cy="'+DIAL.cy+'" r="'+(DIAL.r+5)+'" fill="none" stroke="url(#cl254Cadre)" stroke-width="10"/><circle cy="'+DIAL.cy+'" r="'+(DIAL.r+10.5)+'" fill="none" stroke="'+GOLD2+'" stroke-width="1"/>';
+ for(let i=0;i<24;i++){const a=i*15*R,rr=DIAL.r+5;s+='<circle cx="'+f(rr*Math.sin(a))+'" cy="'+f(DIAL.cy-rr*Math.cos(a))+'" r="1.7" fill="url(#cl254Or)"/>'}
+ s+=ogive()+pinacle(-125)+pinacle(125)+coq()+fenetre(-1)+fenetre(1);
+ for(const o of FIG)s+=statue(o);
+ s+='<g transform="translate(191,-96)">'+cloche()+'</g>';
+ s+='</g>';
+ s+='<g id="cl254CalG"><g transform="translate(0,'+CAL.cy+')">'+cal.svg+'</g></g></g>';
+ svg.innerHTML=s;w.appendChild(svg);SVG=svg;plaqueAn=null;
+ const css=document.createElement('style');css.id='cl254Css';css.textContent=
+  '#cl254Svg{position:absolute;inset:0;width:100%;height:100%;z-index:399;pointer-events:none;visibility:hidden;opacity:0;transition:opacity .7s ease,visibility 0s linear .7s}'+
+  '#watch.prague-active.cl68-on.cl254-facade #cl254Svg,#watch.prague-active.cl68-on.cl254-cal #cl254Svg{visibility:visible;opacity:1;transition:opacity .7s ease}'+
+  '#watch.prague-active #cl68Orloj{transition:transform .9s cubic-bezier(.4,0,.2,1),opacity .6s ease;transform-origin:50% 50%}'+
+  '#watch.cl254-facade #cl68Orloj,#watch.cl254-cal #cl68Orloj{transform:translateY('+f(TY)+'%) scale('+SCALE.toFixed(4)+')}'+
+  '#watch.cl254-cal #cl68Orloj{opacity:0}'+
+  '#cl254Fac{transition:opacity .6s ease}#watch.cl254-cal #cl254Fac{opacity:0}'+
+  '#cl254CalG{transform-origin:0 0;transition:transform .9s cubic-bezier(.4,0,.2,1)}#watch.cl254-cal #cl254CalG{transform:translate(0px,'+f(-CAL.cy*KCAL)+'px) scale('+KCAL.toFixed(4)+')}'+
+  '#cl254Vue{background:#0d1620;color:#f0e2c0;border:1px solid #a88b55;border-radius:6px;padding:3px 6px;font:12.5px Jost,Arial,sans-serif;min-width:0;flex:0 1 auto;max-width:62%}#cl254Info{font:12px/1.4 Jost,Arial,sans-serif;color:#cdbf9a;margin:2px 0 4px}';
+ document.head.appendChild(css)}
+// ---------- la plaque tourne d’un cran par jour
+let infoK='';
+function tourner(){if(!SVG)return;const ms=inst(),D=datePrague(ms);
+ if(D.y!==calY){calY=D.y;const g=SVG.querySelector('#cl254CalG > g');if(g)g.innerHTML=calendrier(D.y).svg;plaqueAn=null}
+ const p=$('cl254Plaque');if(p&&plaqueAn!==D.theta){plaqueAn=D.theta;p.setAttribute('transform','rotate('+f(D.theta)+')')}
+ const k=D.cz;if(k!==infoK){infoK=k;const i=$('cl254Info');if(i)i.textContent='Calendrier de Mánes : '+D.cz+' (' +D.fr+') · jour '+D.doy+' sur '+D.N+', sous l’aiguille fixe.'}}
+// ---------- la vue
+function vue(){return $('cl254Vue')?.value||'astro'}
+function appliquer(v,save){const w=$('watch');if(!w)return;v=v||vue();if(!['astro','facade','cal'].includes(v))v='astro';
+ const s=$('cl254Vue');if(s&&s.value!==v)s.value=v;w.classList.toggle('cl254-facade',v==='facade');w.classList.toggle('cl254-cal',v==='cal');if(save!==false)LS.set(KEY,v);if(v!=='astro'){construire();tourner()}}
+function ui(){if($('cl254Vue'))return true;const card=$('cl68Card'),grp=card&&card.querySelector('.cl2Grp'),lieu=$('cl72Lieu');if(!card||!grp||!lieu)return false;
+ const l=document.createElement('label');l.className='cl68c';l.innerHTML='<span style="white-space:nowrap">Vue de l’orloj</span><select id="cl254Vue"><option value="astro">Cadran astronomique</option><option value="facade">Façade entière</option><option value="cal">Calendrier de Mánes</option></select>';
+ const inf=document.createElement('div');inf.id='cl254Info';inf.className='cl68n';grp.after(l,inf);
+ const v=LS.get(KEY,'astro');$('cl254Vue').value=v;$('cl254Vue').addEventListener('change',()=>appliquer(vue(),true));
+ construire();appliquer(v,false);tourner();
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl254vue')){A.AIDE.push({k:'cl254vue',id:'cl254Vue',t:'Vue de l’orloj',x:'Menu :\n• Cadran astronomique (par défaut) — le grand cadran seul, comme jusqu’ici.\n• Façade entière — l’horloge telle que la place de la Vieille-Ville la voit : en haut le coq doré dans sa niche (1882) ; les deux fenêtres des apôtres, volets bleus étoilés fermés ; le cadran astronomique, qui continue de tourner, entouré de ses quatre statues : à gauche la Vanité qui se mire et l’Avare à la bourse, à droite la Mort — squelette qui tient le sablier et la corde de sa cloche — et le Turc au luth ; en bas le calendrier peint par Josef Mánes (1866) entre le Philosophe, l’Archange Michel, l’Astronome et le Chroniqueur.\n• Calendrier de Mánes — la plaque du calendrier en grand : 365 crans (366 les années bissextiles), chiffres tous les cinq jours, les douze mois en tchèque (LEDEN, ÚNOR, BŘEZEN…), les médaillons des travaux des mois, les signes du zodiaque alignés sur les dates du Soleil, l’écu de la Vieille-Ville au centre. La plaque tourne d’un cran par jour : le jour de Prague se place sous l’aiguille fixe du haut. La ligne sous le menu donne la date en tchèque et le rang du jour.\n\nLe passage d’une vue à l’autre est un mouvement de caméra ; le choix est mémorisé. Les statues et les médaillons sont des dessins originaux, inspirés de l’horloge réelle. Le défilé des apôtres, la cloche de la Mort et le chant du coq, à chaque heure : version suivante.\n\nOù le voir : la face PRAGUE.'});[300,2500].forEach(d=>setTimeout(()=>{try{A.install()}catch(e){}},d))}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL254',e)}if(n>400)clearInterval(t)},200);
+setInterval(()=>{try{if($('cl254Vue'))tourner()}catch(e){console.warn('CL254',e)}},1000);
+window.cl254={vue,choisir:v=>appliquer(v,true),poser:v=>appliquer(v,false),pieces:{tete,robe,arm,SOCLE,GOLD,GOLD2,GOLD3,SKIN,INK,f},svg:()=>SVG,construire,etat:()=>({vue:vue(),facade:!!$('watch')?.classList.contains('cl254-facade'),cal:!!$('watch')?.classList.contains('cl254-cal'),plaque:plaqueAn,annee:calY}),date:ms=>datePrague(ms==null?inst():ms),figures:FIG.map(o=>({k:o.k,nom:o.nom})),geo:{DIAL,CAL,KCAL,WIN,SCALE,TY}};
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("cl254FacadeOrloj",e);}
+/* ───────── cl255Apotres ───────── */
+try{
+/* CL255 — Le défilé des apôtres à chaque heure (Thierry, 20 novembre 2026, document « Carte blanche » : « achève le travail de Prague
+   tel que la vraie horloge le présente à la population »). Ce que la foule attend sur la place, de 9 h à 23 h, à l'heure juste :
+   la Mort tire la corde de sa cloche et retourne son sablier, les deux fenêtres s'ouvrent, les douze apôtres passent et se tournent
+   vers la place — à gauche Paul (épée et livre), Thomas (lance), Jude Thaddée (livre), Simon (scie), Barthélemy (couteau et livre),
+   Barnabé (rouleau) ; à droite Pierre (clef), Matthieu (hache), Jean (calice), André (croix en X), Philippe (croix), Jacques (battoir) —,
+   la Vanité se mire, l'Avare et le Turc hochent la tête, les fenêtres se referment, le coq doré bat des ailes et chante, puis
+   l'horloge sonne l'heure.
+   • Sur la montre : à chaque heure juste de Prague (9 h à 23 h), si la face PRAGUE est affichée et la montre marche à vitesse
+     normale, la façade entière se présente d'elle-même (mouvement de caméra), le spectacle se joue (une quarantaine de secondes),
+     puis la vue choisie revient. Bouton « Jouer le spectacle maintenant », « Arrêter ». Case « Défilé des apôtres à chaque heure »
+     (cochée), « Cloche de la Mort, coq et sonnerie des heures » (cochée ; respecte le sélecteur « Sonnerie / silence » et le silence
+     de nuit), « La montre raconte le spectacle » (voix, décochée). La ligne sous les boutons raconte chaque temps du spectacle
+     (« Saint Paul et saint Pierre se présentent »), et les noms s'écrivent sous les fenêtres (capitales ≥ 0,6 mm).
+   • Les douze apôtres sont des dessins originaux (générateur de statues de la CL254, auréole, attribut de chacun), les volets
+     s'ouvrent sur leurs gonds, chaque apôtre entre, se tourne vers la place (il s'élargit, hoche la tête), puis sort pendant que le
+     suivant arrive ; les sons sont de synthèse (clochette, chant du coq imité, bourdon de l'heure : partiels de cloche).
+   • Retouches p255 : la CL254 expose ses pièces (tête, robe, bras) et une pose de vue sans mémoire ; tête chauve possible (Paul).
+   • Fiches « ? ». Quiétude : le pupitre n'est touché qu'au montage ; le spectacle n'anime que le calque de la façade. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',R=Math.PI/180,f=n=>(+n).toFixed(2);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const KA='cl255Auto',KS='cl255Son',KV='cl255Voix';
+// ---------- les douze apôtres (fenêtre de gauche puis de droite, dans l'ordre de passage)
+const AP_L=[
+ {k:'paul',nom:'saint Paul',lab:'S. PAUL',attr:'epee',robe:'#8e2f2f',mantle:'#3f7a4e',hair:'#3a2a1a',beard:true,bald:true},
+ {k:'thomas',nom:'saint Thomas',lab:'S. THOMAS',attr:'lance',robe:'#2f4f8f',mantle:'#c89a3c',hair:'#5a3a1a',beard:true},
+ {k:'jude',nom:'saint Jude Thaddée',lab:'S. JUDE',attr:'livre',robe:'#2f7a4a',mantle:'#7a4a2a',hair:'#3a2a1a',beard:true},
+ {k:'simon',nom:'saint Simon',lab:'S. SIMON',attr:'scie',robe:'#7a4a2a',mantle:'#2f4f8f',hair:'#9a9388',beard:'#c9c2b4'},
+ {k:'barth',nom:'saint Barthélemy',lab:'S. BARTHÉLEMY',attr:'couteau',robe:'#6b2f5a',mantle:'#f1ebdc',hair:'#3a2a1a',beard:true},
+ {k:'barnabe',nom:'saint Barnabé',lab:'S. BARNABÉ',attr:'rouleau',robe:'#c89a3c',mantle:'#8e2f2f',hair:'#5a3a1a',beard:true}];
+const AP_R=[
+ {k:'pierre',nom:'saint Pierre',lab:'S. PIERRE',attr:'clef',robe:'#2f4f8f',mantle:'#e2b457',hair:'#e8e2d4',beard:'#e8e2d4'},
+ {k:'matthieu',nom:'saint Matthieu',lab:'S. MATTHIEU',attr:'hache',robe:'#8e2f2f',mantle:'#2f4f8f',hair:'#5a3a1a',beard:true},
+ {k:'jean',nom:'saint Jean',lab:'S. JEAN',attr:'calice',robe:'#2f7a4a',mantle:'#b23a2e',hair:'#7a4a1a',long:true},
+ {k:'andre',nom:'saint André',lab:'S. ANDRÉ',attr:'croixX',robe:'#4a5a7a',mantle:'#3f7a4e',hair:'#9a9388',beard:'#c9c2b4'},
+ {k:'philippe',nom:'saint Philippe',lab:'S. PHILIPPE',attr:'croix',robe:'#7a4a2a',mantle:'#f1ebdc',hair:'#3a2a1a',beard:true},
+ {k:'jacques',nom:'saint Jacques',lab:'S. JACQUES',attr:'battoir',robe:'#6b2f5a',mantle:'#c89a3c',hair:'#5a3a1a',beard:true}];
+const livre=(x,y)=>'<rect x="'+x+'" y="'+y+'" width="9" height="11" rx=".8" fill="#7a2a2a" stroke="#3a1a1a" stroke-width=".5"/><path d="M'+(x+1.5)+','+(y+1.5)+' L'+(x+1.5)+','+(y+9.5)+' M'+(x+2.5)+','+(y+3)+' L'+(x+7)+','+(y+3)+'" stroke="#e4c066" stroke-width=".6"/>';
+function apotre(o){const P=window.cl254.pieces;if(!P)return '';const skin=P.SKIN,col=o.robe,G=P.GOLD;let s='<g class="cl255Ap" data-k="'+o.k+'" data-nom="'+o.nom+'"><g class="pose">';
+ if(o.attr==='croixX')s+='<path d="M-17,12 L17,66 M17,12 L-17,66" stroke="#6b4a2a" stroke-width="3.6" stroke-linecap="round"/>';
+ if(o.attr==='lance')s+='<path d="M13,66 L13,2" stroke="#6b4a2a" stroke-width="1.8"/><path d="M13,2 L10,-4 L13,-12 L16,-4 Z" fill="#cfd4da" stroke="#5a6068" stroke-width=".5"/>';
+ if(o.attr==='croix')s+='<path d="M13,66 L13,4 M7,14 L19,14" stroke="#6b4a2a" stroke-width="2.2" stroke-linecap="round"/>';
+ s+=P.robe({robe:o.robe,mantle:o.mantle,belt:o.belt});
+ switch(o.attr){
+  case 'epee':s+='<path d="M14,28 L14,62" stroke="#cfd4da" stroke-width="2.4"/><path d="M14,62 L14,66" stroke="#cfd4da" stroke-width="1"/><path d="M9.5,28 L18.5,28" stroke="'+G+'" stroke-width="1.6"/><path d="M14,28 L14,22" stroke="#5a3a1a" stroke-width="2"/><circle cx="14" cy="21" r="1.4" fill="'+G+'"/>'+livre(-15,34)+P.arm(col,8,20,14,24,14,25,skin)+P.arm(col,-8,20,-14,30,-11,38,skin);break;
+  case 'lance':s+=P.arm(col,8,20,13,26,13,30,skin)+P.arm(col,-8,20,-10,30,-4,36,skin);break;
+  case 'livre':s+=livre(-4.5,33)+P.arm(col,-8,20,-10,34,-5,41,skin)+P.arm(col,8,20,10,34,5,41,skin);break;
+  case 'scie':{let z='M10,26';for(let y=26;y<58;y+=3.2)z+=' L8.8,'+(y+1.6)+' L'+(10+(y+3.2-26)/32*2)+','+(y+3.2);s+='<path d="M10,26 L17,26 L15,58 L12,58 Z" fill="#cfd4da" stroke="#5a6068" stroke-width=".5"/><path d="'+z+'" fill="none" stroke="#5a6068" stroke-width=".6"/><path d="M10,21.5 L17,21.5 L17,26 L10,26 Z" fill="#6b4a2a"/>'+P.arm(col,8,20,13,22,13.5,24,skin)+P.arm(col,-8,20,-10,30,-4,36,skin);break}
+  case 'couteau':s+='<path d="M12.5,30 L15.5,30 L14,46 Z" fill="#cfd4da" stroke="#5a6068" stroke-width=".5"/><path d="M14,26 L14,30" stroke="#5a3a1a" stroke-width="2"/>'+livre(-15,34)+P.arm(col,8,20,14,24,14,27,skin)+P.arm(col,-8,20,-14,30,-11,38,skin);break;
+  case 'rouleau':s+='<g transform="rotate(-28 0 38)"><rect x="-9" y="34.5" width="18" height="7" rx="1" fill="#f3ead6" stroke="#8a7a5a" stroke-width=".5"/><path d="M-9,34.5 a2,3.5 0 1 0 0,7 M9,34.5 a2,3.5 0 1 1 0,7" fill="none" stroke="#8a7a5a" stroke-width=".5"/><path d="M-5,37 L5,37 M-5,39 L3,39" stroke="#8a7a5a" stroke-width=".4"/></g>'+P.arm(col,-8,20,-12,32,-8,42,skin)+P.arm(col,8,20,12,30,8,35,skin);break;
+  case 'clef':s+='<path d="M12,22 L12,40" stroke="'+G+'" stroke-width="2"/><circle cx="12" cy="19" r="3.4" fill="none" stroke="'+G+'" stroke-width="1.7"/><path d="M12,36 L15.5,36 L15.5,38 L12,38 M12,31.5 L14.5,31.5 L14.5,33.5 L12,33.5" fill="'+G+'"/>'+livre(-15,36)+P.arm(col,8,20,14,28,12,34,skin)+P.arm(col,-8,20,-14,32,-11,40,skin);break;
+  case 'hache':s+='<path d="M12,24 L16,62" stroke="#6b4a2a" stroke-width="2"/><path d="M12,24 L5.5,19.5 L4.5,28.5 L11,31.5 Z" fill="#cfd4da" stroke="#5a6068" stroke-width=".5"/>'+P.arm(col,8,20,14,26,13,31,skin)+P.arm(col,-8,20,-6,36,13,46,skin);break;
+  case 'calice':s+='<path d="M7.5,29 L16.5,29 L15,36.5 Q12,39.5 9,36.5 Z" fill="'+G+'" stroke="#8a6420" stroke-width=".5"/><path d="M12,39.5 L12,44.5" stroke="'+G+'" stroke-width="1.6"/><path d="M8,45 L16,45" stroke="'+G+'" stroke-width="1.8" stroke-linecap="round"/>'+P.arm(col,8,20,14,36,12,46,skin)+P.arm(col,-8,20,-10,30,-4,34,skin);break;
+  case 'croixX':s+=P.arm(col,-8,20,-11,24,-11,27,skin)+P.arm(col,8,20,11,24,11,27,skin);break;
+  case 'croix':s+=P.arm(col,8,20,13,28,13,34,skin)+P.arm(col,-8,20,-10,30,-4,36,skin);break;
+  case 'battoir':s+='<path d="M12,26 L14,60" stroke="#a0763a" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="11.6" cy="23" rx="3.6" ry="6" transform="rotate(-8 11.6 23)" fill="#b8924e" stroke="#4a3514" stroke-width=".5"/><path d="M10,19 L13,27" stroke="#7a5a2a" stroke-width=".5"/>'+P.arm(col,8,20,14,34,13,40,skin)+P.arm(col,-8,20,-10,30,-4,36,skin);break}
+ s+=P.tete({skin,hair:o.hair,beard:o.beard,halo:true,long:o.long,bald:o.bald});
+ return s+'</g></g>'}
+// ---------- la partition (secondes depuis le début)
+const T={cloche:0,ouvre:1.6,ap0:2.8,dt:3.1,ferme:21.6,coq:23.2,heure:27.0,coup:1.15};
+const PAIRES=['saint Paul et saint Pierre','saint Thomas et saint Matthieu','saint Jude Thaddée et saint Jean','saint Simon et saint André','saint Barthélemy et saint Philippe','saint Barnabé et saint Jacques'];
+const ease=x=>x<0?0:x>1?1:x*x*(3-2*x);
+// ---------- sons (synthèse)
+const AC=window.AudioContext||window.webkitAudioContext;let ctx=null;const ens=()=>{if(!AC)return null;try{ctx=ctx||new AC();if(ctx.state==='suspended')ctx.resume().catch(()=>{})}catch(e){ctx=null}return ctx};
+['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,ens,{capture:true,passive:true}));
+let vivants=[];const suivre=o=>{vivants.push(o);o.onended=()=>{const i=vivants.indexOf(o);if(i>=0)vivants.splice(i,1)}};
+function taire(){vivants.forEach(o=>{try{o.stop()}catch(e){}});vivants=[]}
+function partiels(fq,t,vol,L){const c=ctx,out=c.createGain();out.gain.value=vol;out.connect(c.destination);
+ for(const [m,a,d] of L){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=fq*m;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(a,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(out);o.start(t);o.stop(t+d+.05);suivre(o)}}
+const clochette=t=>partiels(1760,t,.12,[[1,1,.9],[2.76,.4,.45],[5.4,.15,.25]]);          // la petite cloche de la Mort
+const bourdon=t=>partiels(330,t,.28,[[.5,.55,3.8],[1,1,3.2],[1.2,.45,2.2],[1.5,.3,1.7],[2,.3,1.2],[2.7,.12,.7]]);   // l'heure
+function chantCoq(t0){const c=ctx;const seg=[[0,.17,700,950],[.22,.17,820,1050],[.44,.26,1000,1500],[.74,1.05,1400,760]];   // co-co-ri-cooo
+ for(const [d,L,f0,f1] of seg){const t=t0+d,o=c.createOscillator(),g=c.createGain(),bp=c.createBiquadFilter(),v=c.createOscillator(),vg=c.createGain();
+  o.type='sawtooth';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+L*.7);if(L>.5)o.frequency.exponentialRampToValueAtTime(f1*.8,t+L);
+  v.frequency.value=L>.5?7:11;vg.gain.value=L>.5?28:14;v.connect(vg);vg.connect(o.frequency);
+  bp.type='bandpass';bp.frequency.setValueAtTime(f0*1.9,t);bp.frequency.exponentialRampToValueAtTime(f1*1.9,t+L*.7);bp.Q.value=1.2;
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09,t+.03);g.gain.setValueAtTime(.09,t+L*.6);g.gain.exponentialRampToValueAtTime(.0001,t+L);
+  o.connect(bp);bp.connect(g);g.connect(c.destination);o.start(t);v.start(t);o.stop(t+L+.05);v.stop(t+L+.05);suivre(o);suivre(v)}}
+function sonOk(){if(!$('cl255Son')?.checked)return false;const sel=$('cl64Sel');if(sel&&!sel.checked)return false;
+ try{const w=wall(inst());if(window.cl124Muet&&window.cl124Muet(w.s))return false}catch(e){}return true}
+function son(fn){if(!sonOk())return;const c=ens();if(!c)return;try{fn(c.currentTime+.03)}catch(e){}}
+// ---------- l'heure de Prague
+function inst(){try{return window.cl68Parts.inst()}catch(e){return Date.now()}}
+const FMT=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Prague',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+function wall(ms){const o={};for(const x of FMT.formatToParts(new Date(ms)))if(x.type!=='literal')o[x.type]=+x.value;return {h:o.hour,m:o.minute,s:o.hour*3600+o.minute*60+o.second}}
+// ---------- la scène
+let S=null,prep=null;
+const setT=(el,v)=>{if(el&&el.getAttribute('transform')!==v)el.setAttribute('transform',v)};
+function preparer(){const svg=window.cl254.svg();if(!svg)return null;if(prep&&prep.svg===svg)return prep;
+ const q=s=>svg.querySelector(s);
+ // volets : la feuille (animée) sous le découpage (fixe)
+ svg.querySelectorAll('.cl254Win .volet').forEach(v=>{if(v.querySelector(':scope>g.feuille'))return;const g=document.createElementNS(NS,'g');g.setAttribute('class','feuille');while(v.firstChild)g.appendChild(v.firstChild);v.appendChild(g)});
+ // les apôtres dans leurs fenêtres
+ const poser=(id,L)=>{const h=q('#'+id);if(!h)return [];if(!h.querySelector('.cl255Ap'))h.innerHTML=L.map(apotre).join('');return [...h.querySelectorAll('.cl255Ap')]};
+ const apL=poser('cl254ApL',AP_L),apR=poser('cl254ApR',AP_R);
+ // les noms sous les fenêtres
+ const fac=q('#cl254Fac');const lab=(id,x)=>{let t=q('#'+id);if(!t){t=document.createElementNS(NS,'text');t.id=id;t.setAttribute('x',x);t.setAttribute('y',-156);t.setAttribute('font-size','11');t.setAttribute('font-family','Cinzel,Georgia,serif');t.setAttribute('font-weight','700');t.setAttribute('text-anchor','middle');t.setAttribute('fill','#fff0bf');t.setAttribute('stroke','#1b1a17');t.setAttribute('stroke-width','2.2');t.setAttribute('paint-order','stroke');t.setAttribute('letter-spacing','.3');fac.appendChild(t)}return t};
+ prep={svg,apL,apR,labL:lab('cl255LabL',-78),labR:lab('cl255LabR',78),vol:{Lg:q('#cl254WinL .volet.g .feuille'),Ld:q('#cl254WinL .volet.d .feuille'),Rg:q('#cl254WinR .volet.g .feuille'),Rd:q('#cl254WinR .volet.d .feuille')},
+  brasD:q('#cl254F_mort .brasD'),corde:q('#cl254Corde'),sablier:q('#cl254Sablier'),clocheC:q('#cl254Cloche .corps'),tetes:{mort:q('#cl254F_mort .tete'),vanite:q('#cl254F_vanite .tete'),avare:q('#cl254F_avare .tete'),turc:q('#cl254F_turc .tete')},aile:q('#cl254Aile'),oiseau:q('#cl254Coq .oiseau')};
+ repos();return prep}
+function volets(sx){const p=prep;if(!p)return;const g=(el,h)=>setT(el,'translate('+h+',0) scale('+f(sx)+',1) translate('+(-h)+',0)');g(p.vol.Lg,-29);g(p.vol.Rg,-29);g(p.vol.Ld,29);g(p.vol.Rd,29)}
+function apPose(el,x,sx,nod){const pose=el.querySelector('.pose');setT(pose,'translate('+f(x)+',-20) scale('+f(sx*.8)+',0.8)');const te=el.querySelector('.tete');setT(te,'rotate('+f(nod)+' 0 15)')}
+function repos(){const p=prep;if(!p)return;volets(1);p.apL.forEach(e=>apPose(e,-60,.75,0));p.apR.forEach(e=>apPose(e,60,.75,0));p.labL.textContent='';p.labR.textContent='';
+ setT(p.brasD,'');setT(p.sablier,'translate(-16,22)');setT(p.clocheC,'');if(p.corde)p.corde.setAttribute('d','M17,7 L22,-14');Object.values(p.tetes).forEach(t=>setT(t,''));setT(p.aile,'');setT(p.oiseau,'translate(1,7)')}
+// un apôtre : entre (1 s), se présente (1,3 s), sort (0,8 s) ; côté = −1 (gauche : entre par la gauche) ou +1
+function apotreA(t,i,cote){const a=T.ap0+i*T.dt,u=t-a;if(u<0||u>T.dt+.2)return null;const E=46;
+ if(u<1){const e=ease(u);return {x:cote*E*(1-e),sx:.75+.25*e,nod:0}}
+ if(u<2.3){const v=u-1;return {x:0,sx:1,nod:5*Math.sin(v*Math.PI*2*1.1)}}
+ const e=ease((u-2.3)/.9);return {x:-cote*E*e,sx:1-.25*e,nod:0}}
+function dire(txt){const z=$('cl255Txt');if(z)z.textContent=txt;if($('cl255Voix')?.checked&&window.cl136Dire){try{window.cl136Dire(txt,true)}catch(e){}}}
+function moment(k,at,fn){if(S.t>=at&&!S.fait[k]){S.fait[k]=true;fn()}}
+function frame(){if(!S)return;const p=prep,t=(performance.now()-S.t0)/1000;S.t=t;
+ // la Mort : la corde (deux coups), le sablier retourné, la tête qui hoche
+ if(p.brasD){const a=t<2.2?-26*Math.max(0,Math.sin(t*Math.PI*1.4)):0;setT(p.brasD,'rotate('+f(a)+' 8 20)');if(p.corde){const c=Math.cos(a*R),s=Math.sin(a*R),hx=8+(17-8)*c-(7.5-20)*s,hy=20+(17-8)*s+(7.5-20)*c;p.corde.setAttribute('d','M'+f(hx)+','+f(hy)+' L22,-14')}}
+ if(p.clocheC){const a=t<4?30*Math.sin(t*Math.PI*2*1.4)*Math.exp(-t/1.6):0;setT(p.clocheC,'rotate('+f(a)+' 0 -17)')}
+ if(p.sablier){const a=180*ease((t-.8)/1.1);setT(p.sablier,'translate(-16,22) rotate('+f(a)+')')}
+ const nod=(el,amp,fr,ph)=>setT(el,'rotate('+f(amp*Math.sin((t+(ph||0))*Math.PI*2*fr))+' 0 15)');
+ if(t<T.ferme+1){nod(p.tetes.mort,7,.7);nod(p.tetes.turc,9,1,.25);nod(p.tetes.avare,5,.6,.5);nod(p.tetes.vanite,8,.45,.1)}else Object.values(p.tetes).forEach(e=>setT(e,''));
+ moment('c1',.36,()=>son(clochette));moment('c2',1.08,()=>son(clochette));
+ moment('d0',0,()=>dire('La Mort tire la corde de sa cloche et retourne son sablier.'));
+ // les volets
+ if(t>=T.ouvre&&t<T.ouvre+1)volets(1-.95*ease(t-T.ouvre));else if(t>=T.ouvre+1&&t<T.ferme)volets(.05);
+ if(t>=T.ferme&&t<T.ferme+1)volets(.05+.95*ease(t-T.ferme));else if(t>=T.ferme+1)volets(1);
+ moment('d1',T.ouvre+.4,()=>dire('Les fenêtres s’ouvrent.'));
+ // les apôtres
+ for(let i=0;i<6;i++){const L=apotreA(t,i,-1),Rr=apotreA(t,i,1);if(p.apL[i])apPose(p.apL[i],L?L.x:-60,L?L.sx:.75,L?L.nod:0);if(p.apR[i])apPose(p.apR[i],Rr?Rr.x:60,Rr?Rr.sx:.75,Rr?Rr.nod:0);
+  moment('a'+i,T.ap0+i*T.dt+1,()=>{p.labL.textContent=AP_L[i].lab;p.labR.textContent=AP_R[i].lab;dire(PAIRES[i].charAt(0).toUpperCase()+PAIRES[i].slice(1)+' se présentent.')})}
+ if(t>=T.ferme-.3&&(p.labL.textContent||p.labR.textContent)){p.labL.textContent='';p.labR.textContent=''}
+ moment('d2',T.ferme+.3,()=>dire('Les fenêtres se referment.'));
+ // le coq
+ if(t>=T.coq&&t<T.coq+3.4){const u=t-T.coq;const a=-38*Math.max(0,Math.sin(u*Math.PI*2*3.2));setT(p.aile,'rotate('+f(a)+' -2 2)');setT(p.oiseau,'translate(1,7) rotate('+f(-12*Math.sin(Math.min(1,u/3.2)*Math.PI))+' 0 4)')}else if(t>=T.coq+3.4){setT(p.aile,'');setT(p.oiseau,'translate(1,7)')}
+ moment('coq',T.coq+.25,()=>{son(chantCoq);dire('Le coq bat des ailes et chante.')});
+ // l'heure
+ for(let i=0;i<S.n;i++)moment('h'+i,T.heure+i*T.coup,()=>{son(bourdon);if(i===0)dire('L’horloge sonne '+S.h+' heure'+(S.h>1?'s':'')+' ('+S.n+' coup'+(S.n>1?'s':'')+').')});
+ const fin=T.heure+S.n*T.coup+2.6;
+ if(t>=fin){finir(false);return}
+ S.raf=requestAnimationFrame(frame)}
+function demarrer(h,auto){if(S)return false;if(!window.cl254)return false;const avant=window.cl254.vue();window.cl254.poser('facade');if(!preparer())return false;
+ if(h==null)h=wall(inst()).h;S={t0:performance.now(),t:0,h,n:h%12||12,avant,auto,fait:{},change:false};
+ const st=$('cl255Stop');if(st)st.hidden=false;const go=$('cl255Go');if(go)go.disabled=true;
+ S.raf=requestAnimationFrame(frame);return true}
+function finir(arret){if(!S)return;cancelAnimationFrame(S.raf);const E=S;S=null;repos();if(arret)taire();
+ const st=$('cl255Stop');if(st)st.hidden=true;const go=$('cl255Go');if(go)go.disabled=false;
+ dire(arret?'Spectacle arrêté.':'Le spectacle est fini : il reprend à chaque heure, de 9 h à 23 h.');
+ if(E.avant!=='facade'&&!E.change)setTimeout(()=>{if(!S&&window.cl254.vue()==='facade')window.cl254.poser(E.avant)},arret?200:1200)}
+// ---------- déclenchement à l'heure juste (9 h – 23 h, Prague), montre à vitesse normale, face PRAGUE affichée
+let prev=null;
+function veille(){const w=$('watch');if(!w||!w.classList.contains('prague-active')||!w.classList.contains('cl68-on')||!$('cl255Auto')?.checked||document.visibilityState!=='visible'){prev=null;return}
+ const s=wall(inst()).s;if(prev!==null&&!S){let d=s-prev;if(d<0)d+=86400;if(d>0&&d<=1){const q=Math.floor(s/3600)*3600;let a=q-prev;if(a<=0)a+=86400;if(a<=d){const h=q/3600;if(h>=9&&h<=23)demarrer(h,true)}}}prev=s}
+setInterval(()=>{try{veille()}catch(e){}},250);
+// ---------- la carte
+function ui(){if($('cl255Go'))return true;const card=$('cl68Card');if(!card||!$('cl254Vue')||!window.cl254)return false;
+ const wrap=document.createElement('div');wrap.id='cl255Bloc';
+ const b=k=>LS.get(k,k===KV?'0':'1')==='1';
+ wrap.innerHTML='<div class="cl68n" style="margin-top:10px;color:#efe2c2;font-weight:600">Le spectacle des apôtres (9 h – 23 h, à l’heure juste de Prague)</div>'+
+  '<label class="cl68c"><input type="checkbox" id="cl255Auto"'+(b(KA)?' checked':'')+'> Défilé des apôtres à chaque heure</label>'+
+  '<label class="cl68c"><input type="checkbox" id="cl255Son"'+(b(KS)?' checked':'')+'> Cloche de la Mort, coq et sonnerie des heures</label>'+
+  '<label class="cl68c"><input type="checkbox" id="cl255Voix"'+(b(KV)?' checked':'')+'> La montre raconte le spectacle (voix)</label>'+
+  '<div><button type="button" id="cl255Go">Jouer le spectacle maintenant</button> <button type="button" id="cl255Stop" hidden>Arrêter</button></div><div id="cl255Txt" class="cl68n"></div>';
+ card.appendChild(wrap);
+ [[KA,'cl255Auto'],[KS,'cl255Son'],[KV,'cl255Voix']].forEach(([k,id])=>$(id).addEventListener('change',e=>LS.set(k,e.target.checked?'1':'0')));
+ $('cl255Go').addEventListener('click',()=>{ens();demarrer(null,false)});$('cl255Stop').addEventListener('click',()=>finir(true));
+ $('cl254Vue').addEventListener('change',()=>{if(S)S.change=true});
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl255auto')){A.AIDE.push(
+  {k:'cl255auto',id:'cl255Auto',t:'Défilé des apôtres à chaque heure',x:'• coché (par défaut) — à chaque heure juste de Prague, de 9 h à 23 h, si la face PRAGUE est affichée et la montre marche à vitesse normale : la façade entière se présente d’elle-même, et le spectacle se joue comme sur la place de la Vieille-Ville — la Mort tire la corde de sa cloche et retourne son sablier ; les fenêtres s’ouvrent ; les douze apôtres passent et se tournent vers la place : à gauche Paul (épée et livre), Thomas (lance), Jude Thaddée (livre), Simon (scie), Barthélemy (couteau et livre), Barnabé (rouleau) ; à droite Pierre (clef), Matthieu (hache), Jean (calice), André (croix en X), Philippe (croix), Jacques (battoir) ; la Vanité se mire, l’Avare et le Turc hochent la tête ; les fenêtres se referment ; le coq doré bat des ailes et chante ; l’horloge sonne l’heure (douze coups au plus). Une quarantaine de secondes, puis la vue choisie revient.\n• décoché — rien ne se passe à l’heure ; « Jouer le spectacle maintenant » reste possible.\n\nLes noms des apôtres s’écrivent sous les fenêtres pendant leur passage, et la ligne sous les boutons raconte chaque temps du spectacle.'},
+  {k:'cl255son',id:'cl255Son',t:'Sons du spectacle',x:'• coché (par défaut) — la clochette de la Mort (deux coups), le chant du coq (imitation de synthèse : co-co-ri-co) et le bourdon de l’heure (autant de coups que l’heure, de 1 à 12) accompagnent le spectacle.\n• décoché — le spectacle est muet.\n\nComme les autres sonneries, ces sons se taisent quand le sélecteur « Sonnerie / silence » est décoché et pendant le silence de nuit. L’iPhone ne joue un son qu’après un premier geste sur la page.'},
+  {k:'cl255voix',id:'cl255Voix',t:'La montre raconte le spectacle',x:'• décoché (par défaut) — le récit ne s’écrit que dans la ligne sous les boutons.\n• coché — la montre dit aussi chaque temps du spectacle à voix haute : « La Mort tire la corde de sa cloche… », « Saint Paul et saint Pierre se présentent »…'},
+  {k:'cl255go',id:'cl255Go',t:'Jouer le spectacle maintenant',x:'Joue le spectacle des apôtres sur-le-champ, à n’importe quelle heure : la façade entière se présente, le spectacle se déroule (la sonnerie compte l’heure de Prague affichée), puis la vue choisie revient. « Arrêter » l’interrompt et remet chaque figure en place.'});[300,2500].forEach(d=>setTimeout(()=>{try{A.install()}catch(e){}},d))}
+ return true}
+let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){console.warn('CL255',e)}if(n>400)clearInterval(t)},200);
+window.cl255={jouer:h=>demarrer(h,false),arreter:()=>finir(true),avancer:s=>{if(S)S.t0-=s*1000},etat:()=>S?{t:S.t,h:S.h,n:S.n,avant:S.avant,auto:S.auto}:null,apotres:{gauche:AP_L.map(a=>a.nom),droite:AP_R.map(a=>a.nom)},partition:T,fin:h=>T.heure+((h%12)||12)*T.coup+2.6,wall,preparer:()=>!!preparer()};
+})();
+(()=>{'use strict';
+const TIT='CL255 · Le défilé des apôtres à chaque heure';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL255')v.textContent='CL255'},300);
+})();
+}catch(e){console.error("cl255Apotres",e);}
 </script>
 </body></html>
