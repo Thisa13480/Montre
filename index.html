@@ -11175,7 +11175,7 @@ function verrou(el,ok,val){if(!el||el.dataset.cl134)return;el.dataset.cl134='1';
  Object.defineProperty(el,'textContent',{configurable:true,get(){return D.get.call(this)},set(v){if(ok(String(v)))D.set.call(this,v)}});
  D.set.call(el,val)}
 const plusRecent=v=>{const m=/^CL(\d+)/.exec(v);return !!m&&+m[1]>=134};
-function poser(){verrou(document.querySelector('#cl2Title span'),plusRecent,TITRE);verrou($('cl78Ver'),plusRecent,VER)}
+function poser(){const T=window.cl2TitreCourant||TITRE;verrou(document.querySelector('#cl2Title span'),plusRecent,T);verrou($('cl78Ver'),plusRecent,(/^CL\d+/.exec(T)||[VER])[0])}/* CL280 : verrouillé d'emblée sur le titre de la version courante */
 poser();const pt=setInterval(poser,200);setTimeout(()=>clearInterval(pt),4000);
 window.cl134Titre=v=>{const s=document.querySelector('#cl2Title span');if(s)D.set.call(s,v);const c=$('cl78Ver');if(c)D.set.call(c,(/^CL\d+/.exec(v)||[''])[0])};
 // fondu d'ouverture : on attend que la mise en page soit calme
@@ -17004,9 +17004,21 @@ let n=0;const t=setInterval(()=>{n++;try{if(poser()||n>200)clearInterval(t)}catc
 window.cl279={etat:()=>({pose:fait})};
 })();
 (()=>{'use strict';
-const TIT='CL279 · La lecture Heure locale sur sa ligne';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL279')v.textContent='CL279'},300);
 })();
 }catch(e){console.error("CL279",e);}
+/* ───────── CL280 ───────── */
+try{
+/* CL280 — Le bon titre dès l'ouverture (revue R11, trouvaille n° 15 : captures de la première ouverture).
+   Pendant les deux premières secondes et demie, le sous-titre du pupitre disait « CL134 · Ouverture sans oscillation » : la CL134
+   verrouille le titre sur le sien dès que l'en-tête existe, et le bloc de version (en fin de fichier) n'écrivait le bon titre qu'après
+   2,5 s. Désormais le bloc de version publie son titre (window.cl2TitreCourant) avant que l'en-tête n'existe, la CL134 verrouille
+   directement sur lui (p280), et le bloc l'écrit sans attendre. Même chose pour le numéro « CL280 » de la carte Habillage (#cl78Ver).
+   window.cl280 = {etat}. */
+(()=>{'use strict';window.cl280={etat:()=>({titre:window.cl2TitreCourant||''})}})();
+(()=>{'use strict';
+const TIT='CL280 · Le bon titre dès l’ouverture';window.cl2TitreCourant=TIT;
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL280')v.textContent='CL280'},300);
+})();
+}catch(e){console.error("CL280",e);}
 </script>
 </body></html>
