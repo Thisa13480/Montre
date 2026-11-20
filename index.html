@@ -1629,7 +1629,7 @@ $('nightOpacity').addEventListener('input',()=>{ $('nightOpacityValue').textCont
 // J2000.0 right ascension in degrees, declination in degrees; approximate bright-star catalogue.
 const stars=[
 ['Polaris',37.95,89.26,1.98,'Petite Ourse'],['Sirius',101.287,-16.716,-1.46,'Grand Chien'],['Canopus',95.988,-52.696,-0.74,'Carène'],['Arcturus',213.915,19.182,-0.05,'Bouvier'],['Véga',279.234,38.784,0.03,'Lyre'],['Capella',79.172,45.998,0.08,'Cocher'],['Rigel',78.634,-8.202,0.13,'Orion'],['Procyon',114.826,5.225,0.34,'Petit Chien'],['Bételgeuse',88.793,7.407,0.50,'Orion'],['Achernar',24.429,-57.237,0.46,'Éridan'],['Hadar',210.956,-60.373,0.61,'Centaure'],['Acrux',186.65,-63.099,0.76,'Croix du Sud'],['Altaïr',297.696,8.868,0.77,'Aigle'],['Aldébaran',68.980,16.509,0.85,'Taureau'],['Spica',201.298,-11.161,0.98,'Vierge'],['Antarès',247.352,-26.432,1.06,'Scorpion'],['Pollux',116.329,28.026,1.14,'Gémeaux'],['Fomalhaut',344.413,-29.622,1.16,'Poisson austral'],['Deneb',310.358,45.280,1.25,'Cygne'],['Régulus',152.093,11.967,1.35,'Lion'],['Castor',113.65,31.888,1.58,'Gémeaux'],['Bellatrix',81.283,6.350,1.64,'Orion'],['Mimosa',191.93,-59.689,1.25,'Croix du Sud'],['Denebola',177.265,14.572,2.14,'Lion']
-];
+];window.cl260Stars=stars;/* CL260 : catalogue des étoiles brillantes (noms français, constellations) pour le hublot augmenté */
 const escapeXml=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;');
 $('starPick').innerHTML=stars.map((s,i)=>`<option value="${i}">${s[0]} — ${s[4]}</option>`).join('');
 function renderStars(d,rot){let D=jd(d)-2451545,gmst=norm(280.46061837+360.98564736629*D),mode=$('starMode').value,index=Number($('starPick').value||0),items=mode==='off'?[]:mode==='one'?[stars[index]]:stars.slice(0,5);let nodes=[];for(const st of items){const [name,ra,dec,mag,con]=st;const pt=coords({lat:dec,lon:norm(ra-gmst)},rot);if(Math.hypot(pt[0]-233,pt[1]-233)>202)continue;nodes.push(`<circle cx="${pt[0]}" cy="${pt[1]}" r="${mode==='one'?5:3}" fill="#fff7d6" stroke="#253746" stroke-width="1.5"/><text x="${pt[0]+9}" y="${pt[1]-8}" font-size="${mode==='one'?12:10}" fill="#ffffff" stroke="#162b3a" stroke-width="2.6" paint-order="stroke">${escapeXml(name)}</text>`)}$('starsLayer').innerHTML=nodes.join('');$('starInfo').textContent=mode==='off'?'Étoiles masquées.':mode==='one'?`${stars[index][0]} · ${stars[index][4]} · magnitude ${stars[index][3]}. Position représentée : point géographique sous l’étoile, pas sa position dans le ciel d’un observateur.`:'Cinq étoiles du catalogue, affichées si leur projection tombe dans le disque.';}
@@ -15864,19 +15864,19 @@ function prague(ms){const o={};for(const x of PRG.formatToParts(new Date(ms)))if
 const NOUVELLES=[
  {id:'orloj',test(){const w=$('watch');if(!w||w.classList.contains('prague-active'))return null;if(!$('cl255Auto')||!$('cl255Auto').checked)return null;
   const ms=inst(),p=prague(ms);const h1=(p.hour+1)%24;if(p.minute<55||h1<9||h1>23)return null;const d=60-p.minute;
-  return {t:'Dans <b>'+d+' min</b>, l’orloj de Prague joue le <b>défilé des apôtres</b> ('+h1+' h). Passer sur la <b>face PRAGUE</b> ?',ok:()=>{const b=$('v5P')||[...document.querySelectorAll('#v5Desk button')].find(x=>x.textContent.trim()==='PRAGUE');if(b)b.click()},dit:'Face PRAGUE affichée : à l’heure juste, la façade se présentera d’elle-même pour le défilé des apôtres.'}}},
+  return {t:'Dans <b>'+d+' min</b>, l’orloj de Prague joue le <b>défilé des apôtres</b> ('+h1+' h). Passer sur la <b>face PRAGUE</b>&nbsp;?',ok:()=>{const b=$('v5P')||[...document.querySelectorAll('#v5Desk button')].find(x=>x.textContent.trim()==='PRAGUE');if(b)b.click()},dit:'Face PRAGUE affichée : à l’heure juste, la façade se présentera d’elle-même pour le défilé des apôtres.'}}},
  {id:'midi',test(){if(!libre('cl91Box')||!window.cl36Almanach)return null;const [n,la,lo,tz]=place(),ms=inst();const A=window.cl36Almanach(ms,la,lo,tz);if(!A||!A.noon)return null;
-  const d=(A.noon-ms)/6e4;if(d<=0||d>10)return null;return {t:'<b>Midi vrai</b> dans '+Math.max(1,Math.round(d))+' min à '+n+' ('+hm(A.noon,tz)+'), le Soleil au plus haut'+(A.noonAlt!=null?' ('+Math.round(A.noonAlt)+'°)':'')+'. Afficher l’<b>heure solaire vraie</b> ?',ok:()=>coche('cl91Box'),dit:'Heure solaire vraie affichée : l’aiguille à soleil et son cartouche.'}}},
+  const d=(A.noon-ms)/6e4;if(d<=0||d>10)return null;return {t:'<b>Midi vrai</b> dans '+Math.max(1,Math.round(d))+' min à '+n+' ('+hm(A.noon,tz)+'), le Soleil au plus haut'+(A.noonAlt!=null?' ('+Math.round(A.noonAlt)+'°)':'')+'. Afficher l’<b>heure solaire vraie</b>&nbsp;?',ok:()=>coche('cl91Box'),dit:'Heure solaire vraie affichée : l’aiguille à soleil et son cartouche.'}}},
  {id:'lune',test(){const [n,la,lo,tz]=place(),ms=inst();
   const tp=phaseA(ms,180),tn=phaseA(ms,0);let quoi=null,t=null;if(tp!=null&&Math.abs(tp-ms)<12*H){quoi='Pleine Lune';t=tp}else if(tn!=null&&Math.abs(tn-ms)<12*H){quoi='Nouvelle Lune';t=tn}if(!quoi)return null;
   const quand=t>ms?'aujourd’hui, à '+hm(t,tz):'aujourd’hui (à '+hm(t,tz)+')';
-  return {t:'<b>'+quoi+'</b> '+quand+'. Veux-tu entendre son <b>lever et son coucher</b> à '+n+' ?',ok:()=>{let s='';try{s=window.cl253&&window.cl253.textes.lune()}catch(e){}dire(s||'La Lune n’est pas calculée pour l’instant.')},dit:'Voici la Lune.'}}},
+  return {t:'<b>'+quoi+'</b> '+quand+'. Veux-tu entendre son <b>lever et son coucher</b> à '+n+'&nbsp;?',ok:()=>{let s='';try{s=window.cl253&&window.cl253.textes.lune()}catch(e){}dire(s||'La Lune n’est pas calculée pour l’instant.')},dit:'Voici la Lune.'}}},
  {id:'saison',test(){const [n,la,lo,tz]=place(),ms=inst();const s=saison(ms,la<0);if(!s||Math.abs(s.t-ms)>12*H)return null;
   let A=null;try{A=window.cl36Almanach(ms,la,lo,tz)}catch(e){}const duree=A&&A.sun&&A.sun.rise&&A.sun.set&&A.sun.set>A.sun.rise?(A.sun.set-A.sun.rise):null;const fmt=v=>v==null?'':Math.floor(v/H)+' h '+String(Math.round((v%H)/6e4)).padStart(2,'0');
   const quand=' aujourd’hui (à '+hm(s.t,tz)+')';
-  if(s.quoi==='hiver'){const nuit=duree!=null?DAY-duree:null;return {t:'<b>'+s.nom+'</b>'+quand+' : la nuit la plus longue de l’année à '+n+(nuit!=null?' ('+fmt(nuit)+')':'')+'. Afficher la <b>durée de la nuit</b> sur le cadran ?',ok:()=>{if(libre('cl111Box'))coche('cl111Box');dire('Solstice : la nuit dure '+(nuit!=null?fmt(nuit):'le plus longtemps de l’année')+' à '+n+'.')},dit:'Durée de la nuit affichée.'}}
-  if(s.quoi==='ete')return {t:'<b>'+s.nom+'</b>'+quand+' : le jour le plus long de l’année à '+n+(duree!=null?' ('+fmt(duree)+')':'')+'. Afficher la <b>durée de la nuit</b> (la plus courte) sur le cadran ?',ok:()=>{if(libre('cl111Box'))coche('cl111Box');dire('Solstice : le jour dure '+(duree!=null?fmt(duree):'le plus longtemps de l’année')+' à '+n+'.')},dit:'Durée de la nuit affichée.'};
-  return {t:'<b>'+s.nom+'</b>'+quand+' : le jour égale la nuit'+(duree!=null?' (jour de '+fmt(duree)+' à '+n+')':'')+'. Veux-tu entendre le <b>lever et le coucher du Soleil</b> ?',ok:()=>{let x='';try{x=window.cl253&&window.cl253.textes.soleil()}catch(e){}dire(x||'Le Soleil n’est pas calculé pour l’instant.')},dit:'Voici le Soleil du jour.'}}}
+  if(s.quoi==='hiver'){const nuit=duree!=null?DAY-duree:null;return {t:'<b>'+s.nom+'</b>'+quand+' : la nuit la plus longue de l’année à '+n+(nuit!=null?' ('+fmt(nuit)+')':'')+'. Afficher la <b>durée de la nuit</b> sur le cadran&nbsp;?',ok:()=>{if(libre('cl111Box'))coche('cl111Box');dire('Solstice : la nuit dure '+(nuit!=null?fmt(nuit):'le plus longtemps de l’année')+' à '+n+'.')},dit:'Durée de la nuit affichée.'}}
+  if(s.quoi==='ete')return {t:'<b>'+s.nom+'</b>'+quand+' : le jour le plus long de l’année à '+n+(duree!=null?' ('+fmt(duree)+')':'')+'. Afficher la <b>durée de la nuit</b> (la plus courte) sur le cadran&nbsp;?',ok:()=>{if(libre('cl111Box'))coche('cl111Box');dire('Solstice : le jour dure '+(duree!=null?fmt(duree):'le plus longtemps de l’année')+' à '+n+'.')},dit:'Durée de la nuit affichée.'};
+  return {t:'<b>'+s.nom+'</b>'+quand+' : le jour égale la nuit'+(duree!=null?' (jour de '+fmt(duree)+' à '+n+')':'')+'. Veux-tu entendre le <b>lever et le coucher du Soleil</b>&nbsp;?',ok:()=>{let x='';try{x=window.cl253&&window.cl253.textes.soleil()}catch(e){}dire(x||'Le Soleil n’est pas calculé pour l’instant.')},dit:'Voici le Soleil du jour.'}}}
 ];
 let n=0;const t=setInterval(()=>{n++;if(window.cl139Ajouter){NOUVELLES.forEach(q=>window.cl139Ajouter(q));clearInterval(t)}else if(n>200)clearInterval(t)},200);
 window.cl257={propositions:NOUVELLES.map(q=>q.id),tester:id=>{const q=NOUVELLES.find(x=>x.id===id);if(!q)return null;try{return q.test()}catch(e){return {erreur:String(e)}}},phaseA,saison,elong,phaseJDE};
@@ -15945,8 +15945,9 @@ function dou(){let p=null;try{p=window.cl191&&window.cl191.position()}catch(e){}
 const R0=6371;const dist=(a,b)=>{const p1=a.la*rad,p2=b.la*rad,dp=(b.la-a.la)*rad,dl=(b.lo-a.lo)*rad;const h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R0*Math.asin(Math.min(1,Math.sqrt(h)))};
 const cap=(a,b)=>{const p1=a.la*rad,p2=b.la*rad,dl=(b.lo-a.lo)*rad;return ((Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))/rad)+360)%360};
 const plonge=(altM,dKm,altCible)=>-Math.atan2(altM/1000-(altCible||0)/1000,Math.max(0.05,dKm))/rad;   // angle sous l'horizon (Terre plane)
-function astre(k,pos,ms){try{const c=window.cl23Body(k,new Date(ms));if(!c||!isFinite(c.ra))return null;const gm=window.cl22Gmst?window.cl22Gmst(ms):0;const H=(gm+pos.lo-c.ra)*rad,p=pos.la*rad,d=c.dec*rad;
- const alt=Math.asin(Math.max(-1,Math.min(1,Math.sin(p)*Math.sin(d)+Math.cos(p)*Math.cos(d)*Math.cos(H))))/rad;const az=((Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(p)-Math.tan(d)*Math.cos(p))/rad)+180+360)%360;return {az,alt}}catch(e){return null}}
+function equ(ra,dec,pos,ms){const gm=window.cl22Gmst?window.cl22Gmst(ms):0;const H=(gm+pos.lo-ra)*rad,p=pos.la*rad,d=dec*rad;
+ const alt=Math.asin(Math.max(-1,Math.min(1,Math.sin(p)*Math.sin(d)+Math.cos(p)*Math.cos(d)*Math.cos(H))))/rad;const az=((Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(p)-Math.tan(d)*Math.cos(p))/rad)+180+360)%360;return {az,alt}}
+function astre(k,pos,ms){try{const c=window.cl23Body(k,new Date(ms));if(!c||!isFinite(c.ra))return null;return equ(c.ra,c.dec,pos,ms)}catch(e){return null}}/* CL260 : equ() sert aussi aux étoiles */
 const ROSE=['N','NE','E','SE','S','SO','O','NO'];const nf=n=>Math.round(n).toLocaleString('fr-FR').replace(/ | /g,' ');
 function cibles(pos,ms){const L=[];
  try{const A=window.cl200;if(A){for(const x of A.proches(pos.la,pos.lo,80)){if(x.d>(pos.avion?400:100))break;L.push({n:x.v.nom,la:x.v.la,lo:x.v.lo,d:x.d,alt:x.v.alt||0,pop:x.v.pop||0,k:'ville'})}}}catch(e){}
@@ -15954,11 +15955,15 @@ function cibles(pos,ms){const L=[];
  try{const r=window.cl191&&pos.avion&&window.cl191.route();if(r&&r.arr&&isFinite(r.arr.la)){L.push({n:'→ '+r.arr.nom,la:r.arr.la,lo:r.arr.lo,d:r.dist,alt:0,pop:1e9,k:'arrivee'})}}catch(e){}
  for(const t of L){t.az=cap(pos,t);t.h=plonge(pos.alt,t.d,t.alt)}
  const S=astre('sun',pos,ms),M=astre('moon',pos,ms);if(S)L.push({n:'Soleil',az:S.az,h:S.alt,k:'soleil',pop:1e9,d:null});if(M)L.push({n:'Lune',az:M.az,h:M.alt,k:'lune',pop:1e9,d:null});
+ /* CL260 : la nuit (Soleil sous −3°), les étoiles brillantes (catalogue de la montre, magnitude ≤ 1,7) et les planètes, nommées à leur place */
+ if(S&&S.alt<-3){try{const ST=window.cl260Stars;if(ST)for(const [n,ra,dec,mag,cst] of ST){if(mag>1.7)continue;const q=equ(ra,dec,pos,ms);if(q&&q.alt>-1)L.push({n,az:q.az,h:q.alt,k:'etoile',pop:5e8,d:null,mag,c:cst})}
+  else{const S2=window.cl23Stars&&window.cl23Stars.stars;if(S2)for(const [n,v] of Object.entries(S2)){if(v[2]>1.6)continue;const q=equ(v[0]*15,v[1],pos,ms);if(q&&q.alt>-1)L.push({n:n.replace(/([a-z])([A-Z])/g,'$1 $2'),az:q.az,h:q.alt,k:'etoile',pop:5e8,d:null,mag:v[2]})}}
+  for(const [n,k] of [['Vénus','venus'],['Jupiter','jupiter'],['Mars','mars'],['Saturne','saturn']]){const q=astre(k,pos,ms);if(q&&q.alt>-1)L.push({n,az:q.az,h:q.alt,k:'planete',pop:6e8,d:null})}}catch(e){}}
  return L}
 // ---------- le calque
 function construire(){if(V)return V;V=document.createElement('div');V.id='cl259Vue';V.innerHTML='<video id="cl259Video" autoplay playsinline muted></video><div id="cl259Ciel"></div><svg id="cl259Svg"></svg>'+
  '<div id="cl259Tete"><div id="cl259Nom">Hublot augmenté</div><div id="cl259Dir"></div></div><button type="button" id="cl259Fermer">Fermer</button>'+
- '<div id="cl259Pied"><label>Champ <input type="range" id="cl259Fov" min="45" max="100" step="1" value="'+fov+'"> <span id="cl259FovV">'+fov+'°</span></label><div id="cl259Msg"></div></div>';
+ '<div id="cl259Pied"><label>Champ <input type="range" id="cl259Fov" min="45" max="100" step="1" value="'+fov+'"> <span id="cl259FovV">'+fov+'°</span></label><div id="cl259Voie"><label><input type="checkbox" id="cl259Voix"'+(LS.get('cl259Voix','0')==='1'?' checked':'')+'> La voix nomme ce que je vise</label> <button type="button" id="cl259Dire">Dire ce que je vois</button></div><div id="cl259Msg"></div></div>';
  document.body.appendChild(V);video=$('cl259Video');svg=$('cl259Svg');
  const css=document.createElement('style');css.id='cl259Css';css.textContent='#cl259Vue{position:fixed;inset:0;z-index:100000;background:#06111c;display:none;overflow:hidden;font-family:Jost,Arial,sans-serif;color:#f3ead2;touch-action:none}#cl259Vue.v{display:block}'+
   '#cl259Video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}#cl259Vue.simule #cl259Video{display:none}#cl259Ciel{position:absolute;inset:0;display:none;background:linear-gradient(#0b1b33 0%,#1d3f6b 48%,#2b5a8a 50%,#3a4a3a 51%,#1e2a1c 100%)}#cl259Vue.simule #cl259Ciel{display:block}'+
@@ -15991,7 +15996,7 @@ function fermer(){actif=false;cancelAnimationFrame(raf);if(stream){try{stream.ge
 let cleD='',cacheT={k:'',L:[]};
 function dessiner(force){if(!actif||!V||!R)return;const pos=dou();const ms=inst();const W=V.clientWidth,H=V.clientHeight;if(!W||!H)return;
  const k=[Math.round(ms/2000),R.map(r=>r.map(x=>x.toFixed(3)).join(',')).join(';'),fov,W,H,pos&&pos.la.toFixed(3),pos&&pos.lo.toFixed(3)].join('|');if(!force&&k===cleD)return;cleD=k;
- const F=(v)=>v.toFixed(1);let s='';const pla=[];const chev=(x,y,w,h)=>{for(const b of pla)if(x<b[0]+b[2]&&x+w>b[0]&&y<b[1]+b[3]&&y+h>b[1])return true;return false};
+ const F=(v)=>v.toFixed(1);let s='';const pla=[[0,0,W,92],[0,H-160,W,160]];/* CL260 : pas d'étiquette sous la tête ni sur les réglages */const chev=(x,y,w,h)=>{for(const b of pla)if(x<b[0]+b[2]&&x+w>b[0]&&y<b[1]+b[3]&&y+h>b[1])return true;return false};
  // horizon et points cardinaux
  let h='';let seg=[];const pousser=()=>{if(seg.length>1)h+='<polyline points="'+seg.join(' ')+'" fill="none" stroke="#ffffff" stroke-opacity=".75" stroke-width="1.5" stroke-dasharray="6 5"/>';seg=[]};
  for(let a=0;a<=360;a+=3){const P=projeter(a,0);if(P&&P.x>-200&&P.x<W+200&&P.y>-200&&P.y<H+200)seg.push(F(P.x)+','+F(P.y));else pousser()}pousser();
@@ -15999,7 +16004,7 @@ function dessiner(force){if(!actif||!V||!R)return;const pos=dou();const ms=inst(
  s+=h;
  // les cibles
  let T=[];if(pos){const kc=[Math.round(ms/2000),pos.la.toFixed(3),pos.lo.toFixed(3),Math.round(pos.alt)].join('|');if(cacheT.k!==kc){cacheT={k:kc,L:cibles(pos,ms)}}T=cacheT.L.map(t=>({...t,P:projeter(t.az,t.h)})).filter(t=>t.P&&t.P.x>-40&&t.P.x<W+40&&t.P.y>-40&&t.P.y<H+40)}
- const prio=t=>t.k==='soleil'||t.k==='lune'?0:t.k==='arrivee'?1:t.k==='ville'?2+(t.d||0)/1000-Math.min(3,Math.log10(1+(t.pop||0)))/4:4+(t.d||0)/200;
+ const prio=t=>t.k==='soleil'||t.k==='lune'?0:t.k==='arrivee'?1:t.k==='planete'?1.5:t.k==='ville'?2+(t.d||0)/1000-Math.min(3,Math.log10(1+(t.pop||0)))/4:t.k==='etoile'?3.5+(t.mag||0)/10:4+(t.d||0)/200;
  const dc=t=>Math.hypot(t.P.x-W/2,t.P.y-H/2);T.sort((a,b)=>(dc(a)<40?-1:0)-(dc(b)<40?-1:0)||prio(a)-prio(b));/* le lieu sous le réticule d'abord */
  let n=0;const etiq=[];
  for(const t of T){if(n>=30)break;const {x,y}=t.P;const lab=t.n+(t.d!=null?' · '+nf(t.d)+' km':'');const w=lab.length*9.2+10,bw=w,bh=22;
@@ -16017,6 +16022,8 @@ function dessiner(force){if(!actif||!V||!R)return;const pos=dou();const ms=inst(
  let prox=null,dmin=6;for(const t of T){const sp=Math.acos(Math.max(-1,Math.min(1,Math.sin(altc*rad)*Math.sin(t.h*rad)+Math.cos(altc*rad)*Math.cos(t.h*rad)*Math.cos((azc-t.az)*rad))))/rad;if(sp<dmin){dmin=sp;prox=t}}
  if(V.classList.contains('simule')){const ciel=$('cl259Ciel');if(ciel){const Ph=projeter(azc,0);let y=Ph?Math.max(-30,Math.min(130,Ph.y/H*100)):50;const S=T.find(t=>t.k==='soleil');const sunAlt=S?S.h:(cacheT.L.find(t=>t.k==='soleil')||{h:10}).h;const nuit=sunAlt<-6;
   ciel.style.background='linear-gradient('+(nuit?'#02060f 0%,#0a1428 ':'#0b1b33 0%,#1d3f6b ')+Math.max(0,y-3)+'%,'+(nuit?'#15223a ':'#2b5a8a ')+y+'%,'+(nuit?'#0d130f ':'#3a4a3a ')+(y+1)+'%,'+(nuit?'#05080a':'#1e2a1c')+' 100%)'}}
+ /* CL260 : la voix du hublot — le lieu visé est dit quand il change (case cochée) ; « Dire ce que je vois » énumère le champ */
+ if(window.derniereVisee)window.derniereVisee(prox,pos,T);
  const D=$('cl259Dir');if(D){let cote='';if(prox&&pos&&pos.cap!=null&&window.cl200&&window.cl200.cote){try{cote=' · '+window.cl200.cote(prox.az-pos.cap).txt}catch(e){}}
   D.textContent=(pos?(pos.avion?'Avion '+nf(pos.alt)+' m':'Depuis '+(pos.nom||'ici'))+' · ':'')+'vue '+ROSE[Math.round(azc/45)%8]+' '+Math.round(azc)+'° '+(altc>=0?'+':'−')+Math.round(Math.abs(altc))+'°'+(prox?' · '+prox.n+(prox.d!=null?' à '+nf(prox.d)+' km':'')+cote:'')}}
 // ---------- la carte dans la face AIR
@@ -16030,9 +16037,42 @@ let n=0;const t=setInterval(()=>{n++;try{if(ui())clearInterval(t)}catch(e){conso
 window.cl259={ouvrir,fermer,poser,projeter,etat:()=>({actif,capteurs,camera:camOk,fov,manuel,etiquettes:derniers.slice(),pos:dou(),msg}),cibles:()=>{const p=dou();return p?cibles(p,inst()):[]},astre:(k)=>{const p=dou();return p?astre(k,p,inst()):null}};
 })();
 (()=>{'use strict';
-const TIT='CL259 · Le hublot augmenté';
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL259')v.textContent='CL259'},300);
 })();
 }catch(e){console.error("cl259HublotAugmente",e);}
+/* ───────── cl260VoixHublotEtoiles ───────── */
+try{
+/* CL260 — La voix du hublot, les étoiles de nuit, les espaces insécables (réserve R10 : « voix du hublot » ; revue d'usage CL257).
+   • Hublot augmenté (CL259) : case « La voix nomme ce que je vise » (mémorisée) — quand le réticule se pose sur un lieu, un astre ou
+     une étoile et y reste une seconde et demie, la montre le dit : « Johannesburg, à 176 km, à droite (à 2 h) », « Le Soleil »,
+     « Canopus » ; bouton « Dire ce que je vois » — la montre énumère le champ de gauche à droite : « De gauche à droite : Pretoria
+     à 135 km, Johannesburg à 176 km, le Soleil. » Voix de la montre (cl136Dire), même si « Réponses parlées » est décochée (demandé).
+   • La nuit (Soleil sous −3°) : les 24 étoiles brillantes du catalogue de la montre (magnitude ≤ 1,7 : Sirius, Canopus, Arcturus,
+     Véga, Capella, Rigel, Procyon, Bételgeuse, Achernar, Hadar, Acrux, Altaïr, Aldébaran, Spica, Antarès, Pollux, Fomalhaut, Deneb,
+     Régulus, Castor, Bellatrix, Mimosa…, avec leur constellation) et Vénus, Jupiter, Mars, Saturne, nommés à leur place dans le
+     ciel du hublot (sphère céleste depuis l'avion) ; la voix dit « Canopus (Carène) ».
+   • Les propositions de la CL257 : espace insécable avant les « ? » (le point d'interrogation ne passe plus seul à la ligne).
+   Retouches p260 (11 points dans CL257 et CL259). Tests : tCL260.js. */
+(()=>{'use strict';
+const $=id=>document.getElementById(id);
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const nf=n=>Math.round(n).toLocaleString('fr-FR').replace(/ | /g,' ');
+const dire=t=>{try{if(window.cl136Dire)window.cl136Dire(t,true)}catch(e){}return t};
+const nom=t=>t.k==='soleil'?'le Soleil':t.k==='lune'?'la Lune':t.k==='arrivee'?t.n.replace(/^→ /,'')+', la ville d’arrivée':t.k==='etoile'&&t.c?t.n+' ('+t.c+')':t.n;
+const phrase=(t,pos)=>{let s=nom(t);s=s.charAt(0).toUpperCase()+s.slice(1);if(t.d!=null)s+=', à '+nf(t.d)+' km';if(pos&&pos.cap!=null&&window.cl200&&window.cl200.cote&&t.k!=='soleil'&&t.k!=='lune'&&t.k!=='etoile'&&t.k!=='planete'){try{s+=', '+window.cl200.cote(t.az-pos.cap).txt}catch(e){}}return s+'.'};
+let vise={n:null,t0:0,dit:null},champ=[];
+window.derniereVisee=function(prox,pos,T){champ=(T||[]).filter(t=>t.P).sort((a,b)=>a.P.x-b.P.x);const n=prox?prox.n:null,now=performance.now();
+ if(n!==vise.n){vise={n,t0:now,dit:vise.dit}}else if(n&&vise.dit!==n&&now-vise.t0>1500&&$('cl259Voix')&&$('cl259Voix').checked){vise.dit=n;dire(phrase(prox,pos))}};
+function direChamp(){const e=window.cl259&&window.cl259.etat();const pos=e&&e.pos;const L=champ.slice(0,6);if(!L.length)return dire('Rien de connu dans le champ.');
+ const parts=L.map(t=>{let s=nom(t);if(t.d!=null)s+=' à '+nf(t.d)+' km';return s});return dire('De gauche à droite : '+parts.join(', ')+'.')}
+document.addEventListener('click',e=>{const b=e.target&&e.target.closest&&e.target.closest('#cl259Dire');if(b)direChamp()});
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='cl259Voix')LS.set('cl259Voix',e.target.checked?'1':'0')});
+const css=document.createElement('style');css.id='cl260Css';css.textContent='#cl259Voie{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;font:14px Jost,Arial,sans-serif}#cl259Voie label{display:flex;align-items:center;gap:6px}#cl259Dire{min-height:36px;padding:0 12px;border-radius:18px;border:1px solid #e4c066;background:#152734e6;color:#f3ead2;font:700 14px Jost,Arial,sans-serif}';document.head.appendChild(css);
+window.cl260={phrase,champ:()=>champ.map(t=>t.n),direChamp,visee:()=>({...vise})};
+})();
+(()=>{'use strict';
+const TIT='CL260 · La voix du hublot et les étoiles de nuit';
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&performance.now()>2500&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL260')v.textContent='CL260'},300);
+})();
+}catch(e){console.error("cl260VoixHublotEtoiles",e);}
 </script>
 </body></html>
