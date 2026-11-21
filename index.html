@@ -17233,11 +17233,12 @@ function dessiner(force){const G=calque();if(!G)return false;const v=voulu()?vol
  // part restante : pointillé sur la ligne de base
  if(v.f<0.999)h+='<path d="'+arc(v.f*360,359.9,R0)+'" fill="none" stroke="#e4c066" stroke-opacity=".45" stroke-width="1" stroke-dasharray="1.5 2.5"/>';
  // profil parcouru : altitude en hauteur
- if(ech.length>1){h+='<path d="'+ech.map((e,i)=>{const [x,y]=pt(e[0]*360,rDe(e[1]));return (i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)}).join(' ')+'" fill="none" stroke="#e4c066" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'}
+ if(ech.length>1){const P=[];for(let i=0;i<ech.length;i++){const [f0,a0]=ech[i];if(i===0){P.push([f0*360,rDe(a0)]);continue}const [fp,ap]=ech[i-1];const n=Math.max(1,Math.ceil((f0-fp)*360/3));/* entre deux relevés, on suit le cercle par pas de 3° (sinon des cordes) */for(let k=1;k<=n;k++){const t=k/n;P.push([(fp+(f0-fp)*t)*360,rDe(ap+(a0-ap)*t)])}}
+  h+='<path d="'+P.map(([a,r],i)=>{const [x,y]=pt(a,r);return (i?'L':'M')+x.toFixed(1)+','+y.toFixed(1)}).join(' ')+'" fill="none" stroke="#e4c066" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>'}
  // repère de l'avion
  {const a=v.f*360,r=ech.length?rDe(v.alt):R0;const [x,y]=pt(a,r);h+='<g transform="translate('+x.toFixed(1)+','+y.toFixed(1)+') rotate('+a.toFixed(1)+')"><path d="M0,-4.2 L3,3 L0,1.4 L-3,3 Z" fill="#fff" stroke="#0a1730" stroke-width=".5"/></g>'}
  // codes du départ et de l'arrivée
- const T=(a,t,anch)=>{const [x,y]=pt(a,R0+1.5);return '<text x="'+x.toFixed(1)+'" y="'+(y+2.4).toFixed(1)+'" text-anchor="'+anch+'" font-family="Jost,Arial,sans-serif" font-weight="600" font-size="7" letter-spacing=".06em" fill="#e4c066">'+t.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</text>'};
+ const T=(a,t,anch)=>{const [x,y]=pt(a,R0+1.5);return '<text x="'+x.toFixed(1)+'" y="'+(y+2.4).toFixed(1)+'" text-anchor="'+anch+'" font-family="Jost,Arial,sans-serif" font-weight="600" font-size="7" letter-spacing=".06em" fill="#e4c066" paint-order="stroke" stroke="#0a1730" stroke-width="2.2" stroke-linejoin="round">'+t.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</text>'};
  if(v.dep)h+=T(351.5,v.dep,'end');if(v.arr)h+=T(8.5,v.arr,'start');
  if(h!==derniere){G.innerHTML=h;derniere=h}return true}
 function ui(){if($('cl288On'))return true;const air=$('cl211Air');if(!air)return false;const l=document.createElement('label');l.className='cl288c';l.style.cssText='display:inline-flex;align-items:center;gap:8px;margin-left:6px';l.innerHTML='<input type="checkbox" id="cl288On"> Profil de la route sur la lunette';air.after(l);const b=$('cl288On');b.checked=memoire();b.addEventListener('change',()=>{try{localStorage.setItem('cl288On',b.checked?'1':'0')}catch(e){}dessiner(true)});
@@ -17246,9 +17247,25 @@ let n=0;const t=setInterval(()=>{n++;try{ui();dessiner()}catch(e){console.warn('
 window.cl288={dessiner:()=>dessiner(true),etat:()=>({on:voulu(),echantillons:ech.length,cle,dessine:derniere!==''})};
 })();
 (()=>{'use strict';
-const TIT='CL288 · Le profil de la route sur la lunette NAVI';window.cl2TitreCourant=TIT;
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL288')v.textContent='CL288'},300);
 })();
 }catch(e){console.error("CL288",e);}
+/* ───────── CL289 ───────── */
+try{
+/* CL289 — Le profil tracé en arc (suite de la CL288, défaut vu à la revue d'usage).
+   Le profil de la route de la CL288 reliait ses relevés par des segments droits : à grande vitesse de simulation (×60, ×3 600), les
+   relevés — toutes les deux secondes — tombent à des dizaines de degrés les uns des autres et le tracé coupait le cadran en cordes.
+   Entre deux relevés, le tracé suit désormais le cercle par pas de 3° (flèche d'une corde de 3° sur un rayon de 178 : 0,06 unité,
+   invisible), l'altitude interpolée linéairement : le profil reste sur sa couronne quelle que soit la vitesse. Les codes du départ
+   et de l'arrivée reçoivent un liseré sombre (paint-order) pour rester lisibles quand le pointillé ou l'or passe dessous.
+   window.cl289 = {etat} : rayon minimal et maximal des points du profil, pour l'essai. */
+(()=>{'use strict';
+const C=233;
+window.cl289={etat:()=>{const p=document.querySelector('#cl288Route path[stroke-width="1.6"]');if(!p)return null;const d=p.getAttribute('d');const pts=[...d.matchAll(/[ML](-?[\d.]+),(-?[\d.]+)/g)].map(m=>Math.hypot(+m[1]-C,+m[2]-C));return {n:pts.length,rMin:Math.min(...pts),rMax:Math.max(...pts)}}};
+})();
+(()=>{'use strict';
+const TIT='CL289 · Le profil tracé en arc';window.cl2TitreCourant=TIT;
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL289')v.textContent='CL289'},300);
+})();
+}catch(e){console.error("CL289",e);}
 </script>
 </body></html>
