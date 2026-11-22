@@ -12647,9 +12647,21 @@ const hab=p=>p==null?'':p>=1000?'≈ '+(p/1000).toFixed(1).replace('.',',').repl
 const isa=h=>h==null?null:h<=11000?15-0.0065*h:h<=20000?-56.5:-56.5+0.001*(h-20000);
 const FL=h=>{const f=Math.round(h*3.28084/100);return 'FL'+String(f).padStart(3,'0')};
 // ---------- GPS
-function demarrerGPS(){if(watchId!=null||!navigator.geolocation)return;try{watchId=navigator.geolocation.watchPosition(p=>{prevFix=fix;fix={la:p.coords.latitude,lo:p.coords.longitude,alt:p.coords.altitude,v:p.coords.speed,cap:p.coords.heading,t:Date.now(),ok:true};
-  if((fix.v==null||isNaN(fix.v))&&prevFix){const dt=(fix.t-prevFix.t)/1000;if(dt>0)fix.v=dist(prevFix,fix)*1000/dt;if(fix.cap==null)fix.cap=cap(prevFix,fix)}
-  etat('gps');maj(true)},e=>{fix={ok:false,err:e.code===1?'GPS refusé : autoriser la position dans Réglages › Safari':'GPS indisponible (près du hublot, page ouverte)'};maj(true)},{enableHighAccuracy:true,maximumAge:1000,timeout:20000})}catch(e){}}
+function demarrerGPS(){if(watchId!=null||!navigator.geolocation)return;const G=window.cl290=window.cl290||{rejets:0,dernierRejet:'',erreurs:0,bons:0,vL:null,acc:null};
+ try{watchId=navigator.geolocation.watchPosition(p=>{const c=p.coords,acc=(c.accuracy!=null&&!isNaN(c.accuracy)&&c.accuracy>=0)?c.accuracy:0,tP=Date.now();
+  /* CL290 — le GPS en vol : un point annoncé à plus de 5 km près est ignoré (le dernier bon point reste) ; un point qui supposerait plus de 1 400 km/h depuis le dernier bon point est ignoré (saut) */
+  if(acc>5000){G.rejets++;G.dernierRejet='précision '+Math.round(acc/1000)+' km';if(fix&&fix.ok&&fix.la!=null){fix.gpsNote='GPS imprécis ('+Math.round(acc/1000)+' km), dernier bon point gardé';maj(true)}return}
+  const bon=!!(fix&&fix.ok&&fix.la!=null);
+  if(bon){const dtS=(tP-fix.t)/1000;if(dtS>0&&dtS<600){const saut=dist(fix,{la:c.latitude,lo:c.longitude})/(dtS/3600);if(saut>1400){G.rejets++;G.dernierRejet='saut '+Math.round(saut)+' km/h';return}}}
+  prevFix=bon?fix:null;fix={la:c.latitude,lo:c.longitude,alt:(c.altitude!=null&&!isNaN(c.altitude))?c.altitude:null,v:(c.speed!=null&&!isNaN(c.speed)&&c.speed>=0)?c.speed:null,cap:(c.heading!=null&&!isNaN(c.heading)&&c.heading>=0)?c.heading:null,acc,t:tP,ok:true};
+  if(prevFix){const dt=(fix.t-prevFix.t)/1000,dM=dist(prevFix,fix)*1000,marge=3*Math.max(acc,prevFix.acc||0);/* vitesse et cap déduits de deux points seulement s'ils sont assez éloignés pour leur précision */
+   if(fix.v==null&&dt>=3&&dM>marge+20)fix.v=dM/dt;if(fix.cap==null&&dM>Math.max(200,marge))fix.cap=cap(prevFix,fix);
+   if(fix.v==null&&prevFix.v!=null&&dt<120)fix.v=prevFix.v;if(fix.cap==null&&prevFix.cap!=null&&dt<120)fix.cap=prevFix.cap}
+  if(fix.v!=null){G.vL=(G.vL==null||!prevFix)?fix.v:G.vL+0.25*(fix.v-G.vL);fix.vBrut=fix.v;fix.v=G.vL}else G.vL=null;/* vitesse lissée (constante de temps ≈ 4 s à un point par seconde) */
+  G.bons++;G.acc=acc;etat('gps');maj(true)},e=>{G.erreurs++;
+  /* CL290 : erreur passagère (pas de point, délai) — le dernier bon point reste affiché trois minutes, avec son âge */
+  if(e.code!==1&&fix&&fix.ok&&fix.la!=null&&Date.now()-fix.t<180000){fix.gpsNote='GPS en attente, dernier point il y a '+Math.round((Date.now()-fix.t)/1000)+' s';maj(true);return}
+  fix={ok:false,err:e.code===1?'GPS refusé : autoriser la position dans Réglages › Safari':'GPS indisponible (près du hublot, page ouverte)'};maj(true)},{enableHighAccuracy:true,maximumAge:1000,timeout:20000})}catch(e){}}
 function arreterGPS(){if(watchId!=null&&navigator.geolocation){try{navigator.geolocation.clearWatch(watchId)}catch(e){}}watchId=null}
 // ---------- vol
 function villeDepart(pos){const sel=$('cl200Dep');const n=sel&&sel.value;if(n&&n!=='auto'){const v=parNom(n);if(v)return v}return pos?proches(pos,1)[0].v:null}
@@ -12661,6 +12673,14 @@ function cible(){const sel=$('cl200Vers');const v=sel?sel.value:'maison';if(v===
 function essai(){const sd=$('cl200Dep');const choisi=sd&&sd.value&&sd.value!=='auto'?parNom(sd.value):null;const m=choisi||villeMontre();let arr=arrivee();if(!arr||arr.nom===m.nom){arr=/Paris/i.test(m.nom)?parNom('Johannesburg'):parNom('Paris')}/* départ : la ville choisie dans Départ, sinon la ville de la montre ; arrivée : la ville choisie, ou Paris / Johannesburg si c'est la même */
  const sel=$('cl191Arr');if(sel&&[...sel.options].some(o=>o.value===arr.nom))sel.value=arr.nom;
  const d=dist(m,arr),vit=900,t0=simMs();demo={dep:m,arr,d,vit,t0,altDep:0,duree:d/vit*3600e3+20*60e3};trace=[];altH=[];vz=null;phase='sol';phaseN=0;etaS=null;dits={};dernierDit=0;vol={t0,dep:{la:m.la,lo:m.lo},depVille:m,depNom:m.nom,arr,fin:null,recit:[]};etat('vol');maj(true)}
+/* CL291 — le vol à l'estime : le vrai vol suivi à l'heure, sans GPS — départ et arrivée choisis, heure réelle du décollage t0 et heure d'arrivée prévue fin (ms) */
+function estime(t0,fin,depNom,arrNom){const sd=$('cl200Dep');const choisi=(depNom&&parNom(depNom))||(sd&&sd.value&&sd.value!=='auto'?parNom(sd.value):null);const m=choisi||villeMontre();const arr=(arrNom&&parNom(arrNom))||arrivee();if(!arr||arr.nom===m.nom||!(fin>t0))return false;
+ try{localStorage.setItem(KEYDEP,m.nom);localStorage.setItem(KEYARR,arr.nom)}catch(e){}if(sd&&[...sd.options].some(o=>o.value===m.nom))sd.value=m.nom;/* les menus suivent, même remplis plus tard */
+ const d=dist(m,arr),duree=Math.max(30*60e3,fin-t0),vit=Math.max(300,Math.min(1100,d/Math.max(0.25,(duree-20*60e3)/3600e3)));
+ const sel=$('cl191Arr');if(sel&&[...sel.options].some(o=>o.value===arr.nom))sel.value=arr.nom;
+ demo={dep:m,arr,d,vit,t0,altDep:0,duree,estime:true};trace=[];altH=[];vz=null;phase='sol';phaseN=0;etaS=null;dits={};dernierDit=0;vol={t0,dep:{la:m.la,lo:m.lo},depVille:m,depNom:m.nom,arr,fin:null,recit:[],estime:true};
+ const f=Math.min(1,Math.max(0,(simMs()-t0)/duree));for(let k=0;k<=40;k++){const g=f*k/40,p=inter(m,arr,g);trace.push({la:p.la,lo:p.lo,t:t0+g*duree,alt:null})}/* la route déjà parcourue, du départ à maintenant */
+ etat('vol');lastKey='';maj(true);return true}
 function posEssai(){if(!demo)return null;const f=Math.min(1,Math.max(0,(simMs()-demo.t0)/demo.duree));const p=inter(demo.dep,demo.arr,f);const vol2=f<1;
  const a0=demo.altDep||0;const tm=Math.max(1,(10970-a0)/7.3*1000);const montee=Math.min(1,f*demo.duree/tm),desc=Math.min(1,(1-f)*demo.duree/(25*60e3));const alt=Math.min(a0+(10970-a0)*montee,10970*desc);
  return {la:p.la,lo:p.lo,alt,v:vol2?demo.vit/3.6*Math.min(1,alt/3000+0.3):0,cap:cap(p,demo.arr),t:Date.now(),ok:true,fin:!vol2}}
@@ -12875,10 +12895,10 @@ function maj(force){if(!card||!document.body.classList.contains('clx-air'))retur
  if(pos&&pos.ok){if(!trace.length||dist(trace[trace.length-1],pos)>2)trace.push({la:pos.la,lo:pos.lo,t:now,alt:pos.alt!=null?Math.round(pos.alt):null});if(trace.length>400){trace=trace.filter((q,i)=>i%2===0||i===trace.length-1)}/* 400 points au plus : on en garde un sur deux */
   suivreAlt(pos,now);reconnaitre(pos);
   const kmh=pos.v!=null?pos.v*3.6:null;if(!vol&&kmh!=null&&kmh>250&&!demo&&!relecture)decoller(pos);}
- const key=[pos&&pos.ok?pos.la.toFixed(3)+pos.lo.toFixed(3)+Math.round(pos.alt||0)+Math.round(pos.v||0):'x',Math.floor(now/30000),!!vol,card.dataset.etat,phase].join('|');if(!force&&key===lastKey)return;lastKey=key;
+ const key=[pos&&pos.ok?pos.la.toFixed(3)+pos.lo.toFixed(3)+Math.round(pos.alt||0)+Math.round(pos.v||0)+(pos.gpsNote||''):'x',Math.floor(now/30000),!!vol,card.dataset.etat,phase].join('|');if(!force&&key===lastKey)return;lastKey=key;
  dessin(pos);
  const T=(id,v,html)=>{const e=card.querySelector('#'+id);if(!e)return;if(html){if(e.innerHTML!==v)e.innerHTML=v}else if(e.textContent!==v)e.textContent=v};
- T('cl191Dec',vol?'Atterrir':'Décoller');T('cl191Ess',demo?'Arrêter l’essai':'Vol d’essai');
+ T('cl191Dec',vol?'Atterrir':'Décoller');T('cl191Ess',demo?(demo.estime?'Arrêter l’estime':'Arrêter l’essai'):'Vol d’essai');
  if(!pos){['cl191Alt','cl191Vit','cl191Cap','cl200Phase','cl200Temp','cl191Reste','cl191Arrh','cl200Heures','cl200Autour','cl200Aero','cl200Cap','cl191Sol','cl191Loc','cl201Ombre','cl201Pilote','cl201Temps','cl202Ciel','cl204Bord'].forEach(id=>T(id,'—'));pano(null,null);T('cl191Vol',vol?dur(now-vol.t0):'au sol');
   T('cl191Msg',navigator.geolocation?'En attente du GPS… (autoriser la position ; près du hublot)':'Pas de GPS dans ce navigateur : « Vol d’essai » pour voir la face');barre(null);return}
  if(!pos.ok){T('cl191Msg',pos.err||'GPS indisponible');return}
@@ -12905,7 +12925,7 @@ function maj(force){if(!card||!document.body.classList.contains('clx-air'))retur
  T('cl191Loc',iciTxt.charAt(0).toUpperCase()+iciTxt.slice(1)+' · '+hm(now,fz.tz)+' (heure de '+fz.nom+') · '+Math.abs(pos.la).toFixed(2).replace('.',',')+'° '+(pos.la>=0?'N':'S')+', '+Math.abs(pos.lo).toFixed(2).replace('.',',')+'° '+(pos.lo>=0?'E':'O'));
  T('cl204Bord',LX.bord.length?LX.bord.slice(0,4).map(b=>{const bb=cap(pos,b.g);return b.g.nom+' '+(hdg!=null?cote(bb-hdg).c:vers(bb))+' ('+Math.round(b.d)+' km)'}).join(' · '):(ici&&ici.type!=='m'?'rien d’autre à moins de 120 km':'—'));
  try{if(vol&&ici&&(ici.type==='m'||ici.type==='l')&&!dits['geo'+ici.nom])dire('geo'+ici.nom,'Nous abordons '+ici.nom+'.',now,false)}catch(e){}
- const aS=altSoleil(now,pos.la,pos.lo);T('cl191Msg',(relecture?'Relecture du vol '+nomVol(relecture.r)+' · ':'')+(demo?'Vol d’essai · ':'')+(vol?'En vol depuis '+hm(vol.t0,(vol.depVille||fuseauProche(vol.dep.la,vol.dep.lo)).tz)+(vol.depNom?' ('+vol.depNom+')':'')+' · '+(PHASETXT[phase]||''):'Au sol · '+(PHASETXT[phase]||''))+(aS!=null?' · Soleil '+(aS>=0?'levé, haut de '+Math.round(aS)+'°':'couché, '+Math.round(-aS)+'° sous l’horizon'):''))}
+ const aS=altSoleil(now,pos.la,pos.lo);T('cl191Msg',(relecture?'Relecture du vol '+nomVol(relecture.r)+' · ':'')+(demo?(demo.estime?'Vol à l’estime · ':'Vol d’essai · '):'')+(vol?'En vol depuis '+hm(vol.t0,(vol.depVille||fuseauProche(vol.dep.la,vol.dep.lo)).tz)+(vol.depNom?' ('+vol.depNom+')':'')+' · '+(PHASETXT[phase]||''):'Au sol · '+(PHASETXT[phase]||''))+(aS!=null?' · Soleil '+(aS>=0?'levé, haut de '+Math.round(aS)+'°':'couché, '+Math.round(-aS)+'° sous l’horizon'):'')+(pos.gpsNote?' · '+pos.gpsNote:''))}
 function barre(o){const b=card.querySelector('#cl200Bar');if(!b)return;if(!o){b.hidden=true;return}b.hidden=false;const tot=o.fait+o.reste;const f=tot>0?Math.max(0,Math.min(1,o.fait/tot)):0;
  const T=(sel,v)=>{const e=b.querySelector(sel);if(e&&e.textContent!==v)e.textContent=v};T('.cl200dep',o.dep?o.dep.aero||o.dep.nom.slice(0,3).toUpperCase():'DÉP');T('.cl200arr',o.arr.aero||o.arr.nom.slice(0,3).toUpperCase());
  const fill=b.querySelector('.cl200fill'),pl=b.querySelector('.cl200plane');const w=(f*100).toFixed(1)+'%';if(fill.style.width!==w){fill.style.width=w;pl.style.left=w}
@@ -12969,7 +12989,7 @@ function build(){if(!G){const ov=document.querySelector('#watch svg.overlay'),ha
 let n=0;const t=setInterval(()=>{n++;try{if(build()&&n>20)clearInterval(t)}catch(e){console.warn('CL200',e)}if(n>60)clearInterval(t)},400);
 setInterval(()=>{try{maj()}catch(e){console.warn('CL200',e)}},1000);
 document.addEventListener('change',e=>{if(e.target&&(e.target.id==='angle'||e.target.id==='compareMap'||e.target.id==='v47CityZone')){lastKey='';setTimeout(()=>maj(true),60)}},true);
-window.cl191={show,essai,avancer:f=>{if(relecture){const r=relecture.r;f=Math.max(0,Math.min(1,+f||0));const ms=r.t0+f*(r.fin-r.t0);if(window.cl03SetSim)window.cl03SetSim(new Date(ms));trace=[];altH=[];vz=null;etaS=null;etaT=0;lastKey='';maj(true);return true}/* CL219 : la relecture se glisse aussi */if(!demo)return false;f=Math.max(0,Math.min(1,+f||0));demo.t0=simMs()-f*demo.duree-(f>=1?2:0);/* CL219 : à 100 %, le vol d'essai atterrit même montre en pause */if(vol)vol.t0=demo.t0;altH=[];vz=null;etaS=null;etaT=0;trace=[];for(let k=0;k<=40;k++){const g=f*k/40,p=inter(demo.dep,demo.arr,g);trace.push({la:p.la,lo:p.lo,t:demo.t0+g*demo.duree,alt:null})}lastKey='';maj(true);return true},avancement:()=>{if(relecture){const r=relecture.r;return Math.min(1,Math.max(0,(simMs()-r.t0)/Math.max(1,r.fin-r.t0)))}if(!demo)return null;return Math.min(1,Math.max(0,(simMs()-demo.t0)/demo.duree))},villes:()=>VILLES,position:()=>{const p=relecture?posRelecture():demo?posEssai():fix;return p&&p.ok?{la:p.la,lo:p.lo,alt:p.alt,v:p.v,cap:p.cap}:null},route:()=>{const p=relecture?posRelecture():demo?posEssai():fix;const arr=vol?vol.arr:arrivee();if(!p||!p.ok||!arr)return null;return {cap:cap(p,arr),dist:dist(p,arr),arr:{nom:arr.nom,la:arr.la,lo:arr.lo}}},geo:{dist,cap},/* CL216 : vent, plané, pont */etat:()=>({air:document.body.classList.contains('clx-air'),vol:!!vol,demo:!!demo,relecture:!!relecture,vit:$('v13Speed')?$('v13Speed').value:null,fix,trace:trace.length,phase,vz,eta:etaS,villes:VILLES.length})}/* CL213 : le vol d'essai se fait avancer au doigt sur le bandeau */;
+window.cl191={show,essai,estime,estimeEnCours:()=>demo&&demo.estime?{t0:demo.t0,fin:demo.t0+demo.duree,dep:demo.dep.nom,arr:demo.arr.nom,d:Math.round(demo.d),vit:Math.round(demo.vit)}:null,arreterEssai:()=>{if(!demo)return false;demo=null;if(vol)atterrir();trace=[];lastKey='';maj(true);return true},/* CL291 */avancer:f=>{if(relecture){const r=relecture.r;f=Math.max(0,Math.min(1,+f||0));const ms=r.t0+f*(r.fin-r.t0);if(window.cl03SetSim)window.cl03SetSim(new Date(ms));trace=[];altH=[];vz=null;etaS=null;etaT=0;lastKey='';maj(true);return true}/* CL219 : la relecture se glisse aussi */if(!demo)return false;f=Math.max(0,Math.min(1,+f||0));demo.t0=simMs()-f*demo.duree-(f>=1?2:0);/* CL219 : à 100 %, le vol d'essai atterrit même montre en pause */if(vol)vol.t0=demo.t0;altH=[];vz=null;etaS=null;etaT=0;trace=[];for(let k=0;k<=40;k++){const g=f*k/40,p=inter(demo.dep,demo.arr,g);trace.push({la:p.la,lo:p.lo,t:demo.t0+g*demo.duree,alt:null})}lastKey='';maj(true);return true},avancement:()=>{if(relecture){const r=relecture.r;return Math.min(1,Math.max(0,(simMs()-r.t0)/Math.max(1,r.fin-r.t0)))}if(!demo)return null;return Math.min(1,Math.max(0,(simMs()-demo.t0)/demo.duree))},villes:()=>VILLES,position:()=>{const p=relecture?posRelecture():demo?posEssai():fix;return p&&p.ok?{la:p.la,lo:p.lo,alt:p.alt,v:p.v,cap:p.cap}:null},route:()=>{const p=relecture?posRelecture():demo?posEssai():fix;const arr=vol?vol.arr:arrivee();if(!p||!p.ok||!arr)return null;return {cap:cap(p,arr),dist:dist(p,arr),arr:{nom:arr.nom,la:arr.la,lo:arr.lo}}},geo:{dist,cap},/* CL216 : vent, plané, pont */etat:()=>({air:document.body.classList.contains('clx-air'),vol:!!vol,demo:!!demo,relecture:!!relecture,vit:$('v13Speed')?$('v13Speed').value:null,fix,trace:trace.length,phase,vz,eta:etaS,villes:VILLES.length})}/* CL213 : le vol d'essai se fait avancer au doigt sur le bandeau */;
 window.cl200={villes:VILLES,proches:(la,lo,n)=>proches({la,lo},n),cote,isa,FL,phase:()=>phase};
 window.cl201={posSoleil,soleilRoute,texteSoleil,textePilote,texteTemps};
 window.cl202={cielHublot,prochainAstre,recit:()=>vol&&vol.recit||[],dits:()=>Object.keys(dits)};
@@ -17263,9 +17283,92 @@ const C=233;
 window.cl289={etat:()=>{const p=document.querySelector('#cl288Route path[stroke-width="1.6"]');if(!p)return null;const d=p.getAttribute('d');const pts=[...d.matchAll(/[ML](-?[\d.]+),(-?[\d.]+)/g)].map(m=>Math.hypot(+m[1]-C,+m[2]-C));return {n:pts.length,rMin:Math.min(...pts),rMax:Math.max(...pts)}}};
 })();
 (()=>{'use strict';
-const TIT='CL289 · Le profil tracé en arc';window.cl2TitreCourant=TIT;
-setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL289')v.textContent='CL289'},300);
 })();
 }catch(e){console.error("CL289",e);}
+/* ───────── CL290 ───────── */
+try{
+/* CL290 — Le GPS en vol (22 novembre 2026, Thierry en vol Maputo → Doha : « je veux le vrai vol »).
+   Jusqu'ici la montre prenait chaque point du GPS tel quel : un point annoncé à 30 km près, un saut de position, une vitesse absente
+   déduite de deux points voisins faisaient sauter altitude, vitesse et cap ; et au premier délai du GPS (20 s sans point, fréquent
+   contre un hublot) tout le tableau de bord retombait à « GPS indisponible ».
+   Désormais (p290, dans le guetteur GPS de la face AIR) :
+   • un point annoncé à plus de 5 km près est ignoré, le dernier bon point reste (note « GPS imprécis ») ;
+   • un point qui supposerait plus de 1 400 km/h depuis le dernier bon point est ignoré (saut) ;
+   • vitesse et cap ne sont déduits de deux points que s'ils sont assez éloignés pour leur précision ; sinon les derniers connus
+     restent (deux minutes au plus) ; la vitesse est lissée (constante ≈ 4 s) ; vitesse et cap négatifs (inconnus sur iPhone) = absents ;
+   • à une erreur passagère, le dernier bon point reste affiché trois minutes, avec « dernier point il y a n s » ; « GPS refusé » reste immédiat.
+   window.cl290 = {bons, rejets, dernierRejet, erreurs, acc, vL}. Fiche « Le GPS en vol » après la ligne de message du tableau de bord. */
+(()=>{'use strict';
+const poser=()=>{const A=window.cl45Aide;if(!A||!document.getElementById('cl191Msg'))return false;
+ if(!A.AIDE.find(x=>x.k==='cl290gps')){A.AIDE.push({k:'cl290gps',id:'cl191Msg',t:'Le GPS en vol',x:'En vol, le GPS de l’iPhone n’est pas toujours net : la montre ignore les points annoncés à plus de 5 km près et ceux qui supposeraient un saut impossible (plus de 1 400 km/h), lisse la vitesse sur quelques secondes et, quand le GPS se tait un moment, garde le dernier bon point trois minutes en disant son âge. Il lui faut la page ouverte dans Safari (pas dans une visionneuse de fichier), la position autorisée et exacte, et l’iPhone près du hublot : le premier point peut prendre deux à cinq minutes en avion.'});try{A.install()}catch(e){}}
+ return true};
+let n=0;const t=setInterval(()=>{n++;try{if(poser()||n>40)clearInterval(t)}catch(e){console.warn('CL290',e);clearInterval(t)}},500);
+})();
+(()=>{'use strict';
+})();
+}catch(e){console.error("CL290",e);}
+/* ───────── CL291 ───────── */
+try{
+/* CL291 — Le vol à l'estime (22 novembre 2026, Thierry en vol Maputo → Doha, rangée centrale, sans GPS : « je veux le vrai vol »).
+   Sans GPS, la montre peut suivre le vrai vol à la manière des pilotes d'avant le GPS, à l'estime : départ et arrivée choisis
+   (menus Départ / Arrivée), heure réelle du décollage (heure du lieu de départ) et heure d'arrivée prévue (heure du lieu
+   d'arrivée, celle de l'écran de bord) ; la montre place l'avion sur la route directe au prorata du temps écoulé, altitude et
+   vitesse de croisière déduites, et tout le reste suit — villes survolées, hublot, bande d'horizon, heure d'arrivée, secteur
+   et profil de la lunette NAVI, carnet à l'atterrissage. Moteur : p291 (estime(t0,fin) dans le module AIR, même mécanique que
+   le vol d'essai, étiquette « Vol à l'estime »). Ici : le bouton « À l'estime » après « Vol d'essai », son volet (deux heures,
+   « Suivre le vol », « Arrêter »), la mémoire du vol (localStorage cl291) qui le reprend au rechargement de la page tant qu'il
+   n'est pas fini, et la fiche. window.cl291 = {msDeHeure, demarrer, arreter, etat}. */
+(()=>{'use strict';
+const KEY='cl291';const $=id=>document.getElementById(id);
+const parties=(tz,ms)=>{const f=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});const P={};f.formatToParts(new Date(ms)).forEach(p=>P[p.type]=p.value);return {y:+P.year,m:+P.month,d:+P.day,H:+P.hour%24,M:+P.minute,S:+P.second}};
+const decalage=(tz,ms)=>{try{const P=parties(tz,ms);return Math.round((Date.UTC(P.y,P.m-1,P.d,P.H,P.M,P.S)-ms)/60000)}catch(e){return 0}};
+/* l'instant (ms) de « hh:mm » aujourd'hui dans le fuseau tz, le jour étant celui de ref dans ce fuseau */
+const msDeHeure=(tz,hhmm,ref)=>{const m=/^(\d{1,2}):(\d{2})/.exec(hhmm||'');if(!m)return null;let P;try{P=parties(tz,ref)}catch(e){P=parties('UTC',ref)}const brut=Date.UTC(P.y,P.m-1,P.d,+m[1],+m[2]);const g=brut-decalage(tz,ref)*60000;return brut-decalage(tz,g)*60000};
+const hm=(ms,tz)=>{try{return new Date(ms).toLocaleTimeString('fr-FR',{timeZone:tz,hour:'2-digit',minute:'2-digit'}).replace(':',' h ')}catch(e){return new Date(ms).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}).replace(':',' h ')}};
+const villes=()=>{try{return window.cl191.villes()||[]}catch(e){return []}};
+const ville=nom=>{if(!nom)return null;const V=villes();return V.find(v=>v.nom===nom)||null};
+const villeMontre=()=>{const s=$('v47CityZone');const o=s&&s.selectedOptions[0];if(o&&o.dataset.lat){const n=o.dataset.city||o.textContent.trim();return ville(n)||{nom:n,tz:o.value}}return ville('Paris')};
+const depart=()=>{const s=$('cl200Dep');const v=s&&s.value&&s.value!=='auto'?ville(s.value):null;return v||villeMontre()};
+const arrivee=()=>{const s=$('cl191Arr');let n=s&&s.value;if(!n){try{n=localStorage.getItem('cl191Arr')}catch(e){}}return ville(n)||ville('Johannesburg')};
+const lire=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){return null}};
+const ecrire=o=>{try{if(o)localStorage.setItem(KEY,JSON.stringify(o));else localStorage.removeItem(KEY)}catch(e){}};
+const dur=ms=>{const m=Math.round(ms/60000);return Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')};
+let dernierMotif='';
+const demarrer=(t0,fin,silencieux,depNom,arrNom)=>{const d=depNom?(ville(depNom)||depart()):depart(),a=arrNom?(ville(arrNom)||arrivee()):arrivee();if(!d||!a){dernierMotif='Choisir le départ et l’arrivée';return false}if(d.nom===a.nom){dernierMotif='Départ et arrivée sont la même ville';return false}
+ const now=Date.now();if(!(fin>t0)){dernierMotif='L’arrivée doit suivre le décollage';return false}if(fin-t0>20*3600e3){dernierMotif='Plus de 20 h de vol : vérifier les heures';return false}if(t0>now+3600e3){dernierMotif='Le décollage est dans le futur';return false}
+ if(!(window.cl191&&window.cl191.estime&&window.cl191.estime(t0,fin,d.nom,a.nom))){dernierMotif='La face AIR n’est pas prête';return false}
+ ecrire({dep:d.nom,arr:a.nom,t0,fin});dernierMotif='';if(!silencieux)peindre();return true};
+const arreter=()=>{ecrire(null);try{window.cl191.arreterEssai()}catch(e){}peindre()};
+const etat=()=>{const e=window.cl191&&window.cl191.estimeEnCours&&window.cl191.estimeEnCours();return e?Object.assign({},e,{memo:lire()}):null};
+/* le volet */
+function peindre(){const pan=$('cl291Pan');if(!pan)return;const e=etat();const d=depart(),a=arrivee();
+ const z1=$('cl291T0z'),z2=$('cl291Finz');if(z1)z1.textContent='heure de '+(d?d.nom:'départ');if(z2)z2.textContent='heure de '+(a?a.nom:'arrivée');
+ const et=$('cl291Etat');if(et)et.textContent=e?'Vol à l’estime en cours : '+e.dep+' '+hm(e.t0,(ville(e.dep)||{}).tz)+' → '+e.arr+' '+hm(e.fin,(ville(e.arr)||{}).tz)+' · '+dur(e.fin-e.t0)+' · '+e.d.toLocaleString('fr-FR')+' km à '+e.vit+' km/h':(dernierMotif||'');
+ const go=$('cl291Go'),st=$('cl291Stop');if(go)go.hidden=!!e;if(st)st.hidden=!e;const t0=$('cl291T0'),fi=$('cl291Fin');if(t0)t0.disabled=!!e;if(fi)fi.disabled=!!e;
+ if(e){const hhmm=(ms,tz)=>{try{return new Date(ms).toLocaleTimeString('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}catch(x){return ''}};if(t0&&!t0.value)t0.value=hhmm(e.t0,(ville(e.dep)||{}).tz);if(fi&&!fi.value)fi.value=hhmm(e.fin,(ville(e.arr)||{}).tz)}/* le vol repris montre ses heures */}
+function poser(){const ess=$('cl191Ess');if(!ess||!window.cl191||!window.cl191.estime)return false;if($('cl291Btn'))return true;
+ if(!$('cl291Css')){const c=document.createElement('style');c.id='cl291Css';c.textContent='#cl291Pan{margin:6px 0 2px;padding:8px 10px;border:1px solid var(--h-or2,#a88b55);border-radius:10px;background:#0b1521;color:#efe7d4;font:13px/1.4 Jost,Arial,sans-serif}#cl291Pan[hidden]{display:none}#cl291Pan .cl291l{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:3px 0}#cl291Pan .cl291l span{min-width:112px;font:600 10.5px/1.2 Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase;color:#d8b46a}#cl291Pan input[type=time]{font:15px Jost,Arial,sans-serif;color:#fff;background:#141f2c;border:1px solid var(--h-or2,#a88b55);border-radius:8px;padding:4px 8px;min-height:32px}#cl291Pan small{color:#cfc6b2;font-size:11.5px}#cl291Pan .cl291b{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}#cl291Pan #cl291Etat{color:#b9c6d2;font-size:12px;flex:1 1 100%}';document.head.appendChild(c)}
+ const b=document.createElement('button');b.type='button';b.id='cl291Btn';b.className=ess.className;b.textContent='À l’estime';b.title='Suivre le vrai vol à l’heure, sans GPS';
+ let anc=ess;if(anc.nextElementSibling&&anc.nextElementSibling.classList.contains('cl45-info'))anc=anc.nextElementSibling;anc.insertAdjacentElement('afterend',b);
+ const pan=document.createElement('div');pan.id='cl291Pan';pan.hidden=true;pan.innerHTML='<div class="cl291l"><span>Décollage</span><input type="time" id="cl291T0" aria-label="Heure réelle du décollage"> <small id="cl291T0z"></small></div><div class="cl291l"><span>Arrivée prévue</span><input type="time" id="cl291Fin" aria-label="Heure d’arrivée prévue"> <small id="cl291Finz"></small></div><div class="cl291b"><button type="button" id="cl291Go">Suivre le vol</button><button type="button" id="cl291Stop" hidden>Arrêter</button><button type="button" id="cl291Fermer">Fermer</button><span id="cl291Etat"></span></div>';
+ const row=ess.closest('.cl191r')||ess.parentElement;row.insertAdjacentElement('afterend',pan);
+ b.addEventListener('click',()=>{pan.hidden=!pan.hidden;if(!pan.hidden)peindre()});$('cl291Fermer').addEventListener('click',()=>{pan.hidden=true});
+ $('cl291Go').addEventListener('click',()=>{const d=depart(),a=arrivee();const now=Date.now();const t0=msDeHeure(d&&d.tz||'UTC',$('cl291T0').value,now);let fin=msDeHeure(a&&a.tz||'UTC',$('cl291Fin').value,now);
+  if(t0==null||fin==null){dernierMotif='Donner les deux heures';peindre();return}let T0=t0;if(T0>now+3600e3)T0-=86400e3;/* un décollage « dans le futur » était hier */while(fin<=T0)fin+=86400e3;demarrer(T0,fin)});
+ $('cl291Stop').addEventListener('click',arreter);
+ ['cl200Dep','cl191Arr'].forEach(id=>{const s=$(id);if(s)s.addEventListener('change',()=>{if(!pan.hidden)peindre()})});
+ const A=window.cl45Aide;if(A&&!A.AIDE.find(x=>x.k==='cl291estime')){A.AIDE.push({k:'cl291estime',id:'cl291Btn',t:'Le vol à l’estime',x:'Quand le GPS ne vient pas (rangée centrale, hublot trop loin), la montre suit tout de même le vrai vol, à l’estime, comme les pilotes d’avant le GPS : avec le départ et l’arrivée choisis dans les menus, donnez l’heure réelle du décollage (heure du lieu de départ) et l’heure d’arrivée prévue affichée par l’écran de bord (heure du lieu d’arrivée), puis « Suivre le vol ». L’avion est placé sur la route directe au prorata du temps écoulé ; altitude et vitesse de croisière en découlent ; villes survolées, hublot, bande d’horizon, heure d’arrivée, secteur et profil de la lunette NAVI suivent, et le vol s’inscrit au carnet à l’arrivée. L’écart avec la position vraie est celui de la route réelle avec la route directe, une centaine de kilomètres au plus. Le vol est mémorisé : la page rechargée le reprend jusqu’à l’arrivée. « Arrêter » l’interrompt.'});try{A.install()}catch(e){}}
+ /* reprise d'un vol mémorisé */
+ const m=lire();if(m&&m.fin>Date.now()-10*60e3&&!(window.cl191.estimeEnCours&&window.cl191.estimeEnCours())){try{const sd=$('cl200Dep'),sa=$('cl191Arr');if(sd&&[...sd.options].some(o=>o.value===m.dep)){sd.value=m.dep;try{localStorage.setItem('cl200Dep',m.dep)}catch(e){}sd.dispatchEvent(new Event('change',{bubbles:true}))}if(sa&&[...sa.options].some(o=>o.value===m.arr)){sa.value=m.arr;try{localStorage.setItem('cl191Arr',m.arr)}catch(e){}sa.dispatchEvent(new Event('change',{bubbles:true}))}}catch(e){}
+  if(!demarrer(m.t0,m.fin,true,m.dep,m.arr))ecrire(null)}
+ peindre();return true}
+window.cl291={msDeHeure,demarrer,arreter,etat,motif:()=>dernierMotif};
+let n=0;const t=setInterval(()=>{n++;try{if(poser()||n>60)clearInterval(t)}catch(e){console.warn('CL291',e);clearInterval(t)}},500);
+})();
+(()=>{'use strict';
+const TIT='CL291 · Le vol à l’estime';window.cl2TitreCourant=TIT;
+setInterval(()=>{const s=document.querySelector('#cl2Title span');if(s&&s.textContent!==TIT)s.textContent=TIT;const v=document.getElementById('cl78Ver');if(v&&v.textContent!=='CL291')v.textContent='CL291'},300);
+})();
+}catch(e){console.error("CL291",e);}
 </script>
 </body></html>
